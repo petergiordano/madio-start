@@ -1,0 +1,72 @@
+{
+  "$schema": "https://madio-framework.com/schemas/config.json",
+  "version": "1.0.0",
+  "project": {
+    "name": "[PROJECT_NAME]",
+    "type": "[PROJECT_TYPE]",
+    "complexity": "simple|moderate|complex|enterprise",
+    "created": "[TIMESTAMP]",
+    "lastModified": "[TIMESTAMP]"
+  },
+  "framework": {
+    "version": "1.0.0",
+    "templateLibrary": "_template_library",
+    "coreTemplatesDoc": "madio_core_templates.md"
+  },
+  "ai": {
+    "provider": "gemini",
+    "model": "gemini-2.0-flash-exp",
+    "temperature": 0.7,
+    "maxTokens": 8192,
+    "systemPromptMode": "hierarchical"
+  },
+  "documents": {
+    "mandatory": [
+      "project_system_instructions.md",
+      "orchestrator.md"
+    ],
+    "tier3": [],
+    "customTemplates": []
+  },
+  "generation": {
+    "autoValidate": true,
+    "preservePlaceholders": false,
+    "generateComments": true,
+    "outputFormat": "markdown"
+  },
+  "validation": {
+    "enforceHierarchy": true,
+    "checkCrossReferences": true,
+    "validatePlaceholders": true,
+    "requireSuccessMetrics": true
+  },
+  "deployment": {
+    "targets": ["openai-customgpt", "gemini-gem", "claude-project"],
+    "exportFormat": "unified|platform-specific",
+    "includeMetadata": true
+  },
+  "workflow": {
+    "defaultCommand": "gemini",
+    "commandPrefix": "madio",
+    "interactive": true,
+    "verbosity": "normal"
+  },
+  "paths": {
+    "templates": "_template_library/",
+    "output": "./",
+    "backup": ".madio/backups/",
+    "logs": ".madio/logs/"
+  },
+  "features": {
+    "autoSave": true,
+    "versionControl": true,
+    "templateSync": true,
+    "liveValidation": true
+  },
+  "customCommands": {
+    "validate": "madio validate --all",
+    "export": "madio export --target {platform}",
+    "test": "madio test --coverage",
+    "sync": "madio sync-templates"
+  }
+}

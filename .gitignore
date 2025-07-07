@@ -1,0 +1,88 @@
+# MADIO Framework .gitignore
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE and Editor Files
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# MADIO Generated Files
+.madio/cache/
+.madio/logs/
+.madio/temp/
+*.madio.backup
+
+# Build Outputs
+dist/
+build/
+output/
+generated/
+
+# Dependency Directories
+node_modules/
+venv/
+env/
+.env
+
+# Log Files
+*.log
+logs/
+*.log.*
+
+# Test Coverage
+coverage/
+.coverage
+htmlcov/
+*.cover
+
+# Temporary Files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# API Keys and Secrets
+.env.local
+.env.*.local
+secrets.json
+credentials.json
+*.key
+*.pem
+
+# User-Specific Configuration
+.madio/user-config.json
+.madio/workspace-settings.json
+
+# Project Build Artifacts
+_build/
+_output/
+_generated/
+
+# Documentation Build
+docs/_build/
+site/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Keep Example Files
+!examples/**
+!templates/**
