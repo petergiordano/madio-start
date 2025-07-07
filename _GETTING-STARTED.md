@@ -31,6 +31,7 @@ This command will:
 - ✅ Validate you're in the right directory
 - ✅ Configure template inheritance
 - ✅ Set up your project structure
+- ✅ Generate your AI_CONTEXT.md bridge file
 - ✅ Update configuration files
 - ✅ Prepare for AI system generation
 
@@ -145,6 +146,9 @@ git pull template main
 ```
 your-ai-project/
 ├── _template_library/              # Keep for reference
+├── AI_CONTEXT.md                   # Bridge file for AI collaboration
+├── CLAUDE.md                       # Claude Code CLI context
+├── GEMINI.md                       # Gemini CLI context
 ├── project_system_instructions.md  # Your core AI identity
 ├── orchestrator.md                 # Your workflow controller
 ├── character_voice_authority.md    # If personality defined
@@ -193,6 +197,13 @@ gemini "Complete the [document_name] using the appropriate MADIO template from _
 gemini "Validate the document hierarchy in my MADIO project and identify any issues"
 ```
 
+### "AI doesn't understand my project context"
+```bash
+# Update and copy bridge file
+gemini "Update AI_CONTEXT.md with current project status"
+# Then copy AI_CONTEXT.md contents to your browser-based AI
+```
+
 ## 🎓 Learning Resources
 
 - **Template Guide**: Read `madio_core_templates.md` for detailed template information
@@ -216,6 +227,7 @@ After completing this guide:
 
 - **Always test** before deploying to production
 - **Keep templates** in `_template_library/` for reference
+- **Maintain AI_CONTEXT.md** for seamless AI collaboration
 - **Use git** for version control and updates
 - **Document changes** in your commit messages
 

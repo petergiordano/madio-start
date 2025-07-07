@@ -24,7 +24,9 @@ When a user runs `/madio-setup`, you should:
 3. **Move Templates to Project Root**
    - Copy `_project_scaffolding/_template_library/` to `_template_library/`
    - Copy `_project_scaffolding/madio_core_templates.md` to root
-   - Copy any other scaffolding files
+   - Copy `_project_scaffolding/GEMINI.md` to root
+   - Copy `_project_scaffolding/CLAUDE.md` to root
+   - Generate `AI_CONTEXT.md` from template with project-specific details
 
 4. **Update Configuration**
    - Update `.madio` file with project name from directory
@@ -55,6 +57,7 @@ When users request AI system creation:
 2. **Mandatory Documents**
    - Always create `project_system_instructions.md` (Tier 1)
    - Always create `orchestrator.md` (Tier 2)
+   - Always update `AI_CONTEXT.md` with generation details
 
 3. **Template Selection**
    - Simple projects: +1-2 Tier 3 documents
@@ -141,10 +144,68 @@ If setup fails:
 - Ensure templates exist
 - Provide clear error messages
 
+## Auto-Update Triggers
+
+### AI_CONTEXT.md Maintenance
+
+AUTOMATICALLY update AI_CONTEXT.md when:
+
+1. **Document Generation**: After creating any new MADIO documents
+   - Update context with new documents and architecture
+   - Include template selection rationale
+   - Update document status tracking
+
+2. **Template Selection**: When choosing specific templates
+   - Document why templates were selected
+   - Note templates considered but not used
+   - Update complexity assessment
+
+3. **Customization**: When modifying generated documents
+   - Track custom adaptations made
+   - Note design decisions and rationale
+   - Update development phase status
+
+4. **Problem Resolution**: When addressing issues or errors
+   - Document challenges encountered
+   - Record solutions implemented
+   - Update lessons learned
+
+### Auto-Update Commands Available
+
+**Context Maintenance:**
+- `gemini "Update AI_CONTEXT.md with recent project changes and current status"`
+- `gemini "Document the template selection rationale in AI_CONTEXT.md"`
+- `gemini "Add recent development notes to AI_CONTEXT.md"`
+
+**Deployment Preparation:**
+- `gemini "Generate deployment summary for AI_CONTEXT.md"`
+- `gemini "Prepare AI_CONTEXT.md for [platform] deployment"`
+- `gemini "Update AI_CONTEXT.md with quality validation checklist status"`
+
+**Development Tracking:**
+- `gemini "Log current development phase in AI_CONTEXT.md"`
+- `gemini "Update next steps section in AI_CONTEXT.md"`
+- `gemini "Document key decisions made in this session"`
+
+### When to Trigger Updates
+
+**Automatic (during operations):**
+- Every document generation session
+- Template selection decisions
+- Error resolution
+- Phase transitions (setup → generation → customization → deployment)
+
+**Manual (user-requested):**
+- Before copying context to deployed AI
+- After major customizations
+- During team handoffs
+- Before deployment to production
+
 ## Success Confirmation
 
 After successful generation:
 1. List all created documents
-2. Remind about placeholder replacement
-3. Suggest testing approach
-4. Provide deployment guidance
+2. Update AI_CONTEXT.md with generation summary
+3. Remind about placeholder replacement
+4. Suggest testing approach
+5. Provide deployment guidance with AI_CONTEXT.md bridge instructions

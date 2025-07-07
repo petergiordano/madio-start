@@ -6,6 +6,27 @@ The MADIO (Modular AI Declarative Instruction and Orchestration) framework enabl
 
 ## 🚀 Getting Started (5 minutes)
 
+### **Prerequisites: Desktop/CLI Access Required**
+
+**⚠️ IMPORTANT: Filesystem Access Required**
+
+MADIO requires filesystem access for true collaboration between your local development environment and AI assistants. You'll need:
+
+**For Gemini Integration:**
+- **Gemini CLI** installed and configured
+- **VS Code** with integrated terminal
+- Command: `gemini "your request"` from project directory
+
+**For Claude Integration:**
+- **Claude Desktop App** (not browser version)
+- **Claude Code CLI** (research preview) in VS Code
+- Local filesystem access for document reading/writing
+
+**For Full Workflow:**
+- **Both** Gemini CLI and Claude Desktop/Code for maximum capability
+- **VS Code** as your IDE with terminal access
+- **Git** for template inheritance and version control
+
 ### **Step 1: Use This Template**
 
 **Create your project repository on GitHub:**
@@ -42,9 +63,13 @@ The MADIO (Modular AI Declarative Instruction and Orchestration) framework enabl
 ```bash
 # Initialize your MADIO project (one-time setup)
 gemini "/madio-setup"
+# OR using Claude Code:
+/madio-setup
 
 # Generate your AI system
 gemini "Create a [describe your AI system] using the MADIO framework"
+# OR using Claude Code:
+/generate-ai-system
 ```
 
 **What `/madio-setup` does:**
@@ -68,6 +93,60 @@ gemini "Create a [describe your AI system] using the MADIO framework"
 7. Customize & Deploy → Ready for production use
 ```
 
+## 🤝 AI Collaboration Architecture
+
+### **Local Development (Filesystem Access)**
+```
+VS Code Project
+├── Gemini CLI → Document generation & setup
+├── Claude Desktop/Code → Refinement & validation  
+└── Your Files → Direct filesystem access
+```
+
+### **Deployment (Browser/App Based)**
+```
+Generated Documents → Platform Deployment
+├── OpenAI CustomGPT → Copy project_system_instructions.md
+├── Google Gemini Gem → Combine documents per .madio config
+└── Claude Project → Upload to project knowledge
+```
+
+### **AI_CONTEXT.md Bridge File**
+
+**Purpose:** Provides seamless context transfer between local CLI tools and deployed AI systems.
+
+**Location:** Auto-generated in project root after `/madio-setup`
+
+**Contains:**
+- Project overview and current status
+- Key decisions and architectural choices  
+- Document hierarchy and relationships
+- Recent changes and development notes
+- Deployment configuration summary
+
+**Usage:**
+```bash
+# Auto-updated by Gemini CLI during development
+gemini "Update AI_CONTEXT.md with recent changes"
+
+# Copy to browser-based AI for continuity
+# Paste into Claude Project knowledge or Gemini Gem context
+```
+
+### **CLI Context Files**
+
+**GEMINI.md** - Gemini CLI specific context and commands
+- MADIO template selection guidance
+- Auto-update triggers for AI_CONTEXT.md
+- Setup and validation workflows
+
+**CLAUDE.md** - Claude Code CLI specific context and workflow
+- Plan Mode integration for complex tasks
+- MADIO document generation patterns
+- Quality validation and deployment checklist
+
+**Both files are copied to user projects** and reference AI_CONTEXT.md as the primary source of project-specific context.
+
 ## 📂 Project Structure
 
 After `/madio-setup`, your project will have:
@@ -78,10 +157,18 @@ your-project/
 │   ├── madio_template_tier1_project_system_instructions.md
 │   ├── madio_template_tier2_orchestrator.md
 │   └── madio_template_tier3_*.md (12 supporting templates)
+├── .claude/                    # Claude Code commands
+│   ├── commands/
+│   │   ├── madio-setup.md
+│   │   ├── generate-ai-system.md
+│   │   └── orient.md
+│   └── settings.local.json
+├── AI_CONTEXT.md               # Bridge file for AI collaboration
+├── CLAUDE.md                   # Claude Code CLI context
+├── GEMINI.md                   # Gemini CLI context
 ├── .madio                      # Project configuration
 ├── madio_core_templates.md     # Template selection guide
 ├── README.md                   # Your project documentation
-├── GEMINI.md                   # Gemini context instructions
 └── [Your generated MADIO documents will go here]
 ```
 
@@ -104,9 +191,26 @@ gemini "Create a customer support bot using MADIO with friendly personality, FAQ
 gemini "Create a data analysis AI using MADIO that can evaluate datasets, generate insights, and create reports"
 ```
 
-### **Let MADIO Choose Templates:**
+**Let MADIO Choose Templates:**
 ```bash
 gemini "I want to create [describe your idea]. Use the MADIO framework to build this, selecting appropriate templates based on complexity."
+```
+
+### **Claude Code Commands Available:**
+
+**Setup & Navigation:**
+- `/madio-setup` - One-time project initialization
+- `/orient` - Check current project status and next steps
+
+**AI System Generation:**
+- `/generate-ai-system` - Interactive MADIO system creation
+- `/generate-ai-system "[description]"` - Direct system generation
+
+**Examples:**
+```bash
+/generate-ai-system "customer support bot with friendly personality"
+/generate-ai-system "content writing AI with SEO optimization" 
+/generate-ai-system "data analysis system with evaluation frameworks"
 ```
 
 ## 📚 MADIO Templates
@@ -142,14 +246,17 @@ After generating and customizing your MADIO documents:
 1. Copy `project_system_instructions.md` content
 2. Paste as GPT instructions
 3. Upload other documents to Knowledge base
+4. Copy `AI_CONTEXT.md` for continuity
 
 ### **Google Gemini Gem**
 1. Combine core documents into Gem instructions
 2. Configure according to your `.madio` settings
+3. Include `AI_CONTEXT.md` in context
 
 ### **Claude Project**
 1. Use `project_system_instructions.md` as project instructions
 2. Upload supporting documents to project knowledge
+3. Add `AI_CONTEXT.md` to project knowledge
 
 ## 🔄 Getting Template Updates
 
@@ -163,6 +270,7 @@ git pull template main
 
 ## ⚡ Advanced Features
 
+- **AI_CONTEXT.md Bridge** - Seamless context transfer between local and deployed AI
 - **Template Inheritance** - Get framework improvements while keeping your changes
 - **Hierarchical Authority** - Clear document precedence prevents conflicts
 - **Quality Gates** - Built-in validation ensures production readiness
@@ -171,9 +279,24 @@ git pull template main
 
 ## 🆘 Troubleshooting
 
+**"Gemini CLI not working"**
+- Install: `pip install google-generativeai` 
+- Configure: Set API key in environment
+- Verify: `gemini --version`
+
+**"Claude Desktop not seeing files"**
+- Use Claude Desktop app (not browser)
+- Ensure filesystem permissions enabled
+- Try Claude Code CLI in VS Code
+
 **"I'm getting git errors"**
 - Ensure you're in YOUR project: `pwd` should show your-project-name
 - Check remotes: `git remote -v` should show YOUR repository
+
+**"AI doesn't understand my project context"**
+- Ensure `AI_CONTEXT.md` is up to date
+- Copy its contents to your browser-based AI
+- Run `gemini "Update AI_CONTEXT.md with current project status"`
 
 **"Gemini doesn't see the templates"**
 - Run `/madio-setup` first
@@ -190,7 +313,8 @@ git pull template main
 - **Platform Agnostic** - Deploy anywhere, maintain once
 - **Scalable Architecture** - From simple bots to complex systems
 - **Template-Driven** - Consistent, professional results every time
+- **AI Collaboration** - Seamless handoff between local development and deployment
 
 ---
 
-**Ready to build? Use Template → Clone → `/madio-setup` → Generate Your AI System**
+**Ready to build? Install CLI Tools → Use Template → Clone → `/madio-setup` → Generate Your AI System**
