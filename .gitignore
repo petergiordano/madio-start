@@ -91,3 +91,6 @@ pip-delete-this-directory.txt
 # Keep Example Files
 !examples/**
 !templates/**
+
+# Keep Test Files for Framework Testing
+!.claude/tests/**

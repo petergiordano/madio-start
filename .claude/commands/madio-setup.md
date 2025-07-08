@@ -190,6 +190,13 @@ echo "🧹 Finalizing MADIO setup..."
 rm -rf "_project_scaffolding/"
 echo "   ✅ Removed _project_scaffolding/ (contents copied to root)"
 
+# Clean up any test files that shouldn't be in user projects
+if [ -d ".claude/tests" ]; then
+    echo "   🧹 Removing framework test files..."
+    rm -rf ".claude/tests"
+    echo "   ✅ Cleaned up test directory"
+fi
+
 # Create setup completion marker
 touch ".madio-setup-complete"
 echo "   ✅ Created setup completion marker"
