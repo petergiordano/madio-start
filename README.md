@@ -12,18 +12,19 @@ The MADIO (Modular AI Declarative Instruction and Orchestration) framework enabl
 
 MADIO requires filesystem access for true collaboration between your local development environment and AI assistants. You'll need:
 
-**For Gemini Integration:**
+**For Initial Setup (Required):**
+- **Claude Code CLI** (research preview) in VS Code
+- **Claude Desktop App** (not browser version)
+- Local filesystem access for document reading/writing
+
+**For Ongoing Development (Recommended):**
 - **Gemini CLI** installed and configured
 - **VS Code** with integrated terminal
 - Command: `gemini "your request"` from project directory
 
-**For Claude Integration:**
-- **Claude Desktop App** (not browser version)
-- **Claude Code CLI** (research preview) in VS Code
-- Local filesystem access for document reading/writing
-
-**For Full Workflow:**
-- **Both** Gemini CLI and Claude Desktop/Code for maximum capability
+**Complete Workflow:**
+- **Claude Code** for initial project setup and MADIO generation
+- **Gemini CLI** for ongoing development, refinement, and content creation
 - **VS Code** as your IDE with terminal access
 - **Git** for template inheritance and version control
 
@@ -58,18 +59,23 @@ MADIO requires filesystem access for true collaboration between your local devel
 
 ### **Step 2: Set Up Your MADIO Project**
 
-**Open terminal in VS Code and run:**
+**Open terminal in VS Code and run (using Claude Code):**
 
 ```bash
 # Initialize your MADIO project (one-time setup)
-gemini "/madio-setup"
-# OR using Claude Code:
 /madio-setup
 
 # Generate your AI system
-gemini "Create a [describe your AI system] using the MADIO framework"
-# OR using Claude Code:
-/generate-ai-system
+/generate-ai-system "[describe your AI system]"
+```
+
+**After setup, switch to Gemini CLI for ongoing development:**
+
+```bash
+# Use Gemini CLI for refinement and iteration
+gemini "Review my generated MADIO documents and suggest improvements"
+gemini "Update the project_system_instructions.md to include [specific feature]"
+gemini "Validate my MADIO project structure and identify any issues"
 ```
 
 **What `/madio-setup` does:**
@@ -98,8 +104,8 @@ gemini "Create a [describe your AI system] using the MADIO framework"
 ### **Local Development (Filesystem Access)**
 ```
 VS Code Project
-├── Gemini CLI → Document generation & setup
-├── Claude Desktop/Code → Refinement & validation  
+├── Claude Code → Initial setup & MADIO generation
+├── Gemini CLI → Ongoing development & refinement  
 └── Your Files → Direct filesystem access
 ```
 
@@ -126,7 +132,10 @@ Generated Documents → Platform Deployment
 
 **Usage:**
 ```bash
-# Auto-updated by Gemini CLI during development
+# Initially created by Claude Code during setup
+/madio-setup  # Creates AI_CONTEXT.md
+
+# Updated by Gemini CLI during development
 gemini "Update AI_CONTEXT.md with recent changes"
 
 # Copy to browser-based AI for continuity
@@ -141,9 +150,9 @@ gemini "Update AI_CONTEXT.md with recent changes"
 - Setup and validation workflows
 
 **CLAUDE.md** - Claude Code CLI specific context and workflow
+- Initial setup and MADIO document generation
 - Plan Mode integration for complex tasks
-- MADIO document generation patterns
-- Quality validation and deployment checklist
+- Handoff procedures to Gemini CLI for ongoing development
 
 **Both files are copied to user projects** and reference AI_CONTEXT.md as the primary source of project-specific context.
 
@@ -180,26 +189,26 @@ your-project/
 
 ## 🏗️ Building Your AI System
 
-### **Quick Start Examples**
+### **Quick Start Examples (Using Claude Code)**
 
 **AI Writing Assistant:**
 ```bash
-gemini "Create an AI writing assistant using MADIO that helps with blog posts, maintains consistent tone, and includes SEO optimization"
+/generate-ai-system "AI writing assistant that helps with blog posts, maintains consistent tone, and includes SEO optimization"
 ```
 
 **Customer Support Bot:**
 ```bash
-gemini "Create a customer support bot using MADIO with friendly personality, FAQ handling, and escalation protocols"
+/generate-ai-system "customer support bot with friendly personality, FAQ handling, and escalation protocols"
 ```
 
 **Data Analysis Assistant:**
 ```bash
-gemini "Create a data analysis AI using MADIO that can evaluate datasets, generate insights, and create reports"
+/generate-ai-system "data analysis AI that can evaluate datasets, generate insights, and create reports"
 ```
 
 **Let MADIO Choose Templates:**
 ```bash
-gemini "I want to create [describe your idea]. Use the MADIO framework to build this, selecting appropriate templates based on complexity."
+/generate-ai-system "[describe your idea] - select appropriate MADIO templates based on complexity"
 ```
 
 ### **Claude Code Commands Available:**
@@ -307,15 +316,16 @@ git pull template main
 
 ## 🆘 Troubleshooting
 
+**"Claude Code not working"**
+- Ensure Claude Desktop app is installed (not browser version)
+- Enable filesystem permissions in Claude Desktop
+- Install Claude Code CLI in VS Code terminal
+- Try restarting VS Code if commands not recognized
+
 **"Gemini CLI not working"**
 - Install: `pip install google-generativeai` 
 - Configure: Set API key in environment
 - Verify: `gemini --version`
-
-**"Claude Desktop not seeing files"**
-- Use Claude Desktop app (not browser)
-- Ensure filesystem permissions enabled
-- Try Claude Code CLI in VS Code
 
 **"I'm getting git errors"**
 - Ensure you're in YOUR project: `pwd` should show your-project-name
@@ -326,13 +336,15 @@ git pull template main
 - Copy its contents to your browser-based AI
 - Run `gemini "Update AI_CONTEXT.md with current project status"`
 
-**"Gemini doesn't see the templates"**
-- Run `/madio-setup` first
-- Reference: "Use the MADIO templates in _template_library/"
+**"Commands not working after setup"**
+- Ensure you used Claude Code for initial setup: `/madio-setup`
+- For ongoing development, switch to Gemini CLI
+- Reference generated documents: "Use the MADIO documents in my project"
 
 **"Which templates should I use?"**
+- Let Claude Code decide during `/generate-ai-system`
 - Check the Template Selection Matrix in `madio_core_templates.md`
-- Or let Gemini decide based on your requirements
+- Use Gemini CLI for refinements: "Suggest additional templates for my use case"
 
 ## 📈 Why MADIO Works
 
@@ -345,4 +357,4 @@ git pull template main
 
 ---
 
-**Ready to build? Install CLI Tools → Use Template → Clone → `/madio-setup` → Generate Your AI System**
+**Ready to build? Install Claude Code → Use Template → Clone → `/madio-setup` → `/generate-ai-system` → Switch to Gemini CLI**

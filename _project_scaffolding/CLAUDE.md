@@ -1,9 +1,17 @@
 # Claude Code Context - MADIO Framework
 
+**Role:** Initial Setup & MADIO Document Generation
+**Handoff:** After setup, development continues with Gemini CLI
+
 **Primary Context Source:** Read the complete project context from `AI_CONTEXT.md` - it contains all MADIO project-specific guidelines, template selection rationale, and development context needed for this project.
 
 ## MADIO Framework Overview
 You are working within a MADIO (Modular AI Declarative Instruction and Orchestration) project that uses structured templates to create production-ready AI systems.
+
+**Claude Code's Responsibilities:**
+1. **Initial project setup** via `/madio-setup` command
+2. **MADIO document generation** via `/generate-ai-system` command
+3. **Handoff preparation** by updating AI_CONTEXT.md for Gemini CLI
 
 ## Quick Reference
 - **Always read AI_CONTEXT.md completely before starting any work**
@@ -40,11 +48,12 @@ claude "Create project_system_instructions.md using the MADIO Tier 1 template"
 claude "Generate orchestrator.md that references the Tier 3 documents"
 ```
 
-### Context Updates
+### Context Updates (Prepare for Gemini CLI Handoff)
 ```bash
 # Update bridge file with current status
 claude "Update AI_CONTEXT.md with the new document architecture and template selections"
 claude "Document the rationale for choosing [specific templates] in AI_CONTEXT.md"
+claude "Prepare AI_CONTEXT.md for Gemini CLI handoff with current project status"
 ```
 
 ### Validation
@@ -61,10 +70,15 @@ claude "Review all placeholders and ensure project-specific content replacement"
 - **Transfer:** Development notes and architectural decisions from browser-based Claude
 - **Continuity:** Maintain awareness of previous sessions through AI_CONTEXT.md
 
+### To Gemini CLI (Ongoing Development)
+- **Update AI_CONTEXT.md:** After completing initial MADIO document generation
+- **Document Setup Decisions:** Record template selection rationale and initial customizations
+- **Handoff Status:** Update project phase to "Ready for Gemini CLI Development"
+
 ### To Chat AI (Browser Claude Project)
-- **Update AI_CONTEXT.md:** After completing MADIO document generation or modifications
-- **Document Decisions:** Record template selection rationale and customizations made
-- **Status Updates:** Update project phase and next steps for browser AI awareness
+- **Backup Context:** Provide AI_CONTEXT.md to browser-based Claude for strategic oversight
+- **Status Reports:** Share major milestones and architectural decisions
+- **Quality Assurance:** Enable browser Claude to validate overall system design
 
 ## MADIO Template Reference
 

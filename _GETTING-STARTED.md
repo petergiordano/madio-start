@@ -17,14 +17,15 @@ Before starting, verify:
 - [ ] You're in YOUR project directory: `pwd` shows your-project-name
 - [ ] Git is configured: `git remote -v` shows YOUR repository
 - [ ] VS Code is open with YOUR project
-- [ ] You have Gemini CLI installed
+- [ ] Claude Code CLI is installed and working
+- [ ] Gemini CLI installed for ongoing development (optional for initial setup)
 
 ## 🏗️ Step 1: Initialize Your MADIO Project
 
-**Run this command in your VS Code terminal:**
+**Run this command in your VS Code terminal (using Claude Code):**
 
 ```bash
-gemini "/madio-setup"
+/madio-setup
 ```
 
 This command will:
@@ -37,24 +38,35 @@ This command will:
 
 ## 🤖 Step 2: Generate Your AI System
 
+**Use Claude Code for initial generation:**
+
 ### Option A: Describe What You Want
 ```bash
-gemini "Using MADIO templates, create a customer support bot that helps users with technical issues, has a friendly personality, and can escalate to humans when needed"
+/generate-ai-system "customer support bot that helps users with technical issues, has a friendly personality, and can escalate to humans when needed"
 ```
 
 ### Option B: Let MADIO Decide Everything
 ```bash
-gemini "I want to create [describe your idea]. Use the MADIO framework to build this. Determine which templates are needed based on my requirements."
+/generate-ai-system "[describe your idea] - select appropriate MADIO templates based on complexity"
 ```
 
-### Option C: Specify Exact Templates
+### Option C: Be More Specific
 ```bash
-gemini "Create a MADIO project using: project_system_instructions, orchestrator, character_voice_authority, and content_operations templates. This is for a [describe purpose]"
+/generate-ai-system "[describe purpose] using character_voice_authority, content_operations, and methodology_framework templates"
+```
+
+**After generation, switch to Gemini CLI for refinement:**
+
+```bash
+# Use Gemini CLI for ongoing development
+gemini "Review my generated MADIO documents and suggest improvements"
+gemini "Add SEO optimization capabilities to my content writer AI"
+gemini "Validate my MADIO project structure and check for any issues"
 ```
 
 ## 📝 Step 3: Review Generated Files
 
-Gemini will create several `.md` files in your project:
+Claude Code will create several `.md` files in your project:
 
 **Always Generated:**
 - `project_system_instructions.md` - Your AI's core identity
@@ -132,7 +144,7 @@ gemini "Create test cases for my MADIO AI system based on the generated document
 
 ### Making Changes:
 1. **Update specific documents** - Modify individual components
-2. **Regenerate sections** - Use Gemini to revise parts
+2. **Regenerate sections** - Use Gemini CLI to revise parts
 3. **Add new capabilities** - Include additional Tier 3 templates
 
 ### Getting Template Updates:
@@ -164,36 +176,41 @@ your-ai-project/
 
 ### Beginner: Simple Assistant
 ```bash
-gemini "Create a helpful AI assistant using MADIO that answers questions politely and accurately"
+# Use Claude Code for setup
+/generate-ai-system "helpful AI assistant that answers questions politely and accurately"
 ```
 
 ### Intermediate: Content Creator
 ```bash
-gemini "Create a blog writing AI using MADIO with SEO optimization, tone consistency, and topic research capabilities"
+# Use Claude Code for setup
+/generate-ai-system "blog writing AI with SEO optimization, tone consistency, and topic research capabilities"
 ```
 
 ### Advanced: Analysis System
 ```bash
-gemini "Create a business analysis AI using MADIO with methodology framework, evaluation rubrics, and strategic recommendations"
+# Use Claude Code for setup
+/generate-ai-system "business analysis AI with methodology framework, evaluation rubrics, and strategic recommendations"
 ```
 
 ## 🐛 Common Issues & Solutions
 
-### "Gemini doesn't understand MADIO"
+### "Claude Code commands not working"
 ```bash
-# Be explicit about templates
-gemini "Use the MADIO templates in _template_library/ to create..."
+# Ensure Claude Code is installed and working
+# Try restarting VS Code if commands not recognized
+/madio-setup  # Should work if Claude Code is properly installed
 ```
 
 ### "Generated files seem incomplete"
 ```bash
-# Request completion
-gemini "Complete the [document_name] using the appropriate MADIO template from _template_library/"
+# Use Gemini CLI for completion after initial setup
+gemini "Complete the [document_name] using the MADIO framework"
+gemini "Review my MADIO project and identify any missing components"
 ```
 
 ### "Not sure about document hierarchy"
 ```bash
-# Ask for validation
+# Use Gemini CLI for validation
 gemini "Validate the document hierarchy in my MADIO project and identify any issues"
 ```
 

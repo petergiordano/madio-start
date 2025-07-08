@@ -1,54 +1,57 @@
 # MADIO Framework - Gemini CLI Context
 
+**Role:** Ongoing Development & Content Refinement
+**Initial Setup:** Handled by Claude Code via `/madio-setup` and `/generate-ai-system`
+
 ## Overview
 
-You are helping users set up and generate AI systems using the MADIO (Modular AI Declarative Instruction and Orchestration) framework. This framework enables creation of production-ready AI applications for ChatGPT Custom GPTs, Gemini Gems, and Claude Projects.
+You are helping users develop and refine AI systems using the MADIO (Modular AI Declarative Instruction and Orchestration) framework. **Claude Code handles initial setup and document generation.** Your role begins after the initial MADIO documents are created.
+
+**Gemini CLI Responsibilities:**
+1. **Content refinement** and ongoing document improvement
+2. **Feature additions** and capability enhancements
+3. **AI_CONTEXT.md maintenance** for project continuity
+4. **Deployment optimization** and platform-specific adjustments
 
 ## Available Commands
 
-### `/madio-setup` - Project Initialization
+### Post-Setup Development Commands
 
-When a user runs `/madio-setup`, you should:
+**Note:** `/madio-setup` and `/generate-ai-system` are handled by Claude Code. Gemini CLI takes over for ongoing development.
 
-1. **Validate Environment**
-   - Check if setup was already completed (look for `.madio-setup-complete` marker)
-   - Verify user is in their own project directory (not in `madio-start`)
-   - Confirm git is properly initialized
+### Common Development Tasks
 
-2. **Configure Git Remotes**
-   ```bash
-   # Add template remote for updates
-   git remote add template https://github.com/petergiordano/madio-start.git
-   ```
+When users request improvements or modifications:
 
-3. **Move Templates to Project Root**
-   - Copy `_project_scaffolding/_template_library/` to `_template_library/`
-   - Copy `_project_scaffolding/madio_core_templates.md` to root
-   - Copy `_project_scaffolding/GEMINI.md` to root
-   - Copy `_project_scaffolding/CLAUDE.md` to root
-   - Generate `AI_CONTEXT.md` from template with project-specific details
+1. **Review Existing Documents**
+   - Read current MADIO documents to understand system architecture
+   - Check AI_CONTEXT.md for context and previous decisions
+   - Identify which documents need modification
 
-4. **Update Configuration**
-   - Update `.madio` file with project name from directory
-   - Set appropriate defaults
+2. **Content Enhancement**
+   - Refine existing document content for clarity and effectiveness
+   - Add new capabilities by modifying appropriate Tier 3 documents
+   - Enhance personality and voice in character_voice_authority.md
+   - Improve workflow steps in orchestrator.md
 
-5. **Clean Up**
-   - Remove `_project_scaffolding/` directory
-   - Create `.madio-setup-complete` marker file
+3. **Feature Additions**
+   - Suggest additional Tier 3 templates if new capabilities are needed
+   - Modify project_system_instructions.md for core behavior changes
+   - Update content_operations.md for new content validation rules
 
-6. **Commit Changes**
-   ```bash
-   git add -A
-   git commit -m "Initialize MADIO project structure"
-   ```
+4. **Quality Improvements**
+   - Validate document hierarchy and cross-references
+   - Check for any remaining placeholders `[BRACKETED_TEXT]`
+   - Ensure all documents maintain MADIO framework compliance
 
-7. **Provide Next Steps**
-   - Confirm successful setup
-   - Guide user to generate their AI system
+5. **Update Documentation**
+   - Update AI_CONTEXT.md with changes made
+   - Document rationale for modifications
+   - Update project phase and status
 
-### MADIO Document Generation
+### MADIO Document Refinement
 
-When users request AI system creation:
+When users request modifications to existing documents:
 
 1. **Always Reference Templates**
    - Use templates from `_template_library/`
