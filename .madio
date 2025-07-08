@@ -1,5 +1,4 @@
 {
-  "$schema": "https://madio-framework.com/schemas/config.json",
   "version": "1.0.0",
   "project": {
     "name": "[PROJECT_NAME]",

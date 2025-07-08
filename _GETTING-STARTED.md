@@ -81,7 +81,7 @@ Common placeholders:
 - `[SPECIFIC_REQUIREMENTS]` - Your unique needs
 
 ### 2. Update .madio Configuration
-Edit `.madio` file:
+Edit `.madio` file (see `docs/MADIO_CONFIGURATION.md` for complete documentation):
 - Set your project name
 - Confirm complexity level
 - List your Tier 3 documents

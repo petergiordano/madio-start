@@ -172,7 +172,7 @@ your-project/
 ├── AI_CONTEXT.md               # Bridge file for AI collaboration
 ├── CLAUDE.md                   # Claude Code CLI context
 ├── GEMINI.md                   # Gemini CLI context
-├── .madio                      # Project configuration
+├── .madio                      # Project configuration (see docs/MADIO_CONFIGURATION.md)
 ├── madio_core_templates.md     # Template selection guide
 ├── README.md                   # Your project documentation
 └── [Your generated MADIO documents will go here]
