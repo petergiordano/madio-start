@@ -57,6 +57,13 @@ MADIO requires filesystem access for true collaboration between your local devel
    - Save it in your project root directory
    - When prompted, choose "Open Workspace"
 
+5. **Import Claude Desktop MCP Servers:**
+   - Do this on the terminal, NOT within Claude Code!
+```bash
+claude mcp add-from-claude-desktop
+```
+
+
 ### **Step 2: Set Up Your MADIO Project**
 
 **Open terminal in VS Code and run (using Claude Code):**
