@@ -163,6 +163,12 @@ your-project/
 │   │   ├── generate-ai-system.md
 │   │   └── orient.md
 │   └── settings.local.json
+├── setup-ai-companion/         # AI companion setup guides
+│   ├── SETUP_INSTRUCTIONS.md
+│   ├── CLAUDE_PROJECT_INSTRUCTIONS.md
+│   ├── GEMINI_GEM_INSTRUCTIONS.md
+│   ├── CHATGPT_INSTRUCTIONS.md
+│   └── WORKFLOW_REFERENCE.md
 ├── AI_CONTEXT.md               # Bridge file for AI collaboration
 ├── CLAUDE.md                   # Claude Code CLI context
 ├── GEMINI.md                   # Gemini CLI context
@@ -257,6 +263,28 @@ After generating and customizing your MADIO documents:
 1. Use `project_system_instructions.md` as project instructions
 2. Upload supporting documents to project knowledge
 3. Add `AI_CONTEXT.md` to project knowledge
+
+## 🤝 Set Up Your AI Companion
+
+Enhance your MADIO development with a strategic AI companion that works alongside your local CLI tools:
+
+### **Companion Options:**
+- **Claude Project** (Recommended) - Strategic analysis and deployment guidance
+- **Google Gemini Gem** - Native integration with Gemini CLI workflow  
+- **ChatGPT Custom GPT** - Interactive system design and planning
+
+### **Three-Way Collaboration:**
+```
+Local CLI (Development) ↔ AI_CONTEXT.md Bridge ↔ Browser AI (Strategy)
+```
+
+**Setup Instructions:** See `setup-ai-companion/` directory for complete setup guides for each platform.
+
+**Benefits:**
+- Strategic template selection guidance
+- Quality assurance and architecture review
+- Platform-specific deployment optimization
+- Context continuity across development sessions
 
 ## 🔄 Getting Template Updates
 
