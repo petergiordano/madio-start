@@ -1,6 +1,13 @@
 # To Do.md
 
 - [x] create instructions for the user to set up their companion AI Chat Assistant (Claude or Gemini or ChatGPT), e.g. /Users/petergiordano/Documents/GitHub/ai-new-project-template/setup-claude-chat-ai
+- [ ] **Google Cloud OAuth App Production Setup** - Currently in testing mode, limiting to test users only
+  - [ ] Review and complete OAuth consent screen for production
+  - [ ] Add privacy policy and terms of service if required
+  - [ ] Submit app for verification if needed for public use
+  - [ ] Add additional users to test user list as needed
+  - [ ] Consider publishing app for broader MADIO community access
+  - **Context**: Google Docs sync currently requires users to be added as test users. For wider MADIO adoption, may need production OAuth approval.
 
 ## Completed
 

@@ -61,6 +61,11 @@ credentials.json
 *.key
 *.pem
 
+# Google OAuth Files
+.claude/scripts/credentials.json
+.claude/scripts/token.pickle
+.claude/scripts/venv/
+
 # User-Specific Configuration
 .madio/user-config.json
 .madio/workspace-settings.json

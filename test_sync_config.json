@@ -1,0 +1,8 @@
+{
+  "_comment": "Test configuration for MADIO Google Docs sync",
+  "_note": "Replace the PLACEHOLDER_DOC_ID values with actual Google Doc IDs",
+  
+  "test_project_system_instructions.md": "PLACEHOLDER_DOC_ID_1",
+  "test_orchestrator.md": "PLACEHOLDER_DOC_ID_2",
+  "test_methodology_framework.md": "PLACEHOLDER_DOC_ID_3"
+}
