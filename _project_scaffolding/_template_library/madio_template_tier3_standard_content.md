@@ -1,6 +1,6 @@
 ## TIER 3 TEMPLATE: STANDARD CONTENT TEMPLATE
 
-**File:** `madio_template_tier3_standard.md`
+**File:** `madio_template_tier3_standard_content.md`
 
 
 # [PROJECT_NAME]: Standard [CONTENT_TYPE] Template

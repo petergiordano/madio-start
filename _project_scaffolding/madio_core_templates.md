@@ -26,7 +26,7 @@ _template_library/
 ├── madio_template_tier3_methodology_framework.md
 ├── madio_template_tier3_research_protocols.md
 ├── madio_template_tier3_rubrics_evaluation.md
-├── madio_template_tier3_standard.md
+├── madio_template_tier3_standard_content.md
 ├── madio_template_tier3_strategic_framework.md
 ├── madio_template_tier3_visual_asset_generation.md
 └── madio_template_tier3_visual_design_standards.md
@@ -77,7 +77,7 @@ _template_library/
 - **Reports To:** orchestrator
 
 ##### Standard Content Template
-**Template:** `madio_template_tier3_standard.md`
+**Template:** `madio_template_tier3_standard_content.md`
 - **Purpose:** Standardized output format for consistent content generation
 - **Use When:** Project produces templated content (episodes, reports, articles)
 - **Reports To:** orchestrator
