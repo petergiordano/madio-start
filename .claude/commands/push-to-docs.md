@@ -6,7 +6,8 @@ Sync local markdown files to Google Docs for Claude Project integration.
 
 ### Sync all configured files
 ```bash
-/push-to-docs
+cd .claude/scripts
+python3 sync_to_docs.py --config sync_config.json
 ```
 
 ### Sync specific file
@@ -35,12 +36,12 @@ pip install -r requirements.txt
 5. Download `credentials.json` to `.claude/scripts/`
 
 ### 3. Configure sync mapping
-Create `sync_config.json` in project root:
+Create `sync_config.json` in `.claude/scripts/`:
 ```json
 {
-  "project_system_instructions.md": "1ABC...xyz",
-  "orchestrator.md": "1DEF...xyz",
-  "methodology_framework.md": "1GHI...xyz"
+  "../../project_system_instructions.md": "1ABC...xyz",
+  "../../orchestrator.md": "1DEF...xyz",
+  "../../methodology_framework.md": "1GHI...xyz"
 }
 ```
 
