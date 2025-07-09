@@ -1,23 +1,28 @@
 {
   "_comment": "MADIO Google Docs sync configuration template",
   "_setup_instructions": [
-    "1. Create Google Docs for each MADIO file you want to sync",
-    "2. Share each document with yourself (ensure edit access)", 
-    "3. Copy document IDs from URLs (the long string after /d/)",
-    "4. Replace REPLACE_WITH_GOOGLE_DOC_ID with actual IDs",
-    "5. File paths are relative to script directory (use ../../filename.md for project root files)"
+    "1. Use CREATE_NEW_DOCUMENT placeholder for auto-creation",
+    "2. File paths are relative to script directory (use ../../filename.md for project root files)",
+    "3. Run sync script to automatically create Google Docs",
+    "4. Configuration file will be updated with new Google Doc IDs",
+    "5. Legacy: Use actual Google Doc IDs if you have existing docs"
   ],
+  "_google_drive_folder": {
+    "name": "",
+    "id": "",
+    "description": "Google Drive folder for documents. Leave name empty for root folder."
+  },
   
-  "../../project_system_instructions.md": "REPLACE_WITH_GOOGLE_DOC_ID",
-  "../../orchestrator.md": "REPLACE_WITH_GOOGLE_DOC_ID", 
-  "../../methodology_framework.md": "REPLACE_WITH_GOOGLE_DOC_ID",
-  "../../rubrics_evaluation.md": "REPLACE_WITH_GOOGLE_DOC_ID",
-  "../../character_voice_authority.md": "REPLACE_WITH_GOOGLE_DOC_ID",
-  "../../content_operations.md": "REPLACE_WITH_GOOGLE_DOC_ID",
-  "../../strategic_framework.md": "REPLACE_WITH_GOOGLE_DOC_ID",
-  "../../implementation_roadmap.md": "REPLACE_WITH_GOOGLE_DOC_ID",
-  "../../research_protocols.md": "REPLACE_WITH_GOOGLE_DOC_ID",
-  "../../visual_design_standards.md": "REPLACE_WITH_GOOGLE_DOC_ID",
-  "../../visual_asset_generation.md": "REPLACE_WITH_GOOGLE_DOC_ID", 
-  "../../document_reference_map.md": "REPLACE_WITH_GOOGLE_DOC_ID"
+  "../../project_system_instructions.md": "CREATE_NEW_DOCUMENT",
+  "../../orchestrator.md": "CREATE_NEW_DOCUMENT", 
+  "../../methodology_framework.md": "CREATE_NEW_DOCUMENT",
+  "../../rubrics_evaluation.md": "CREATE_NEW_DOCUMENT",
+  "../../character_voice_authority.md": "CREATE_NEW_DOCUMENT",
+  "../../content_operations.md": "CREATE_NEW_DOCUMENT",
+  "../../strategic_framework.md": "CREATE_NEW_DOCUMENT",
+  "../../implementation_roadmap.md": "CREATE_NEW_DOCUMENT",
+  "../../research_protocols.md": "CREATE_NEW_DOCUMENT",
+  "../../visual_design_standards.md": "CREATE_NEW_DOCUMENT",
+  "../../visual_asset_generation.md": "CREATE_NEW_DOCUMENT", 
+  "../../document_reference_map.md": "CREATE_NEW_DOCUMENT"
 }
