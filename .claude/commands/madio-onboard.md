@@ -408,6 +408,17 @@ for file in "${ESSENTIAL_FILES[@]}"; do
     fi
 done
 
+# Project configuration directory setup
+echo ""
+echo "📁 Project Configuration Setup"
+echo "------------------------------"
+echo ""
+
+# Create project-config directory for storing project-specific records
+mkdir -p .claude/project-config
+echo "✅ Created .claude/project-config/ directory"
+echo "   This will store project-specific configuration records"
+
 # Core setup completion
 CORE_END_TIME=$(date +%s)
 CORE_DURATION=$((CORE_END_TIME - CORE_START_TIME))

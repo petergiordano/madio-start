@@ -194,6 +194,31 @@ else
     echo "   ℹ️  No VS Code workspace file (not required but recommended)"
     ((RECOMMENDATIONS++))
 fi
+
+# Check for project-config directory
+if [ -d ".claude/project-config" ]; then
+    echo "   ✅ Project configuration directory present"
+    
+    # Check for Google Cloud config
+    if [ -f ".claude/project-config/google-cloud-config.md" ]; then
+        echo "   ✅ Google Cloud configuration record found"
+        
+        # Check if it's been populated
+        if grep -q "\[PROJECT_NAME\]" ".claude/project-config/google-cloud-config.md" 2>/dev/null; then
+            echo "   ⚠️  Google Cloud config contains placeholders"
+            echo "      Run /madio-enable-sync to populate configuration"
+            ((WARNINGS_FOUND++))
+        else
+            echo "   ✅ Google Cloud configuration appears populated"
+        fi
+    else
+        echo "   ℹ️  Google Cloud configuration not found (OK if sync not enabled)"
+    fi
+else
+    echo "   ⚠️  Project configuration directory missing"
+    echo "      Run /madio-onboard to create proper project structure"
+    ((WARNINGS_FOUND++))
+fi
 ```
 
 ### Phase 3: MADIO Document Validation
