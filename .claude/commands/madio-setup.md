@@ -43,16 +43,62 @@ fi
 echo "✅ Fresh MADIO template detected - proceeding with setup..."
 ```
 
-### Phase 2: Git Configuration
+### Phase 2: Git Configuration and Validation
 
-Configure git remotes properly for MADIO template updates:
+Configure git remotes properly for MADIO template updates and validate repository setup:
 
 ```bash
 echo "🔧 Configuring git for MADIO template updates..."
 
-# Check current git status
-CURRENT_REMOTE=$(git remote get-url origin 2>/dev/null || echo "none")
-echo "   📡 Current origin: $CURRENT_REMOTE"
+# Check if we're in a git repository
+if [ ! -d ".git" ]; then
+    echo "❌ Not in a git repository."
+    echo "   Please ensure you've cloned your repository from GitHub."
+    echo "   If you used the template, clone YOUR repository, not madio-start."
+    exit 1
+fi
+
+# Get the current remote URL
+ORIGIN_URL=$(git remote get-url origin 2>/dev/null)
+if [ -z "$ORIGIN_URL" ]; then
+    echo "❌ No origin remote found."
+    echo "   Please ensure you've cloned your repository from GitHub."
+    exit 1
+fi
+
+echo "   📡 Current origin: $ORIGIN_URL"
+
+# Check if the remote URL suggests they're using the template repo directly
+if echo "$ORIGIN_URL" | grep -q "madio-start"; then
+    echo "⚠️  WARNING: You appear to be using the madio-start template repository directly."
+    echo "   This is not recommended. You should:"
+    echo "   1. Use the GitHub template to create YOUR repository"
+    echo "   2. Clone YOUR repository instead of madio-start"
+    echo ""
+    echo "   Continue anyway? (y/N)"
+    read -r confirm
+    if [ "$confirm" != "y" ] && [ "$confirm" != "Y" ]; then
+        echo "   Setup cancelled. Please create your own repository from the template."
+        exit 1
+    fi
+fi
+
+# Extract project name from remote URL for later use
+PROJECT_NAME=$(echo "$ORIGIN_URL" | sed -E 's/.*[\/:]([^\/]+)\/([^\/]+)\.git$/\2/' | sed 's/\.git$//')
+if [ -z "$PROJECT_NAME" ]; then
+    PROJECT_NAME=$(basename "$PWD")
+fi
+
+echo "   ✅ Git repository validated"
+echo "   📦 Project: $PROJECT_NAME"
+
+# Test connectivity to origin
+echo "   🌐 Testing remote connectivity..."
+if git ls-remote origin >/dev/null 2>&1; then
+    echo "      ✅ Origin remote accessible"
+else
+    echo "      ⚠️  Origin remote not accessible (check network/credentials)"
+fi
 
 # Add MADIO template remote (if not already exists)
 if ! git remote get-url template 2>/dev/null; then
@@ -63,14 +109,24 @@ else
     echo "   ✅ MADIO template remote already configured"
 fi
 
+# Test template remote connectivity
+if git ls-remote template >/dev/null 2>&1; then
+    echo "      ✅ Template remote accessible"
+else
+    echo "      ⚠️  Template remote not accessible (check network)"
+fi
+
 # Verify remote configuration
 echo "   📋 Git remote configuration:"
 git remote -v | sed 's/^/      /'
 
 # Fetch template to enable template updates
 echo "   ⬇️  Fetching template for future updates..."
-git fetch template --quiet
-echo "   ✅ MADIO template update capability configured"
+if git fetch template --quiet; then
+    echo "   ✅ MADIO template update capability configured"
+else
+    echo "   ⚠️  Failed to fetch template (check network connectivity)"
+fi
 ```
 
 ### Phase 3: MADIO Project Structure Setup
@@ -179,7 +235,113 @@ else
 fi
 ```
 
-### Phase 6: Clean Up and Finalize
+### Phase 6: Generate Project-Specific README
+
+Create a customized README.md for this specific project:
+
+```bash
+echo "📝 Generating project-specific README..."
+
+# Backup current README if it exists
+if [ -f "README.md" ]; then
+    cp "README.md" "README.md.template-backup"
+    echo "   📋 Backed up template README to README.md.template-backup"
+fi
+
+# Generate project-specific README
+cat > "README.md" << EOF
+# $PROJECT_NAME
+
+### **Your AI System Built with MADIO Framework**
+
+This project uses the MADIO (Modular AI Declarative Instruction and Orchestration) framework to create a production-ready AI system for ChatGPT Custom GPTs, Gemini Gems, or Claude Projects.
+
+## 🚀 Project Status
+
+**Setup Complete** ✅ - Ready for AI system generation
+
+## 📁 Project Structure
+
+\`\`\`
+$PROJECT_NAME/
+├── _template_library/          # 14 MADIO templates for AI system creation
+├── madio_core_templates.md     # Template selection guide
+├── CLAUDE.md                   # Claude Code CLI context
+├── GEMINI.md                   # Gemini CLI context  
+├── AI_CONTEXT.md              # Project bridge file
+├── GETTING-STARTED.md         # Detailed setup guide
+├── .vscode/                   # VS Code workspace configuration
+├── .claude/                   # Claude Code commands and scripts
+└── setup-ai-companion/       # AI companion setup instructions
+\`\`\`
+
+## 🎯 Next Steps
+
+### 1. Generate Your AI System
+\`\`\`bash
+# Using Claude Code CLI
+/generate-ai-system "describe your AI system here"
+
+# Examples:
+/generate-ai-system "customer support bot with friendly personality"
+/generate-ai-system "content writing AI with SEO optimization"
+/generate-ai-system "data analysis AI with evaluation frameworks"
+\`\`\`
+
+### 2. Customize and Deploy
+- Review generated documents in your project
+- Customize for your specific use case
+- Deploy to your chosen platform (ChatGPT/Gemini/Claude)
+
+### 3. Ongoing Development
+\`\`\`bash
+# Switch to Gemini CLI for refinement
+gemini "review my MADIO documents and suggest improvements"
+\`\`\`
+
+## 🔧 Available Commands
+
+| Command | Description |
+|---------|-------------|
+| \`/generate-ai-system\` | Generate complete AI system from templates |
+| \`/madio-doctor\` | Diagnose project issues |
+| \`/madio-enable-sync\` | Set up Google Docs synchronization |
+| \`/push-to-docs\` | Sync documents to Google Docs |
+
+## 📚 Documentation
+
+- **[GETTING-STARTED.md](GETTING-STARTED.md)** - Complete setup and usage guide
+- **[madio_core_templates.md](madio_core_templates.md)** - Template selection guide
+- **[setup-ai-companion/](setup-ai-companion/)** - AI companion integration guides
+
+## 🌐 Template Updates
+
+This project maintains connection to the MADIO template for updates:
+
+\`\`\`bash
+# Get latest template improvements
+git pull template main
+\`\`\`
+
+## 🔗 Links
+
+- **Template Repository**: [madio-start](https://github.com/petergiordano/madio-start)
+- **Framework Documentation**: See template repository for full documentation
+- **Created**: $CURRENT_DATE
+- **Origin**: $ORIGIN_URL
+
+---
+
+*Generated by MADIO Framework - Modular AI Declarative Instruction and Orchestration*
+EOF
+
+echo "   ✅ Generated project-specific README.md"
+echo "      Project: $PROJECT_NAME"
+echo "      Created: $CURRENT_DATE"
+echo "      Origin: $ORIGIN_URL"
+```
+
+### Phase 7: Clean Up and Finalize
 
 Clean up scaffolding and create setup completion marker:
 
@@ -222,7 +384,54 @@ Template: $(git remote get-url template)"
 echo "   ✅ MADIO project setup committed to git history"
 ```
 
-### Phase 7: Success Message and Next Steps
+### Phase 8: VS Code Configuration and Getting Started
+
+```bash
+echo "🔧 Setting up VS Code workspace..."
+
+# Check if VS Code is available
+if command -v code >/dev/null 2>&1; then
+    echo "   ✅ VS Code detected"
+    
+    # Check if extensions are available for installation
+    if [ -f ".vscode/extensions.json" ]; then
+        echo "   📦 VS Code extensions configured:"
+        echo "      • Python support (ms-python.python)"
+        echo "      • Markdown editing (davidanson.vscode-markdownlint)"
+        echo "      • Git integration (eamodio.gitlens)"
+        echo "      • Enhanced markdown preview (shd101wyy.markdown-preview-enhanced)"
+        echo ""
+        echo "   💡 To install recommended extensions:"
+        echo "      1. Open VS Code Extensions panel (Ctrl+Shift+X / Cmd+Shift+X)"
+        echo "      2. Click 'Install Workspace Recommended Extensions'"
+        echo "      3. Or run: code --install-extension <extension-id>"
+    else
+        echo "   ❌ VS Code extensions configuration not found"
+    fi
+    
+    # Check if workspace settings are applied
+    if [ -f ".vscode/settings.json" ]; then
+        echo "   ⚙️  VS Code workspace settings configured"
+    else
+        echo "   ❌ VS Code workspace settings not found"
+    fi
+else
+    echo "   ⚠️  VS Code not detected in PATH"
+    echo "      Install VS Code and add 'code' command to PATH for full MADIO experience"
+fi
+
+# Move getting started file to prominent location
+if [ -f "GETTING-STARTED.md" ]; then
+    echo "   📖 Getting started guide is ready at: GETTING-STARTED.md"
+    echo "      Open this file after setup for detailed next steps"
+else
+    echo "   ❌ Getting started guide not found"
+fi
+
+echo ""
+```
+
+### Phase 9: Success Message and Next Steps
 
 ```bash
 echo ""
@@ -235,6 +444,9 @@ echo "   ✅ GEMINI.md (Gemini CLI context)"
 echo "   ✅ CLAUDE.md (Claude Code CLI context)"
 echo "   ✅ AI_CONTEXT.md (project bridge file)"
 echo "   ✅ .madio (project configuration)"
+echo "   ✅ .vscode/ (VS Code workspace configuration)"
+echo "   ✅ GETTING-STARTED.md (detailed next steps guide)"
+echo "   ✅ README.md (project-specific documentation)"
 echo "   🔗 Git remotes configured (origin + template)"
 echo ""
 echo "🔄 Template Update Capability:"
@@ -251,6 +463,9 @@ echo "   4. 🔄 Generate AI system using MADIO templates"
 echo "   5. 🔄 Customize & Deploy to production platforms"
 echo ""
 echo "💡 Next Steps - Generate Your AI System:"
+echo ""
+echo "   📖 FIRST: Read GETTING-STARTED.md for detailed guidance"
+echo "   📖 File: $(pwd)/GETTING-STARTED.md"
 echo ""
 echo "   🎯 Using Claude Code (for initial generation):"
 echo "   /generate-ai-system \"[describe your AI system]\""

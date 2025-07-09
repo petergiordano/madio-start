@@ -233,7 +233,7 @@ After completing this guide:
 
 1. **Delete this file** - You don't need it anymore!
    ```bash
-   rm _GETTING-STARTED.md
+   rm GETTING-STARTED.md
    ```
 
 2. **Update README.md** - Add your project-specific documentation

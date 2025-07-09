@@ -1,0 +1,17 @@
+{
+  "recommendations": [
+    "ms-python.python",
+    "ms-python.flake8",
+    "davidanson.vscode-markdownlint",
+    "shd101wyy.markdown-preview-enhanced",
+    "yzhang.markdown-all-in-one",
+    "ms-vscode.vscode-json",
+    "eamodio.gitlens",
+    "github.vscode-pull-request-github",
+    "ms-vscode.vscode-typescript-next",
+    "ms-vscode.vscode-eslint"
+  ],
+  "unwantedRecommendations": [
+    "ms-python.pylint"
+  ]
+}
