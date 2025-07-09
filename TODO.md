@@ -1,7 +1,11 @@
 # To Do.md
 
 - [x] create instructions for the user to set up their companion AI Chat Assistant (Claude or Gemini or ChatGPT), e.g. /Users/petergiordano/Documents/GitHub/ai-new-project-template/setup-claude-chat-ai
-- [ ] **Google Cloud OAuth App Production Setup** - Currently in testing mode, limiting to test users only
+- [ ] **Review Jules' Production Readiness Report** - Incorporate engineer feedback on Google Docs sync error handling, user experience, and configuration validation
+  - [ ] Implement recommended error handling improvements
+  - [ ] Address configuration validation issues
+  - [ ] Resolve any user experience friction points identified
+  - **Context**: Jules reviewing sync_to_docs.py for production deployment readiness
   - [ ] Review and complete OAuth consent screen for production
   - [ ] Add privacy policy and terms of service if required
   - [ ] Submit app for verification if needed for public use
