@@ -169,30 +169,48 @@ After `/madio-setup`, your project will have:
 
 ```
 your-project/
-├── _template_library/          # MADIO templates (reference)
-│   ├── madio_template_tier1_project_system_instructions.md
-│   ├── madio_template_tier2_orchestrator.md
-│   └── madio_template_tier3_*.md (12 supporting templates)
-├── .claude/                    # Claude Code commands
-│   ├── commands/
-│   │   ├── madio-setup.md
-│   │   ├── generate-ai-system.md
-│   │   └── orient.md
-│   └── settings.local.json
+├── .claude/                    # Claude Code CLI integration
+│   ├── commands/               # Available slash commands
+│   │   ├── madio-setup.md      # One-time project initialization
+│   │   ├── generate-ai-system.md # AI system generation with customization
+│   │   ├── madio-doctor.md     # Project health diagnostics
+│   │   ├── madio-enable-sync.md # Optional Google Docs sync setup
+│   │   ├── push-to-docs.md     # Sync documents to Google Docs
+│   │   └── orient.md           # Check project status
+│   ├── scripts/                # Optional Google Docs sync (if enabled)
+│   │   ├── sync_to_docs.py     # Sync script
+│   │   ├── requirements.txt    # Python dependencies
+│   │   ├── setup.sh           # Sync setup script
+│   │   └── sync_config.json   # Document mapping config
+│   └── settings.local.json     # Claude Code settings
 ├── setup-ai-companion/         # AI companion setup guides
 │   ├── SETUP_INSTRUCTIONS.md
 │   ├── CLAUDE_PROJECT_INSTRUCTIONS.md
 │   ├── GEMINI_GEM_INSTRUCTIONS.md
 │   ├── CHATGPT_INSTRUCTIONS.md
 │   └── WORKFLOW_REFERENCE.md
+├── docs/                       # Documentation
+│   ├── GOOGLE_CLOUD_SETUP.md  # Google Docs sync setup guide
+│   ├── MADIO_CONFIGURATION.md # Configuration reference
+│   └── AI_INTEGRATION_SUMMARY.md
 ├── AI_CONTEXT.md               # Bridge file for AI collaboration
 ├── CLAUDE.md                   # Claude Code CLI context
 ├── GEMINI.md                   # Gemini CLI context
-├── .madio                      # Project configuration (see docs/MADIO_CONFIGURATION.md)
+├── .madio                      # Project configuration
 ├── madio_core_templates.md     # Template selection guide
+├── your-project.code-workspace # VS Code workspace
 ├── README.md                   # Your project documentation
-└── [Your generated MADIO documents will go here]
+└── [Generated MADIO documents after /generate-ai-system]
+    ├── project_system_instructions.md # Core AI identity (Tier 1)
+    ├── orchestrator.md                # Workflow controller (Tier 2)
+    └── [Additional documents based on complexity]
+        ├── character_voice_authority.md
+        ├── content_operations.md
+        ├── methodology_framework.md
+        └── [...other Tier 3 documents]
 ```
+
+**Note:** `_template_library/` is automatically removed after document generation to keep your project clean. Templates remain available via `git pull template main`.
 
 ## 🏗️ Building Your AI System
 
