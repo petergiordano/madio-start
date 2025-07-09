@@ -1,0 +1,9 @@
+{
+  "_comment": "Test configuration for Google Drive folder functionality",
+  "_google_drive_folder": {
+    "name": "",
+    "id": "",
+    "description": "Google Drive folder for documents. Leave name empty for root folder."
+  },
+  "test_folder_doc.md": "1DO1qv6ovwB9oIcup8wr80CoXhFa7-qYSbPG-f4k69Dc"
+}

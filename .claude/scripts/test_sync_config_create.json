@@ -1,0 +1,6 @@
+{
+  "_comment": "Test configuration for auto-creation functionality",
+  "_note": "This config tests CREATE_NEW_DOCUMENT placeholder and existing Google Doc sync",
+  "../../test_new_doc.md": "1lZZkj164wqgKKengObJq8BfcWS1m1OztBkpjxrloRHQ",
+  "../../docs/development-history/google-docs-sync/test_orchestrator.md": "1RdDNthNa0ayZu31MnKNo6RE20b_RBVzGqIDrKHkzIYc"
+}
