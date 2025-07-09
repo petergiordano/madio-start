@@ -36,7 +36,7 @@ pip install -r requirements.txt
 ### 2. Get Google credentials
 1. Go to [Google Cloud Console](https://console.cloud.google.com/)
 2. Create project or select existing
-3. Enable Google Docs API
+3. Enable Google Docs API **and Google Drive API**
 4. Create OAuth2 credentials (Desktop application)
 5. Download `credentials.json` to `.claude/scripts/`
 
@@ -44,22 +44,44 @@ pip install -r requirements.txt
 Create `sync_config.json` in `.claude/scripts/`:
 ```json
 {
-  "../../project_system_instructions.md": "1ABC...xyz",
-  "../../orchestrator.md": "1DEF...xyz",
-  "../../methodology_framework.md": "1GHI...xyz"
+  "_google_drive_folder": {
+    "name": "",
+    "id": "",
+    "description": "Google Drive folder for documents. Leave name empty for root folder."
+  },
+  "../../project_system_instructions.md": "CREATE_NEW_DOCUMENT",
+  "../../orchestrator.md": "CREATE_NEW_DOCUMENT",
+  "../../methodology_framework.md": "CREATE_NEW_DOCUMENT"
 }
 ```
+
+**✨ NEW: Google Drive Folder Organization**
+- Configure `_google_drive_folder.name` to organize documents in specific folders
+- Script automatically creates folders if they don't exist
+- Leave name empty for root folder (My Drive)
+- Interactive prompts guide folder selection
+
+**✨ NEW: Automatic Document Creation**
+- Use `CREATE_NEW_DOCUMENT` placeholder for new files
+- Script automatically creates Google Docs and updates config
+- No manual Google Doc ID copying required!
 
 ### 4. First-time authentication
 Run `/push-to-docs` - browser will open for Google OAuth consent.
 
+**⚠️ Important**: If you previously used this script, delete `token.pickle` to re-authenticate with new Google Drive permissions.
+
 ## How it works
 
-1. Reads local `.md` files
-2. **NEW**: Automatically cleans escaped markdown characters from Google Docs exports
-3. Completely replaces Google Doc content
-4. Preserves document ID for Claude Project
-5. All Google Docs auto-update in Claude Project knowledge
+1. **NEW**: Configures Google Drive folder organization (interactive prompts)
+2. Reads local `.md` files
+3. **NEW**: Auto-creates Google Docs for `CREATE_NEW_DOCUMENT` placeholders
+4. **NEW**: Places documents in specified Google Drive folders
+5. **NEW**: Automatically cleans escaped markdown characters from Google Docs exports
+6. Completely replaces Google Doc content
+7. Auto-updates config file with new Google Doc IDs and folder settings
+8. Preserves document ID for Claude Project
+9. All Google Docs auto-update in Claude Project knowledge
 
 ### ✨ New: Automatic Markdown Cleanup
 
@@ -107,10 +129,12 @@ if __name__ == "__main__":
 ## Workflow Integration
 
 ### MADIO Development Cycle
-1. Claude edits local `.md` files via MCP filesystem
-2. Run `/push-to-docs` to sync to Google Docs
-3. Claude Project automatically picks up changes
-4. Continuous framework evolution
+1. Create local `.md` files (or let Claude edit via MCP filesystem)
+2. Run `/push-to-docs` to configure Google Drive folders (first time only)
+3. Auto-create Google Docs and sync content to organized folders
+4. Configuration automatically updates with new Google Doc IDs and folder settings
+5. Claude Project automatically picks up changes
+6. Continuous framework evolution with seamless document management
 
 ### File Watching (Optional)
 Auto-sync on file changes:
@@ -133,6 +157,8 @@ chokidar "*.md" -c "/push-to-docs"
 - Verify Google Doc IDs in `sync_config.json`
 - Ensure you have edit access to all Google Docs
 - Check file permissions for local markdown files
+- **NEW**: Ensure Google Drive API is enabled in Google Cloud Console
+- **NEW**: Verify folder permissions if using custom folders
 
 ### Performance
 - Large documents may take longer to sync
