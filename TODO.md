@@ -1,69 +1,32 @@
-# To Do.md
+# TODO.md
 
-- [x] create instructions for the user to set up their companion AI Chat Assistant (Claude or Gemini or ChatGPT), e.g. /Users/petergiordano/Documents/GitHub/ai-new-project-template/setup-claude-chat-ai
+## Active Items
+
+### 1. 🔧 Google Docs Sync Production Readiness
 - [ ] **Review Jules' Production Readiness Report** - Incorporate engineer feedback on Google Docs sync error handling, user experience, and configuration validation
   - [ ] Implement recommended error handling improvements
   - [ ] Address configuration validation issues
   - [ ] Resolve any user experience friction points identified
   - **Context**: Jules reviewing sync_to_docs.py for production deployment readiness
-  - [ ] Review and complete OAuth consent screen for production
-  - [ ] Add privacy policy and terms of service if required
-  - [ ] Submit app for verification if needed for public use
-  - [ ] Add additional users to test user list as needed
-  - [ ] Consider publishing app for broader MADIO community access
-  - **Context**: Google Docs sync currently requires users to be added as test users. For wider MADIO adoption, may need production OAuth approval.
 
-## refactor new project setup 
+### 2. 🚨 OAuth Production Setup
+- [ ] Review and complete OAuth consent screen for production
+- [ ] Add privacy policy and terms of service if required
+- [ ] Submit app for verification if needed for public use
+- [ ] Add additional users to test user list as needed
+- [ ] Consider publishing app for broader MADIO community access
+- **Context**: Google Docs sync currently requires users to be added as test users. For wider MADIO adoption, may need production OAuth approval.
 
-🎉 **MAJOR UPDATES COMPLETED** (2025-07-09):
-- ✅ **FIXED BLOCKER**: `/generate-ai-system` now properly customizes templates with interactive prompts
-- ✅ **FIXED BLOCKER**: `_template_library/` automatically cleaned up after generation
-- ✅ **NEW**: `/madio-doctor` comprehensive diagnostic and troubleshooting command
-- ✅ **NEW**: `/madio-enable-sync` makes Google Docs sync completely optional
-- ✅ **IMPROVED**: Enhanced setup automation and error prevention
-- ✅ **UPDATED**: Project structure documentation reflects actual post-setup state
-
-**Result**: Core functionality now works as intended! MADIO framework is fully functional.
-### 1. 🔧 Automated Setup Script Enhancement ✅ COMPLETED
-- [x] ✅ Create automated first-run detection in `/madio-setup`
-- [x] ✅ Add workspace file auto-creation if not exists  
-- [x] ✅ Implement automatic Python dependency installation (optional)
-- [x] ✅ Add Google Docs sync optional setup prompt (via `/madio-enable-sync`)
-- [x] ✅ Create post-setup validation and health check (`/madio-doctor`)
-
-### 2. 🚨 CRITICAL: Fix Generate AI System Command ✅ FIXED
-- [x] ✅ **`/generate-ai-system` copies templates without customization** - **FIXED**: Now includes interactive prompts for project details, target audience, domain, personality traits, etc.
-- [x] ✅ **Reference inspiration**: Implemented comprehensive customization system with intelligent template personalization
-- [x] ✅ Should prompt user for project details and replace template placeholders - **IMPLEMENTED**: Interactive collection of project details with deep template customization
-- [x] ✅ Should create truly customized files, not template copies - **IMPLEMENTED**: Deep customization based on user inputs, not just sed replacements
-
-### 3. 🚨 CRITICAL: Fix Template Library Cleanup ✅ FIXED  
-- [x] ✅ **`_template_library/` folder not removed during setup** - **FIXED**: Automatically removed after successful document generation in `/generate-ai-system`
-- [x] ✅ Template files should only exist during development, not in user projects - **IMPLEMENTED**: Clean project structure after generation
-
-### 4. 🔧 Google Docs Sync Improvements
-- [ ] **Fix Google Docs markdown export escaping** - Google Docs "Download as Markdown" adds backslashes before #, *, numbers, etc.
-- [ ] Use Google Docs API to fetch clean markdown instead of export feature
-- [ ] Add regex cleanup step: Find `\\([#*.-]|\d)` Replace `$1` as fallback
-
-### 5. ✨ Quick Start Improvements
+### 3. ✨ Quick Start Improvements
 - [ ] Move `_GETTING-STARTED.md` to prominent location after setup
 - [ ] Create interactive setup wizard for first-time users
 - [ ] Add VS Code recommended extensions prompt
 - [ ] Implement automatic git remote validation and fix
 - [ ] Generate project-specific README template
 
-### 3. ☁️ Google Docs Sync Simplification
-- [ ] Make Google Docs sync opt-in during initial setup
-- [ ] Create simplified OAuth setup with better error messages
-- [ ] Add skip option for users who don’t need cloud sync
-- [ ] Provide test credentials for demo purposes (if possible)
-- [ ] Auto-detect if credentials exist and skip setup
-
 ### 4. 🛡️ Error Prevention & Recovery
 - [ ] Add pre-flight checks before any operations
 - [ ] Implement rollback capability for failed setups
-- [ ] Create diagnostic command for troubleshooting
 - [ ] Add clear error messages with solution steps
 - [ ] Implement setup state recovery
 
@@ -81,18 +44,7 @@
 - [ ] Create progress indicator for setup steps
 - [ ] Add success celebration and next steps
 
-### 7. 🧹 Template Cleanup
-- [ ] Move test files to `.claude/tests/google-docs-sync/` directory:
-  - `test_project_system_instructions.md`
-  - `test_methodology_framework.md`
-  - `test_sync_config.json`
-- [ ] Remove development artifacts from template root
-- [ ] Clean up outdated content
-- [ ] Ensure gitignore covers all test scenarios
-- [ ] Streamline duplicate documentation
-- [ ] Minimize file structure
-
-### 8. 🧪 Integration Testing
+### 7. 🧪 Integration Testing
 - [ ] Test end-to-end flow on Windows/Mac/Linux
 - [ ] Verify with/without Gemini CLI installed
 - [ ] Validate with various Python versions
@@ -100,25 +52,80 @@
 
 ---
 
-## Completed
+## Recently Completed ✅
 
-### AI Companion Setup Instructions
-✅ **Complete setup-ai-companion/ directory with:**
-- SETUP_INSTRUCTIONS.md - Overview and platform selection guide
-- CLAUDE_PROJECT_INSTRUCTIONS.md - Complete Claude Project setup and instructions
-- GEMINI_GEM_INSTRUCTIONS.md - Google Gemini Gem setup and workflow
-- CHATGPT_INSTRUCTIONS.md - ChatGPT Custom GPT setup and guidance
-- WORKFLOW_REFERENCE.md - Three-way collaboration patterns and best practices
+### 🎉 **MAJOR UPDATES COMPLETED** (2025-07-09):
 
-✅ **Updated README.md with AI companion integration section**
-✅ **Enhanced project structure to show setup-ai-companion/ directory**
+#### Core Framework Fixes
+- ✅ **FIXED BLOCKER**: `/generate-ai-system` now properly customizes templates with interactive prompts
+- ✅ **FIXED BLOCKER**: `_template_library/` automatically cleaned up after generation
+- ✅ **NEW**: `/madio-doctor` comprehensive diagnostic and troubleshooting command
+- ✅ **NEW**: `/madio-enable-sync` makes Google Docs sync completely optional
+- ✅ **IMPROVED**: Enhanced setup automation and error prevention
+- ✅ **UPDATED**: Project structure documentation reflects actual post-setup state
 
-### Key Features Implemented
+#### Google Docs Sync Enhancements (Jules' Implementation)
+- ✅ **NEW**: `CREATE_NEW_DOCUMENT` placeholder for automatic Google Doc creation
+- ✅ **NEW**: Google Drive folder organization with interactive prompts
+- ✅ **NEW**: Automatic configuration updates with new document IDs
+- ✅ **IMPROVED**: Enhanced markdown escape character cleanup
+- ✅ **IMPROVED**: Streamlined user experience eliminating manual ID copying
+- ✅ **ADDED**: Google Drive API integration for folder management
+- ✅ **ADDED**: Document moving to specified folders
+- ✅ **ADDED**: Folder creation with user prompts
+- ✅ **FIXED**: Empty document handling for newly created docs
+- ✅ **DOCUMENTED**: Comprehensive documentation updates
+
+#### Automated Setup Script Enhancement
+- ✅ Create automated first-run detection in `/madio-setup`
+- ✅ Add workspace file auto-creation if not exists  
+- ✅ Implement automatic Python dependency installation (optional)
+- ✅ Add Google Docs sync optional setup prompt (via `/madio-enable-sync`)
+- ✅ Create post-setup validation and health check (`/madio-doctor`)
+
+#### Template System Fixes
+- ✅ **Generate AI System Command**: Now includes interactive prompts for project details, target audience, domain, personality traits, etc.
+- ✅ **Template Library Cleanup**: `_template_library/` folder automatically removed after successful document generation
+- ✅ **Template Customization**: Deep customization based on user inputs, not just sed replacements
+
+#### AI Companion Setup Instructions
+- ✅ **Complete setup-ai-companion/ directory with:**
+  - SETUP_INSTRUCTIONS.md - Overview and platform selection guide
+  - CLAUDE_PROJECT_INSTRUCTIONS.md - Complete Claude Project setup and instructions
+  - GEMINI_GEM_INSTRUCTIONS.md - Google Gemini Gem setup and workflow
+  - CHATGPT_INSTRUCTIONS.md - ChatGPT Custom GPT setup and guidance
+  - WORKFLOW_REFERENCE.md - Three-way collaboration patterns and best practices
+- ✅ **Updated README.md with AI companion integration section**
+- ✅ **Enhanced project structure to show setup-ai-companion/ directory**
+
+#### Key Features Implemented
 - **Three-way collaboration model**: Local CLI ↔ AI_CONTEXT.md Bridge ↔ Browser AI
 - **Platform-specific instructions** for Claude Project, Gemini Gem, and ChatGPT Custom GPT
 - **Context transfer protocols** for seamless handoff between local and browser AI
 - **Template intelligence guidance** for strategic AI companion recommendations
 - **Quality assurance workflows** and deployment optimization
 - **Session bridging patterns** for context continuity
+- **Google Drive folder organization** with auto-creation and user prompts
+- **Automatic Google Doc creation** from local markdown files
+- **Configuration management** with persistent settings and validation
 
-The MADIO framework now supports complete AI companion integration! 🎉
+**Result**: Core functionality now works as intended! MADIO framework is fully functional with enhanced Google Docs sync capabilities.
+
+---
+
+## Archive
+
+### Completed Google Docs Sync Issues (Resolved by Jules' Implementation)
+- ✅ **Fixed Google Docs markdown export escaping** - Implemented comprehensive regex cleanup for escaped characters
+- ✅ **Enhanced Google Docs API usage** - Now creates docs directly via API instead of relying on export feature
+- ✅ **Streamlined sync workflow** - Users create .md files locally, script handles Google Doc creation automatically
+- ✅ **Added folder organization** - Documents can be organized in Google Drive folders with interactive prompts
+- ✅ **Improved error handling** - Better validation and fallback mechanisms
+- ✅ **Configuration automation** - Automatic updates to sync_config.json with new document IDs
+
+### Completed Template Cleanup
+- ✅ **Moved test files** to `docs/development-history/google-docs-sync-enhancements/`
+- ✅ **Removed development artifacts** from template root
+- ✅ **Cleaned up outdated content** and duplicate documentation
+- ✅ **Updated gitignore** to cover test scenarios
+- ✅ **Streamlined file structure** for better user experience
