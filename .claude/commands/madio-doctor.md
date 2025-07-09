@@ -28,6 +28,19 @@ echo ""
 ISSUES_FOUND=0
 WARNINGS_FOUND=0
 RECOMMENDATIONS=0
+ONBOARDING_COMPLETE=false
+
+# Check for onboarding completion
+if [ -f ".madio-onboard/complete" ]; then
+    ONBOARDING_COMPLETE=true
+    echo "✅ MADIO onboarding completed successfully"
+    echo "   $(cat .madio-onboard/complete | head -1)"
+    echo ""
+else
+    echo "ℹ️  MADIO onboarding not completed"
+    echo "   Run /madio-onboard for streamlined setup"
+    echo ""
+fi
 
 # Check system requirements
 echo "🔧 Environment Validation"
@@ -82,6 +95,43 @@ if [ -d ".claude" ]; then
 else
     echo "   ⚠️  No .claude directory (Claude Code CLI may not be set up)"
     ((WARNINGS_FOUND++))
+fi
+
+# Python environment validation
+echo "🐍 Python Environment:"
+if [ -d ".madio-venv" ]; then
+    echo "   ✅ MADIO Python virtual environment found"
+    
+    # Check if virtual environment is functional
+    if [ -f ".madio-venv/bin/python" ] || [ -f ".madio-venv/Scripts/python.exe" ]; then
+        echo "   ✅ Python virtual environment functional"
+    else
+        echo "   ❌ Python virtual environment corrupted"
+        echo "      Remove .madio-venv and run /madio-onboard"
+        ((ISSUES_FOUND++))
+    fi
+else
+    echo "   ℹ️  No MADIO Python environment"
+    echo "      Run /madio-onboard to create one"
+fi
+
+# Requirements validation
+if [ -f "requirements.txt" ]; then
+    echo "   ✅ Requirements file present"
+    
+    # Check if requirements are installed
+    if [ -d ".madio-venv" ]; then
+        INSTALLED_PACKAGES=$(.madio-venv/bin/python -m pip list --format=freeze 2>/dev/null | wc -l || echo "0")
+        if [ "$INSTALLED_PACKAGES" -gt 1 ]; then
+            echo "   ✅ Python packages installed ($INSTALLED_PACKAGES packages)"
+        else
+            echo "   ⚠️  Python packages not installed"
+            echo "      Run /madio-onboard to install dependencies"
+            ((WARNINGS_FOUND++))
+        fi
+    fi
+else
+    echo "   ℹ️  No requirements.txt (OK for basic setup)"
 fi
 ```
 
@@ -407,7 +457,11 @@ echo "------------------"
 if [ "$ISSUES_FOUND" -gt 0 ]; then
     echo "🚨 CRITICAL (Fix First):"
     if [ ! -f ".madio-setup-complete" ]; then
-        echo "   • Run /madio-setup to complete MADIO initialization"
+        if [ "$ONBOARDING_COMPLETE" = false ]; then
+            echo "   • Run /madio-onboard for comprehensive setup (recommended)"
+        else
+            echo "   • Run /madio-setup to complete MADIO initialization"
+        fi
     fi
     if [ ! -f "AI_CONTEXT.md" ]; then
         echo "   • Generate AI_CONTEXT.md bridge file (essential for AI collaboration)"
@@ -446,7 +500,10 @@ echo "🔧 Quick Fixes"
 echo "--------------"
 echo "One-line solutions for common issues:"
 echo ""
-echo "Setup not complete:"
+echo "Complete setup (new users):"
+echo "   /madio-onboard"
+echo ""
+echo "Setup not complete (advanced users):"
 echo "   /madio-setup"
 echo ""
 echo "No AI system generated:"

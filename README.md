@@ -66,7 +66,14 @@ claude mcp add-from-claude-desktop
 
 ### **Step 2: Set Up Your MADIO Project**
 
-**Open terminal in VS Code and run (using Claude Code):**
+**For new users, use the streamlined onboarding (recommended):**
+
+```bash
+# Complete setup with validation and guidance (2-12 minutes)
+/madio-onboard
+```
+
+**For advanced users, use individual commands:**
 
 ```bash
 # Initialize your MADIO project (one-time setup)
@@ -85,14 +92,18 @@ gemini "Update the project_system_instructions.md to include [specific feature]"
 gemini "Validate my MADIO project structure and identify any issues"
 ```
 
-**What `/madio-setup` does:**
-1. Validates you're in YOUR project (not the template)
-2. Configures git remote for template updates
-3. Moves templates from `_project_scaffolding/` to your project root
-4. Updates `.madio` configuration with your project name
-5. Creates initial project structure
-6. Commits the setup changes
-7. Enables template inheritance via `git pull template main`
+**What `/madio-onboard` does:**
+1. ✅ Validates prerequisites (Python, Git, VS Code)
+2. ✅ Confirms you're in YOUR project (not the template)
+3. ✅ Configures git remote for template updates
+4. ✅ Sets up Python virtual environment
+5. ✅ Moves templates from `_project_scaffolding/` to your project root
+6. ✅ Updates `.madio` configuration with your project name
+7. ✅ Creates initial project structure
+8. ✅ Optionally sets up Google Docs sync
+9. ✅ Validates setup success with health checks
+10. ✅ Commits the setup changes
+11. ✅ Enables template inheritance via `git pull template main`
 
 ## 🎯 Complete User Journey
 
@@ -101,7 +112,8 @@ gemini "Validate my MADIO project structure and identify any issues"
 2. Clone YOUR repository → Local development environment
 3. cd your-project-name → Enter YOUR project directory
 4. Open in VS Code → Professional IDE environment
-5. /madio-setup → One-time project initialization
+5. /madio-onboard → Streamlined setup with validation (recommended)
+   OR /madio-setup → Advanced users only
 6. Generate AI system → Creates hierarchical MADIO documents
 7. Customize & Deploy → Ready for production use
 ```

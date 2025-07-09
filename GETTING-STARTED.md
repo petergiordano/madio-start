@@ -22,19 +22,30 @@ Before starting, verify:
 
 ## 🏗️ Step 1: Initialize Your MADIO Project
 
-**Run this command in your VS Code terminal (using Claude Code):**
+**For new users, use the streamlined onboarding command:**
 
 ```bash
-/madio-setup
+/madio-onboard
 ```
 
-This command will:
+This comprehensive command will:
+- ✅ Check all prerequisites (Python, Git, VS Code)
 - ✅ Validate you're in the right directory
 - ✅ Configure template inheritance
 - ✅ Set up your project structure
 - ✅ Generate your AI_CONTEXT.md bridge file
 - ✅ Update configuration files
 - ✅ Prepare for AI system generation
+- ✅ Optionally set up Google Docs sync
+- ✅ Validate setup success
+
+**Advanced users can use the individual command:**
+
+```bash
+/madio-setup
+```
+
+This runs just the core MADIO setup without the comprehensive validation and guidance.
 
 ## 🤖 Step 2: Generate Your AI System
 
@@ -198,7 +209,7 @@ your-ai-project/
 ```bash
 # Ensure Claude Code is installed and working
 # Try restarting VS Code if commands not recognized
-/madio-setup  # Should work if Claude Code is properly installed
+/madio-onboard  # Should work if Claude Code is properly installed
 ```
 
 ### "Generated files seem incomplete"

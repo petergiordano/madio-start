@@ -6,6 +6,8 @@ One-time MADIO project initialization after creating project from madio-start te
 
 Run **once only** after creating and cloning a project from the madio-start template to transform scaffolding into a clean MADIO project workspace. Sets up templates, generates bridge files, and configures git for template updates.
 
+**🔄 Note**: This command is automatically called by `/madio-onboard` but can be run independently for advanced users.
+
 ## Execution Process
 
 ### Phase 1: Safety Validation
@@ -21,10 +23,11 @@ if [ -f ".madio-setup-complete" ]; then
     ls -la | grep -E "(AI_CONTEXT\.md|GEMINI\.md|project_system_instructions\.md)"
     echo ""
     echo "💡 Next steps:"
-    echo "   • Generate AI system: Use Gemini CLI with MADIO templates"
+    echo "   • Generate AI system: Use /generate-ai-system command"
     echo "   • Update context: Read AI_CONTEXT.md for current project status"
     echo "   • Get template updates: git pull template main"
     echo "   • View templates: ls _template_library/"
+    echo "   • Run health check: /madio-doctor"
     exit 1
 fi
 
@@ -467,7 +470,10 @@ echo ""
 echo "   📖 FIRST: Read GETTING-STARTED.md for detailed guidance"
 echo "   📖 File: $(pwd)/GETTING-STARTED.md"
 echo ""
-echo "   🎯 Using Claude Code (for initial generation):"
+echo "   🎯 New Users: Use /madio-onboard for complete setup"
+echo "   /madio-onboard"
+echo ""
+echo "   🎯 Generate AI System:"
 echo "   /generate-ai-system \"[describe your AI system]\""
 echo ""
 echo "   🎯 Examples:"
