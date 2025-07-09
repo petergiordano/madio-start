@@ -17,7 +17,7 @@ This file records the specific Google Cloud setup for this MADIO project's Googl
 
 ### APIs Enabled
 - **Google Docs API** - Required for reading/writing Google Documents
-- **Google Drive API** - Required for folder organization (if enabled)
+- **Google Drive API** - Required for folder organization and document creation
 
 ### OAuth 2.0 Configuration
 - **Application Type**: Desktop Application

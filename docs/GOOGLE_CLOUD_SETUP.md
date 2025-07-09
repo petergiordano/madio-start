@@ -31,12 +31,18 @@ Ensure you are logged into the Google account you intend to use for this project
         *   Click the project selector dropdown and choose your desired project.
     *   <!-- Consider adding screenshot of project creation/selection -->
 
-3.  **Enable the Google Docs API:**
+3.  **Enable Required APIs:**
     *   Once your project is selected, use the search bar at the top of the Google Cloud Console (or navigate via the menu ☰ to "APIs & Services" > "Library").
-    *   Search for **"Google Docs API"**.
-    *   Click on "Google Docs API" in the search results.
-    *   Click the **"ENABLE"** button. If it's already enabled, you'll see "MANAGE".
-    *   <!-- Consider adding screenshot of API Library search and enabling Google Docs API -->
+    *   **Enable Google Docs API:**
+        *   Search for **"Google Docs API"**.
+        *   Click on "Google Docs API" in the search results.
+        *   Click the **"ENABLE"** button. If it's already enabled, you'll see "MANAGE".
+    *   **Enable Google Drive API (for folder support):**
+        *   Search for **"Google Drive API"**.
+        *   Click on "Google Drive API" in the search results.
+        *   Click the **"ENABLE"** button. If it's already enabled, you'll see "MANAGE".
+        *   Note: This API is required for folder organization and document creation features.
+    *   <!-- Consider adding screenshot of API Library search and enabling both APIs -->
 
 4.  **Configure the OAuth Consent Screen:**
     *   Before creating credentials, you might need to configure the OAuth consent screen.
@@ -89,7 +95,7 @@ Once you have placed `credentials.json` in the correct location:
 
 *   **`Error 400: redirect_uri_mismatch` during authorization:** You likely did not select "Desktop app" as the Application type when creating OAuth Client ID (Step 5). Delete the incorrect credential, create a new one ensuring "Desktop app" is selected, and re-download/rename `credentials.json`.
 *   **`Error 403: access_denied` or similar permission errors:**
-    *   Ensure the Google Docs API is enabled for your project (Step 3).
+    *   Ensure both the Google Docs API and Google Drive API are enabled for your project (Step 3).
     *   If your OAuth consent screen is in "testing" mode and your Google account is not listed as a "Test user", you might encounter this. For personal use with your own account, this usually isn't an issue.
 *   **`FileNotFoundError: [Errno 2] No such file or directory: 'credentials.json'` when running the script:** Ensure you have placed the renamed `credentials.json` file in the correct location: `.claude/scripts/credentials.json`.
 *   **Script hangs or browser doesn't open for authorization:** Check your system's default browser settings and any pop-up blockers.
