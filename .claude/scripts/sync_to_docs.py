@@ -15,14 +15,19 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
-# Scopes required for Google Docs API
-SCOPES = ['https://www.googleapis.com/auth/documents']
+# Scopes required for Google Docs and Drive APIs
+SCOPES = ['https://www.googleapis.com/auth/documents', 'https://www.googleapis.com/auth/drive']
+
+# Placeholder for new documents in config
+NEW_DOC_PLACEHOLDER = "CREATE_NEW_DOCUMENT"
 
 class GoogleDocsSync:
     def __init__(self, credentials_file='credentials.json', token_file='token.pickle'):
         self.credentials_file = credentials_file
         self.token_file = token_file
         self.service = None
+        self.drive_service = None
+        self.target_folder_id = None
         self.authenticate()
     
     def authenticate(self):
@@ -52,7 +57,104 @@ class GoogleDocsSync:
                 token.write(creds.to_json())
         
         self.service = build('docs', 'v1', credentials=creds)
-        print("✅ Google Docs authentication successful")
+        self.drive_service = build('drive', 'v3', credentials=creds)
+        print("✅ Google Docs and Drive authentication successful")
+    
+    def find_folder_by_name(self, folder_name):
+        """Search for a folder by name in Google Drive"""
+        try:
+            print(f"🔍 Searching for folder: \"{folder_name}\"...")
+            
+            # Search for folders with the specified name
+            query = f"name='{folder_name}' and mimeType='application/vnd.google-apps.folder' and trashed=false"
+            results = self.drive_service.files().list(
+                q=query,
+                fields='files(id, name, parents)'
+            ).execute()
+            
+            folders = results.get('files', [])
+            
+            if not folders:
+                print(f"❌ Folder \"{folder_name}\" not found")
+                return None
+            elif len(folders) == 1:
+                folder_id = folders[0]['id']
+                print(f"✅ Found folder \"{folder_name}\" (ID: {folder_id[:15]}...)")
+                return folder_id
+            else:
+                # Multiple folders found - use the first one but warn
+                folder_id = folders[0]['id']
+                print(f"⚠️  Multiple folders named \"{folder_name}\" found. Using first one (ID: {folder_id[:15]}...)")
+                return folder_id
+                
+        except HttpError as error:
+            print(f"❌ Error searching for folder \"{folder_name}\": {error}")
+            return None
+        except Exception as e:
+            print(f"❌ Unexpected error searching for folder \"{folder_name}\": {e}")
+            return None
+    
+    def create_folder(self, folder_name):
+        """Create a new folder in Google Drive"""
+        try:
+            print(f"📁 Creating folder: \"{folder_name}\"...")
+            
+            folder_metadata = {
+                'name': folder_name,
+                'mimeType': 'application/vnd.google-apps.folder'
+            }
+            
+            folder = self.drive_service.files().create(
+                body=folder_metadata,
+                fields='id'
+            ).execute()
+            
+            folder_id = folder.get('id')
+            print(f"✅ Created folder \"{folder_name}\" (ID: {folder_id[:15]}...)")
+            return folder_id
+            
+        except HttpError as error:
+            print(f"❌ Error creating folder \"{folder_name}\": {error}")
+            return None
+        except Exception as e:
+            print(f"❌ Unexpected error creating folder \"{folder_name}\": {e}")
+            return None
+    
+    def prompt_for_folder(self):
+        """Prompt user for Google Drive folder selection"""
+        print("\n📁 Google Drive Folder Configuration")
+        print("   Choose where to create your Google Docs:")
+        print("   • Press Enter for root folder (My Drive)")
+        print("   • Enter folder name (e.g., 'MADIO Docs')")
+        print("   • If folder doesn't exist, you'll be asked to create it")
+        
+        while True:
+            folder_name = input("\nEnter Google Drive folder name (or press Enter for root): ").strip()
+            
+            if not folder_name:
+                print("📂 Using root folder (My Drive)")
+                return None
+            
+            # Search for the folder
+            folder_id = self.find_folder_by_name(folder_name)
+            
+            if folder_id:
+                return {'name': folder_name, 'id': folder_id}
+            else:
+                # Folder not found, ask to create
+                print(f"\n❓ Folder \"{folder_name}\" not found.")
+                create_choice = input("Create this folder? (y/N): ").strip().lower()
+                
+                if create_choice == 'y' or create_choice == 'yes':
+                    folder_id = self.create_folder(folder_name)
+                    if folder_id:
+                        return {'name': folder_name, 'id': folder_id}
+                    else:
+                        print("❌ Failed to create folder. Please try again.")
+                        continue
+                else:
+                    print("📂 Using root folder (My Drive)")
+                    return None
     
     def read_markdown_file(self, file_path):
         """Read markdown file content"""
@@ -183,7 +285,7 @@ class GoogleDocsSync:
             
             # Clear existing content
             doc_length = doc['body']['content'][-1]['endIndex'] - 1
-            if doc_length > 0:
+            if doc_length > 1:  # Only delete if there's actual content beyond the initial position
                 requests = [{
                     'deleteContentRange': {
                         'range': {
@@ -214,6 +316,60 @@ class GoogleDocsSync:
         except Exception as e:
             print(f"❌ Unexpected error updating Google Doc {doc_id}: {e}")
             return False
+
+    def move_document_to_folder(self, doc_id, folder_id):
+        """Move a document to a specific folder in Google Drive"""
+        try:
+            print(f"📁 Moving document {doc_id[:8]}... to folder {folder_id[:8]}...")
+            
+            # Get the document's current parents
+            file = self.drive_service.files().get(
+                fileId=doc_id,
+                fields='parents'
+            ).execute()
+            
+            previous_parents = ",".join(file.get('parents', []))
+            
+            # Move the document to the target folder
+            self.drive_service.files().update(
+                fileId=doc_id,
+                addParents=folder_id,
+                removeParents=previous_parents,
+                fields='id, parents'
+            ).execute()
+            
+            print(f"✅ Document moved to folder successfully")
+            return True
+            
+        except HttpError as error:
+            print(f"❌ Error moving document to folder: {error}")
+            return False
+        except Exception as e:
+            print(f"❌ Unexpected error moving document to folder: {e}")
+            return False
+
+    def create_google_doc(self, title):
+        """Create a new Google Doc and return its ID."""
+        try:
+            print(f"➕ Creating new Google Doc with title: \"{title}\"...")
+            document_body = {'title': title}
+            doc = self.service.documents().create(body=document_body).execute()
+            doc_id = doc.get('documentId')
+            print(f"✅ Successfully created Google Doc with ID: {doc_id}")
+            
+            # Move to target folder if specified
+            if self.target_folder_id:
+                success = self.move_document_to_folder(doc_id, self.target_folder_id)
+                if not success:
+                    print(f"⚠️  Document created but failed to move to folder")
+            
+            return doc_id
+        except HttpError as error:
+            print(f"❌ Error creating Google Doc \"{title}\": {error}")
+            return None
+        except Exception as e:
+            print(f"❌ Unexpected error creating Google Doc \"{title}\": {e}")
+            return None
     
     def sync_file(self, file_path, doc_id, clean_escapes=True):
         """Sync a single file to Google Docs"""
@@ -248,28 +404,106 @@ class GoogleDocsSync:
             print(f"❌ Invalid JSON in config file: {e}")
             return False
         
+        # Handle folder configuration
+        folder_config = config.get('_google_drive_folder', {})
+        
+        # Check if folder is already configured
+        if folder_config.get('id'):
+            folder_name = folder_config.get('name', 'configured folder')
+            folder_id = folder_config.get('id')
+            print(f"📂 Using configured folder: \"{folder_name}\" ({folder_id[:15]}...)")
+            self.target_folder_id = folder_id
+        elif folder_config.get('name'):
+            # Folder name specified but no ID - search for it
+            folder_name = folder_config.get('name')
+            folder_id = self.find_folder_by_name(folder_name)
+            if folder_id:
+                print(f"📂 Found folder: \"{folder_name}\" ({folder_id[:15]}...)")
+                self.target_folder_id = folder_id
+                # Update config with found folder ID
+                config['_google_drive_folder']['id'] = folder_id
+                config_updated = True
+            else:
+                print(f"❌ Configured folder \"{folder_name}\" not found")
+                return False
+        else:
+            # No folder configured - prompt user or use root
+            try:
+                folder_info = self.prompt_for_folder()
+                if folder_info:
+                    print(f"📂 Selected folder: \"{folder_info['name']}\" ({folder_info['id'][:15]}...)")
+                    self.target_folder_id = folder_info['id']
+                    # Update config with selected folder
+                    config['_google_drive_folder'] = {
+                        'name': folder_info['name'],
+                        'id': folder_info['id'],
+                        'description': "Google Drive folder for documents. Leave name empty for root folder."
+                    }
+                    config_updated = True
+                else:
+                    print("📂 Using root folder (My Drive)")
+                    self.target_folder_id = None
+            except (EOFError, KeyboardInterrupt):
+                print("\n📂 Using root folder (My Drive)")
+                self.target_folder_id = None
+        
         success_count = 0
         total_count = 0
         
-        for file_path, doc_id in config.items():
+        # Create a copy of keys to iterate over, allowing modification of original dict
+        for file_path in list(config.keys()):
+            doc_id = config[file_path]
+
             # Skip configuration comments
             if file_path.startswith('_'):
                 continue
-                
-            if doc_id == "REPLACE_WITH_GOOGLE_DOC_ID":
-                print(f"⚠️  Skipping {file_path} - no Google Doc ID configured")
-                continue
             
+            if doc_id == NEW_DOC_PLACEHOLDER:
+                print(f"ℹ️  Found placeholder for {file_path}. Attempting to create new Google Doc.")
+                # Derive title from filename
+                title = os.path.basename(file_path)
+                # Potentially remove .md extension from title if desired
+                if title.endswith(".md"):
+                    title = title[:-3]
+                
+                new_doc_id = self.create_google_doc(title)
+                
+                if new_doc_id:
+                    config[file_path] = new_doc_id
+                    doc_id = new_doc_id  # Use the new ID for syncing this iteration
+                    config_updated = True
+                    print(f"   🔄 Updated config for {file_path} with new Doc ID: {new_doc_id[:15]}...")
+                else:
+                    print(f"❌ Failed to create Google Doc for {file_path}. Skipping sync for this file.")
+                    continue  # Skip to the next file if creation failed
+            
+            elif doc_id == "REPLACE_WITH_GOOGLE_DOC_ID": # Legacy placeholder
+                print(f"⚠️  Skipping {file_path} - uses legacy placeholder. Update to '{NEW_DOC_PLACEHOLDER}' to enable auto-creation.")
+                continue
+
             if not os.path.exists(file_path):
-                print(f"⚠️  File not found: {file_path}")
+                # This check should be after potential doc creation,
+                # as a new file might not exist yet if config was prepared in advance.
+                # However, for syncing content, the local file must exist.
+                print(f"⚠️  Local file not found: {file_path}. Skipping sync for this file.")
                 continue
             
             total_count += 1
             if self.sync_file(file_path, doc_id, clean_escapes):
                 success_count += 1
         
+        if config_updated:
+            print(f"\n💾 Updating configuration file: {config_file}...")
+            try:
+                with open(config_file, 'w') as f:
+                    json.dump(config, f, indent=2)
+                print(f"✅ Configuration file updated successfully.")
+            except IOError as e:
+                print(f"❌ Error writing updated configuration to {config_file}: {e}")
+                print("   Please check file permissions and path.")
+        
         print(f"\n📊 Sync complete: {success_count}/{total_count} files synced successfully")
-        return success_count == total_count
+        return success_count == total_count and not (total_count == 0 and config_updated) # Success if all synced or only config updated
 
 
 def main():
