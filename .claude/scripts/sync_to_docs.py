@@ -77,6 +77,8 @@ class GoogleDocsSync:
         - \\- List item → - List item 
         - \\*emphasis\\* → *emphasis*
         - \\1. Numbered → 1. Numbered
+        - \\+1-2 → +1-2
+        - project\\_system\\_instructions → project_system_instructions
         
         This function gracefully handles both escaped and non-escaped content.
         """
@@ -93,6 +95,9 @@ class GoogleDocsSync:
             r'\\\d+\.',      # Escaped numbered lists
             r'\\>',          # Escaped blockquotes
             r'\\\[.*\\\]',   # Escaped links
+            r'\\\+',         # Escaped plus signs
+            r'\\\_',         # Escaped underscores in text
+            r'\\\s*$',       # Trailing standalone backslashes
         ]
         
         # Count potential escaped markdown patterns
@@ -118,8 +123,15 @@ class GoogleDocsSync:
             # Lists: \- \* \+ at start of line or after whitespace
             (r'(^|\s)\\([-*+])\s', r'\1\2 '),
             
-            # Numbered lists: \1. \2. etc.
+            # Numbered lists: \1. \2. etc. (both at start of line and mid-text)
             (r'(^|\s)\\(\d+)\.', r'\1\2.'),
+            (r'\\(\d+)\.', r'\1.'),  # Catch remaining escaped numbers with dots
+            
+            # Escaped plus signs: \+1-2 → +1-2
+            (r'\\(\+)', r'\1'),
+            
+            # Escaped underscores in text: project\_system\_instructions → project_system_instructions
+            (r'\\(_)', r'\1'),
             
             # Emphasis: \*text\* \_text\_ (but not legitimate double backslashes)
             (r'(?<!\\)\\([*_])', r'\1'),
@@ -136,6 +148,12 @@ class GoogleDocsSync:
             
             # Blockquotes: \> 
             (r'(^|\s)\\(>)\s', r'\1\2 '),
+            
+            # Trailing standalone backslashes (common in Google Docs exports)
+            (r'\\\s*$', r''),
+            
+            # Escaped periods in general text (not just numbered lists)
+            (r'(?<!\\)\\(\.)', r'\1'),
         ]
         
         cleaned_content = content

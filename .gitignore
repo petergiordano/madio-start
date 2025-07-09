@@ -94,3 +94,6 @@ pip-delete-this-directory.txt
 
 # Keep Test Files for Framework Testing
 !.claude/tests/**
+
+# Test Files for Google Docs Sync Testing
+test-google-doc-download*.md
