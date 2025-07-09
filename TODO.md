@@ -1,51 +1,16 @@
 # To Do.md
 
-- [x] create instructions for the user to set up their companion AI Chat Assistant (Claude or Gemini or ChatGPT), e.g. /Users/petergiordano/Documents/GitHub/ai-new-project-template/setup-claude-chat-ai
-- [x] ✅ **Review Jules' Production Readiness Report** - **COMPLETED**: Analyzed detailed engineer feedback on sync_to_docs.py
-  - **Result**: Identified 8 specific production readiness improvements needed
-
-## 🔥 **JULES' PRODUCTION READINESS RECOMMENDATIONS** (HIGH PRIORITY)
-
-### 🚨 **Critical Error Handling Improvements**
-- [ ] **Implement specific Google API error handling** - Replace generic HttpError catches with specific 401/403/404/500 status handling
-  - [ ] Add 401/403 handling: "Authentication/Permission error for Google Doc ID {doc_id}"
-  - [ ] Add 404 handling: "Google Doc ID {doc_id} not found. Verify sync_config.json"
-  - [ ] Add 500/503 handling: "Google Docs API unavailable. Try again later"
-  - [ ] Consider exponential backoff retry logic for 5xx errors
-
-- [ ] **Add network timeout handling** - Import and catch requests.exceptions.Timeout or socket.timeout
-  - [ ] Message: "Network timeout while updating Google Doc ID {doc_id}. Check internet connection"
-
-- [ ] **Improve authentication error handling** - Handle token refresh failures and malformed credentials
-  - [ ] Catch google.auth.exceptions.RefreshError in authenticate()
-  - [ ] Message: "Failed to refresh token. Delete token.pickle and re-authenticate"
-  - [ ] Handle malformed credentials.json with specific error message
-
-### 📚 **Critical User Experience Improvements**
-- [ ] **Create consolidated SYNC_SETUP.md guide** - Single comprehensive setup document
-  - [ ] Include prerequisites (Python 3.x, Google Cloud access)
-  - [ ] Document pip install -r .claude/scripts/requirements.txt
-  - [ ] Step-by-step sync_config.json configuration
-  - [ ] Clear script execution instructions
-  - [ ] Troubleshooting section with common errors
-
-### 🔧 **Configuration Management Improvements**
-- [ ] **Refactor CWD/path management** - Eliminate multiple os.chdir() calls
-  - [ ] Establish single project_root = Path(__file__).resolve().parent.parent
-  - [ ] Resolve all paths relative to project_root consistently
-  - [ ] Update sync_config.json to use project-root-relative paths
-
-- [ ] **Add security documentation** - Document token.pickle sensitivity
-  - [ ] Ensure token.pickle is in .gitignore
-  - [ ] Add security notes to setup documentation
-
-### 🌐 **OAuth Production Deployment**
-- [ ] Review and complete OAuth consent screen for production
-- [ ] Add privacy policy and terms of service if required
-- [ ] Submit app for verification if needed for public use
-- [ ] Add additional users to test user list as needed
-- [ ] Consider publishing app for broader MADIO community access
-- **Context**: Google Docs sync currently requires users to be added as test users
+- [ ] **Review Jules' Production Readiness Report** - Incorporate engineer feedback on Google Docs sync error handling, user experience, and configuration validation
+  - [ ] Implement recommended error handling improvements
+  - [ ] Address configuration validation issues
+  - [ ] Resolve any user experience friction points identified
+  - **Context**: Jules reviewing sync_to_docs.py for production deployment readiness
+  - [ ] Review and complete OAuth consent screen for production
+  - [ ] Add privacy policy and terms of service if required
+  - [ ] Submit app for verification if needed for public use
+  - [ ] Add additional users to test user list as needed
+  - [ ] Consider publishing app for broader MADIO community access
+  - **Context**: Google Docs sync currently requires users to be added as test users. For wider MADIO adoption, may need production OAuth approval.
 
 ## refactor new project setup 
 
@@ -54,11 +19,10 @@
 - ✅ **FIXED BLOCKER**: `_template_library/` automatically cleaned up after generation
 - ✅ **NEW**: `/madio-doctor` comprehensive diagnostic and troubleshooting command
 - ✅ **NEW**: `/madio-enable-sync` makes Google Docs sync completely optional
-- ✅ **FIXED**: Google Docs markdown export escaping issue (\\# → #, \\- → -, etc.)
 - ✅ **IMPROVED**: Enhanced setup automation and error prevention
 - ✅ **UPDATED**: Project structure documentation reflects actual post-setup state
 
-**Result**: Core functionality now works as intended! MADIO framework is fully functional with working Google Docs sync.
+**Result**: Core functionality now works as intended! MADIO framework is fully functional.
 ### 1. 🔧 Automated Setup Script Enhancement ✅ COMPLETED
 - [x] ✅ Create automated first-run detection in `/madio-setup`
 - [x] ✅ Add workspace file auto-creation if not exists  
@@ -76,19 +40,17 @@
 - [x] ✅ **`_template_library/` folder not removed during setup** - **FIXED**: Automatically removed after successful document generation in `/generate-ai-system`
 - [x] ✅ Template files should only exist during development, not in user projects - **IMPLEMENTED**: Clean project structure after generation
 
-### 4. 🔧 Google Docs Sync Improvements ✅ COMPLETED
-- [x] ✅ **Fix Google Docs markdown export escaping** - **FIXED**: Added comprehensive cleanup of escaped markdown characters (\\# → #, \\- → -, \\* → *, \\+1-2 → +1-2, project\\_system\\_instructions → project_system_instructions, etc.)
-- [x] ✅ **Enhanced escape pattern detection** - **IMPLEMENTED**: Added 5+ types of escape pattern detection with graceful handling
-- [x] ✅ **Comprehensive regex patterns** - **IMPLEMENTED**: Handles headers, lists, emphasis, links, underscores, plus signs, numbered lists, trailing backslashes
-- [x] ✅ **Production testing completed** - **VERIFIED**: All escape patterns now properly cleaned (356 characters removed from test file)
-- [ ] Use Google Docs API to fetch clean markdown instead of export feature (future enhancement)
+### 4. 🔧 Google Docs Sync Improvements
+- [ ] **Fix Google Docs markdown export escaping** - Google Docs "Download as Markdown" adds backslashes before #, *, numbers, etc.
+- [ ] Use Google Docs API to fetch clean markdown instead of export feature
+- [ ] Add regex cleanup step: Find `\\([#*.-]|\d)` Replace `$1` as fallback
 
 ### 5. ✨ Quick Start Improvements
-- [x] ✅ Move `_GETTING-STARTED.md` to prominent location after setup - **COMPLETED**: Renamed to `GETTING-STARTED.md`
-- [x] ✅ Create interactive setup wizard for first-time users - **ENHANCED**: Added git remote validation, VS Code setup, and getting started prominence
-- [x] ✅ Add VS Code recommended extensions prompt - **IMPLEMENTED**: Added VS Code extensions check and workspace configuration
-- [x] ✅ Implement automatic git remote validation and fix - **IMPLEMENTED**: Added comprehensive git remote validation with connectivity testing
-- [x] ✅ Generate project-specific README template - **IMPLEMENTED**: Added README generation with project name, structure, and commands
+- [ ] Move `_GETTING-STARTED.md` to prominent location after setup
+- [ ] Create interactive setup wizard for first-time users
+- [ ] Add VS Code recommended extensions prompt
+- [ ] Implement automatic git remote validation and fix
+- [ ] Generate project-specific README template
 
 ### 3. ☁️ Google Docs Sync Simplification
 - [ ] Make Google Docs sync opt-in during initial setup
