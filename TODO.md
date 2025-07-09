@@ -1,5 +1,6 @@
 # To Do.md
 
+- [x] create instructions for the user to set up their companion AI Chat Assistant (Claude or Gemini or ChatGPT), e.g. /Users/petergiordano/Documents/GitHub/ai-new-project-template/setup-claude-chat-ai
 - [ ] **Review Jules' Production Readiness Report** - Incorporate engineer feedback on Google Docs sync error handling, user experience, and configuration validation
   - [ ] Implement recommended error handling improvements
   - [ ] Address configuration validation issues
