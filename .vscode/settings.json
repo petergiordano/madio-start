@@ -7,7 +7,7 @@
     "GETTING-STARTED.md": "markdown",
     "madio_core_templates.md": "markdown"
   },
-  "markdown.validate.enabled": true,
+  "markdown.validate.enabled": false,
   "markdown.preview.doubleClickToSwitchToEditor": false,
   "markdown.extension.toc.levels": "2..6",
   "markdown.extension.orderedList.marker": "one",
@@ -29,9 +29,6 @@
     "docs/development-history": true
   },
   "python.defaultInterpreterPath": "python3",
-  "python.linting.enabled": true,
-  "python.linting.flake8Enabled": true,
-  "python.linting.pylintEnabled": false,
   "terminal.integrated.defaultProfile.osx": "zsh",
   "terminal.integrated.defaultProfile.linux": "bash",
   "terminal.integrated.defaultProfile.windows": "PowerShell",
@@ -39,8 +36,7 @@
   "git.enableSmartCommit": true,
   "explorer.excludeGitIgnore": true,
   "workbench.startupEditor": "readme",
-  "markdown.validate.enabled": false,
-  "markdown.validate.fileLinks.enabled": false,
-  "markdown.validate.fragmentLinks.enabled": false,
-  "markdown.validate.referenceLinks.enabled": false
+  "markdown.validate.fileLinks.enabled": "ignore",
+  "markdown.validate.fragmentLinks.enabled": "ignore",
+  "markdown.validate.referenceLinks.enabled": "ignore"
 }
