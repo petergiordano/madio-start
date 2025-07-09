@@ -18,6 +18,9 @@ from googleapiclient.errors import HttpError
 # Scopes required for Google Docs API
 SCOPES = ['https://www.googleapis.com/auth/documents']
 
+# Placeholder for new documents in config
+NEW_DOC_PLACEHOLDER = "CREATE_NEW_DOCUMENT"
+
 class GoogleDocsSync:
     def __init__(self, credentials_file='credentials.json', token_file='token.pickle'):
         self.credentials_file = credentials_file
@@ -214,6 +217,22 @@ class GoogleDocsSync:
         except Exception as e:
             print(f"❌ Unexpected error updating Google Doc {doc_id}: {e}")
             return False
+
+    def create_google_doc(self, title):
+        """Create a new Google Doc and return its ID."""
+        try:
+            print(f"➕ Creating new Google Doc with title: \"{title}\"...")
+            document_body = {'title': title}
+            doc = self.service.documents().create(body=document_body).execute()
+            doc_id = doc.get('documentId')
+            print(f"✅ Successfully created Google Doc with ID: {doc_id}")
+            return doc_id
+        except HttpError as error:
+            print(f"❌ Error creating Google Doc \"{title}\": {error}")
+            return None
+        except Exception as e:
+            print(f"❌ Unexpected error creating Google Doc \"{title}\": {e}")
+            return None
     
     def sync_file(self, file_path, doc_id, clean_escapes=True):
         """Sync a single file to Google Docs"""
@@ -250,26 +269,62 @@ class GoogleDocsSync:
         
         success_count = 0
         total_count = 0
+        config_updated = False
         
-        for file_path, doc_id in config.items():
+        # Create a copy of keys to iterate over, allowing modification of original dict
+        for file_path in list(config.keys()):
+            doc_id = config[file_path]
+
             # Skip configuration comments
             if file_path.startswith('_'):
                 continue
+
+            if doc_id == NEW_DOC_PLACEHOLDER:
+                print(f"ℹ️  Found placeholder for {file_path}. Attempting to create new Google Doc.")
+                # Derive title from filename
+                title = os.path.basename(file_path)
+                # Potentially remove .md extension from title if desired
+                if title.endswith(".md"):
+                    title = title[:-3]
                 
-            if doc_id == "REPLACE_WITH_GOOGLE_DOC_ID":
-                print(f"⚠️  Skipping {file_path} - no Google Doc ID configured")
-                continue
+                new_doc_id = self.create_google_doc(title)
+
+                if new_doc_id:
+                    config[file_path] = new_doc_id
+                    doc_id = new_doc_id  # Use the new ID for syncing this iteration
+                    config_updated = True
+                    print(f"   🔄 Updated config for {file_path} with new Doc ID: {new_doc_id[:15]}...")
+                else:
+                    print(f"❌ Failed to create Google Doc for {file_path}. Skipping sync for this file.")
+                    continue  # Skip to the next file if creation failed
             
+            elif doc_id == "REPLACE_WITH_GOOGLE_DOC_ID": # Legacy placeholder
+                print(f"⚠️  Skipping {file_path} - uses legacy placeholder. Update to '{NEW_DOC_PLACEHOLDER}' to enable auto-creation.")
+                continue
+
             if not os.path.exists(file_path):
-                print(f"⚠️  File not found: {file_path}")
+                # This check should be after potential doc creation,
+                # as a new file might not exist yet if config was prepared in advance.
+                # However, for syncing content, the local file must exist.
+                print(f"⚠️  Local file not found: {file_path}. Skipping sync for this file.")
                 continue
             
             total_count += 1
             if self.sync_file(file_path, doc_id, clean_escapes):
                 success_count += 1
         
+        if config_updated:
+            print(f"\n💾 Updating configuration file: {config_file}...")
+            try:
+                with open(config_file, 'w') as f:
+                    json.dump(config, f, indent=2)
+                print(f"✅ Configuration file updated successfully.")
+            except IOError as e:
+                print(f"❌ Error writing updated configuration to {config_file}: {e}")
+                print("   Please check file permissions and path.")
+
         print(f"\n📊 Sync complete: {success_count}/{total_count} files synced successfully")
-        return success_count == total_count
+        return success_count == total_count and not (total_count == 0 and config_updated) # Success if all synced or only config updated
 
 
 def main():
