@@ -61,26 +61,42 @@ fi
 echo "✅ Prerequisites check passed"
 ```
 
-### Phase 2: Google Cloud Setup Guide
+### Phase 2: Google Cloud Setup and Credentials
+
+This step involves configuring Google Cloud to get the necessary `credentials.json` file that allows this script to access your Google Docs.
 
 ```bash
 echo ""
-echo "📋 Google Cloud Setup Required"
-echo "------------------------------"
+echo "📋 Google Cloud Setup Required for Credentials"
+echo "---------------------------------------------"
 echo ""
-echo "You'll need to set up Google Cloud credentials:"
+echo "You will now be guided to set up Google Cloud credentials."
+echo "For detailed, step-by-step instructions, please open and follow the guide:"
+echo "➡️  docs/GOOGLE_CLOUD_SETUP.md"
 echo ""
-echo "1. Go to: https://console.cloud.google.com/"
-echo "2. Create a new project or select existing"
-echo "3. Enable Google Docs API"
-echo "4. Create OAuth2 credentials (Desktop application)"
-echo "5. Download credentials.json"
+echo "Please open 'docs/GOOGLE_CLOUD_SETUP.md' in your editor or browser now."
+echo "It contains important details, including screenshots and troubleshooting."
 echo ""
-echo "Detailed instructions: https://developers.google.com/docs/api/quickstart/python"
+read -p "Press Enter to continue after you have the guide open..."
+
+echo ""
+echo "Key tasks you will perform by following 'docs/GOOGLE_CLOUD_SETUP.md':"
+echo "  1. Navigate to the Google Cloud Console."
+echo "  2. Create or select a Google Cloud Project."
+echo "  3. Enable the 'Google Docs API' for that project."
+echo "  4. Configure the OAuth Consent Screen."
+echo "  5. Create 'OAuth 2.0 Client ID' credentials of type 'Desktop app'."
+echo "  6. Download the generated JSON file and RENAME it to 'credentials.json'."
+echo ""
+echo "IMPORTANT: "
+echo "  - Ensure you are logged into the correct Google account in your browser."
+echo "  - The credential type MUST be 'Desktop app'."
+echo "  - Remember to RENAME the downloaded file to 'credentials.json'."
 echo ""
 
-read -p "Have you completed Google Cloud setup? (y/N): " CLOUD_SETUP
-if [[ ! "$CLOUD_SETUP" =~ ^[Yy]$ ]]; then
+read -p "Have you completed all steps in 'docs/GOOGLE_CLOUD_SETUP.md' and downloaded/renamed your 'credentials.json' file? (y/N): " CLOUD_SETUP_COMPLETE
+
+if [[ ! "$CLOUD_SETUP_COMPLETE" =~ ^[Yy]$ ]]; then
     echo ""
     echo "🔄 No problem! Complete the setup when ready:"
     echo "   1. Follow the Google Cloud setup above"
@@ -124,25 +140,48 @@ echo "✅ Credentials secured (600 permissions)"
 
 ```bash
 echo ""
-echo "🐍 Installing Python Dependencies"
-echo "---------------------------------"
+echo "🐍 Ensuring Python Environment is Ready..."
+echo "---------------------------------------"
+echo "This will run the .claude/scripts/setup.sh script to prepare the Python environment."
 
-cd .claude/scripts
+# Assuming this command is run from the project root directory
+SETUP_SCRIPT_PATH=".claude/scripts/setup.sh"
 
-# Create virtual environment if not exists
-if [ ! -d "venv" ]; then
-    python3 -m venv venv
-    echo "✅ Created Python virtual environment"
+if [ ! -f "$SETUP_SCRIPT_PATH" ]; then
+    echo "❌ Error: Python setup script not found at $SETUP_SCRIPT_PATH"
+    echo "   Please ensure you are in the project root and the script exists."
+    # For Claude commands, exiting might not be the best. Consider how errors are surfaced.
+    # For now, we'll assume the command framework handles script errors.
+    # If this were a standalone script, 'exit 1' would be here.
+    echo "SCRIPT_ERROR: Python setup script not found. Aborting."
+    # Claude CLI might require a specific way to signal error, this is a placeholder.
+    # Depending on how Claude CLI handles shell script execution, we might need to adjust error signaling.
+    # For now, printing an error and letting it continue might be what happens,
+    # or the Claude CLI might halt on non-zero exit codes if we add 'exit 1'.
+    # Let's assume for now that we want to halt.
+    exit 1 
 fi
 
-# Activate virtual environment
-source venv/bin/activate
+echo "   Running $SETUP_SCRIPT_PATH ..."
+# Make sure setup.sh is executable
+chmod +x "$SETUP_SCRIPT_PATH"
 
-# Install dependencies
-pip install -q google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client
-echo "✅ Installed Google API dependencies"
+# Execute setup.sh and capture its success/failure
+if bash "$SETUP_SCRIPT_PATH"; then
+    echo "✅ Python environment setup script completed successfully."
+    echo "   The Python virtual environment and dependencies should now be installed."
+else
+    echo "❌ Error: Python environment setup failed."
+    echo "   Please review the output from the setup script above for details."
+    echo "   You may need to resolve Python/pip issues or other errors shown."
+    echo "   Aborting Google Docs Sync enablement."
+    exit 1 # Signal error
+fi
 
-cd - > /dev/null
+# Reminder: setup.sh now deactivates the venv itself.
+# The following steps in this /madio-enable-sync command that need
+# to run python scripts (like the auth test) will need to re-activate it.
+echo "   Python environment is prepared for Google Docs Sync."
 ```
 
 ### Phase 5: Sync Configuration
