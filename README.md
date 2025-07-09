@@ -223,10 +223,15 @@ your-project/
 **Setup & Navigation:**
 - `/madio-setup` - One-time project initialization
 - `/orient` - Check current project status and next steps
+- `/madio-doctor` - Comprehensive project health check and diagnostics
 
 **AI System Generation:**
-- `/generate-ai-system` - Interactive MADIO system creation
+- `/generate-ai-system` - Interactive MADIO system creation with deep customization
 - `/generate-ai-system "[description]"` - Direct system generation
+
+**Optional Features:**
+- `/madio-enable-sync` - Set up Google Docs sync (optional, most users don't need this)
+- `/push-to-docs` - Sync documents to Google Docs (requires sync setup)
 
 **Examples:**
 ```bash
@@ -302,47 +307,41 @@ Local CLI (Development) ↔ AI_CONTEXT.md Bridge ↔ Browser AI (Strategy)
 - Platform-specific deployment optimization
 - Context continuity across development sessions
 
-## 🔄 Google Docs Sync Integration
+## 🔄 Google Docs Sync Integration (Optional)
 
-### **Breakthrough Capability: Local Development + Cloud Knowledge**
+### **Advanced Feature: Local Development + Cloud Knowledge**
 
-MADIO now bridges the gap between local development and cloud-based AI knowledge:
+**⚠️ IMPORTANT: This is an OPTIONAL feature that most users don't need.**
 
-**The Challenge Solved:**
-- Local development: Claude can write/edit files via MCP filesystem
-- Cloud deployment: Claude Projects need Google Docs for automatic updates
-- Previous gap: No easy way to sync local files to Google Docs
+For users who want automatic synchronization between local MADIO documents and Google Docs:
 
-**The Solution:**
+**When You Might Want This:**
+- Using Claude Projects as your primary AI platform
+- Want automatic document updates in Claude Project knowledge
+- Collaborating with business users who prefer Google Docs
+
+**When You DON'T Need This:**
+- Using OpenAI CustomGPT or Gemini Gems only
+- Prefer manual document uploads
+- Want to keep things simple
+
+**Setup (Optional):**
 ```bash
-# Setup (one-time)
-./.claude/scripts/setup.sh          # Install dependencies
-# Configure Google Cloud credentials (see docs/GOOGLE_CLOUD_SETUP.md)
-# Edit sync_config.json with your Google Doc IDs
-
-# Workflow
-gemini "update methodology_framework.md"  # Claude edits local file
-/push-to-docs                              # Sync to Google Docs
-# Claude Project automatically refreshes knowledge
+# Only run if you specifically need Google Docs sync
+/madio-enable-sync
 ```
 
-**What This Enables:**
-- **Framework Evolution**: Continuous improvement through Claude's direct file editing
-- **No Git Barrier**: Business users can leverage MADIO without technical workflows
-- **Automatic Sync**: Google Docs update immediately, Claude Projects refresh automatically
-- **Best of Both Worlds**: Local development speed + cloud knowledge persistence
+**What This Enables (If You Choose to Use It):**
+- **Automatic Sync**: Local file changes automatically update Google Docs
+- **Claude Project Integration**: Documents auto-refresh in Claude Project knowledge
+- **No Manual Uploads**: Skip the copy-paste step for document updates
 
-### **Setup Requirements:**
-1. **Google Cloud Project** with Docs API enabled (see `docs/GOOGLE_CLOUD_SETUP.md`)
-2. **OAuth2 Credentials** downloaded to `.claude/scripts/credentials.json`
-3. **Document Mapping** configured in `sync_config.json`
-4. **Python Dependencies** installed via setup script
-
-### **New Commands:**
+### **Available Commands (If Sync Enabled):**
+- `/madio-enable-sync` - One-time setup for Google Docs sync (optional)
 - `/push-to-docs` - Sync all configured files to Google Docs
 - `/push-to-docs --file file.md doc-id` - Sync specific file
 
-**See `docs/GOOGLE_CLOUD_SETUP.md` for complete setup instructions.**
+**💡 Remember: MADIO works perfectly without Google Docs sync!**
 
 ## 🔄 Getting Template Updates
 

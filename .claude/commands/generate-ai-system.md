@@ -217,16 +217,77 @@ for template in "${SELECTED_TEMPLATES[@]}"; do
 done
 ```
 
-### Phase 4: Document Generation
+### Phase 4: Interactive Project Details Collection
 
 ```bash
 echo ""
-echo "🚀 Generating MADIO Documents..."
+echo "📋 Let's gather details about your AI system..."
+echo ""
+
+# Collect project details based on complexity and description
+echo "Project Name: $PROJECT_NAME"
+read -p "Target Audience (e.g., customers, internal team, developers): " TARGET_AUDIENCE
+read -p "Primary Domain/Industry (e.g., tech support, marketing, healthcare): " DOMAIN
+read -p "Deployment Platform (openai/gemini/claude/all): " PLATFORM
+
+# Collect additional details based on system type
+if [[ "$AI_SYSTEM_DESC" =~ (personality|friendly|tone|voice) ]]; then
+    echo ""
+    echo "🎭 Character & Voice Details:"
+    read -p "Personality traits (e.g., friendly, professional, witty): " PERSONALITY_TRAITS
+    read -p "Communication style (e.g., formal, casual, technical): " COMM_STYLE
+    read -p "Example greeting for users: " EXAMPLE_GREETING
+fi
+
+if [[ "$AI_SYSTEM_DESC" =~ (content|writing|blog|article) ]]; then
+    echo ""
+    echo "✍️ Content Creation Details:"
+    read -p "Content types to create (e.g., blog posts, emails, reports): " CONTENT_TYPES
+    read -p "Tone variations needed (e.g., professional, casual, persuasive): " TONE_VARIATIONS
+    read -p "Any specific formatting requirements? " FORMAT_REQUIREMENTS
+fi
+
+if [[ "$AI_SYSTEM_DESC" =~ (analysis|evaluate|assess|methodology) ]]; then
+    echo ""
+    echo "📊 Analysis Framework Details:"
+    read -p "Types of analysis performed (e.g., data, business, risk): " ANALYSIS_TYPES
+    read -p "Key evaluation criteria (e.g., ROI, efficiency, accuracy): " EVAL_CRITERIA
+    read -p "Deliverable formats (e.g., reports, dashboards, summaries): " DELIVERABLES
+fi
+
+if [[ "$AI_SYSTEM_DESC" =~ (support|help|customer) ]]; then
+    echo ""
+    echo "🤝 Support System Details:"
+    read -p "Common issue categories (e.g., technical, billing, account): " ISSUE_CATEGORIES
+    read -p "Escalation triggers (e.g., angry customer, complex issue): " ESCALATION_TRIGGERS
+    read -p "Available resources/knowledge base: " KNOWLEDGE_BASE
+fi
+
+# Quality standards
+echo ""
+echo "📏 Quality Standards:"
+read -p "Critical quality requirements (e.g., accuracy, empathy, speed): " QUALITY_REQUIREMENTS
+read -p "Unacceptable behaviors (e.g., giving medical advice, making promises): " FORBIDDEN_ACTIONS
+
+echo ""
+echo "   ✅ Project details collected"
+```
+
+### Phase 5: Document Generation with Deep Customization
+
+```bash
+echo ""
+echo "🚀 Generating Customized MADIO Documents..."
 
 PROJECT_NAME=$(basename "$PWD")
 CURRENT_DATE=$(date '+%Y-%m-%d')
 
-# Generate each selected template
+# Function to escape special characters for sed
+escape_for_sed() {
+    echo "$1" | sed 's/[[\.*^$()+?{|]/\\&/g'
+}
+
+# Generate each selected template with customization
 for template in "${SELECTED_TEMPLATES[@]}"; do
     TEMPLATE_PATH="_template_library/$template"
     
@@ -236,43 +297,143 @@ for template in "${SELECTED_TEMPLATES[@]}"; do
         
         echo "   🔄 Generating $OUTPUT_NAME..."
         
-        # Copy template and replace placeholders
+        # Copy template
         cp "$TEMPLATE_PATH" "$OUTPUT_NAME"
         
         # Replace common placeholders
-        sed -i.bak "s/\[PROJECT_NAME\]/$PROJECT_NAME/g" "$OUTPUT_NAME"
-        sed -i.bak "s/\[CURRENT_DATE\]/$CURRENT_DATE/g" "$OUTPUT_NAME"
-        sed -i.bak "s/\[AI_SYSTEM_DESCRIPTION\]/$AI_SYSTEM_DESC/g" "$OUTPUT_NAME"
+        sed -i.bak "s/\[PROJECT_NAME\]/$(escape_for_sed "$PROJECT_NAME")/g" "$OUTPUT_NAME"
+        sed -i.bak "s/\[DATE\]/$(escape_for_sed "$CURRENT_DATE")/g" "$OUTPUT_NAME"
+        sed -i.bak "s/\[CURRENT_DATE\]/$(escape_for_sed "$CURRENT_DATE")/g" "$OUTPUT_NAME"
+        sed -i.bak "s/\[TARGET_AUDIENCE\]/$(escape_for_sed "$TARGET_AUDIENCE")/g" "$OUTPUT_NAME"
+        sed -i.bak "s/\[DOMAIN\]/$(escape_for_sed "$DOMAIN")/g" "$OUTPUT_NAME"
         
-        # Replace complexity-specific placeholders
+        # Document-specific customization
         case $OUTPUT_NAME in
             "project_system_instructions.md")
-                sed -i.bak "s/\[SYSTEM_PURPOSE\]/$AI_SYSTEM_DESC/g" "$OUTPUT_NAME"
+                # Customize primary directive
+                PRIMARY_DIRECTIVE="You are $PROJECT_NAME, an AI system designed to $AI_SYSTEM_DESC. Your primary mission is to serve $TARGET_AUDIENCE in the $DOMAIN domain with exceptional quality and reliability."
+                sed -i.bak "s/\[Define the fundamental purpose and mission of this AI system in 2-3 clear sentences\]/$(escape_for_sed "$PRIMARY_DIRECTIVE")/g" "$OUTPUT_NAME"
+                
+                # Customize scope
+                SCOPE="This system provides: $AI_SYSTEM_DESC. It does not: $FORBIDDEN_ACTIONS"
+                sed -i.bak "s/\[Clearly define what this system does and does not do\]/$(escape_for_sed "$SCOPE")/g" "$OUTPUT_NAME"
+                
+                # Set platform
+                case $PLATFORM in
+                    "openai") sed -i.bak "s/\[ \] OpenAI CustomGPT/\[x\] OpenAI CustomGPT/g" "$OUTPUT_NAME" ;;
+                    "gemini") sed -i.bak "s/\[ \] Google Gemini Gem/\[x\] Google Gemini Gem/g" "$OUTPUT_NAME" ;;
+                    "claude") sed -i.bak "s/\[ \] Claude Project/\[x\] Claude Project/g" "$OUTPUT_NAME" ;;
+                    "all") sed -i.bak "s/\[ \] Multi-platform deployment/\[x\] Multi-platform deployment/g" "$OUTPUT_NAME" ;;
+                esac
+                
+                # Add quality requirements
+                sed -i.bak "s/\[List requirements that, if violated, trigger immediate regeneration\]/$(escape_for_sed "$QUALITY_REQUIREMENTS")/g" "$OUTPUT_NAME"
+                
+                # Update subordinate documents list
+                SUBORDINATE_DOCS="- orchestrator.md (Tier 2) - Main workflow controller"
+                for t in "${SELECTED_TEMPLATES[@]}"; do
+                    if [[ "$t" =~ tier3 ]]; then
+                        DOC_NAME=$(echo "$t" | sed 's/madio_template_tier3_//g' | sed 's/.md//g')
+                        SUBORDINATE_DOCS="$SUBORDINATE_DOCS\n- ${DOC_NAME}.md (Tier 3) - Supporting document"
+                    fi
+                done
+                sed -i.bak "s/\[List all other Tier 2 and Tier 3 documents\]/$(escape_for_sed "$SUBORDINATE_DOCS")/g" "$OUTPUT_NAME"
                 ;;
+                
             "orchestrator.md")
-                # Add references to selected Tier 3 documents
+                # Add workflow introduction based on system type
+                WORKFLOW_INTRO="This orchestrator controls the workflow for $AI_SYSTEM_DESC, ensuring consistent quality for $TARGET_AUDIENCE."
+                sed -i.bak "s/\[Brief description of what this orchestrator controls\]/$(escape_for_sed "$WORKFLOW_INTRO")/g" "$OUTPUT_NAME"
+                
+                # Reference tier 3 documents
                 TIER3_REFS=""
                 for t in "${SELECTED_TEMPLATES[@]}"; do
                     if [[ "$t" =~ tier3 ]]; then
                         REF_NAME=$(echo "$t" | sed 's/madio_template_tier3_//g' | sed 's/.md//g')
-                        TIER3_REFS="$TIER3_REFS- $REF_NAME.md\n"
+                        TIER3_REFS="$TIER3_REFS- ${REF_NAME}.md\n"
                     fi
                 done
-                sed -i.bak "s/\[TIER3_DOCUMENTS\]/$TIER3_REFS/g" "$OUTPUT_NAME"
+                sed -i.bak "s/\[List all Tier 3 documents this orchestrator will reference\]/$(escape_for_sed "$TIER3_REFS")/g" "$OUTPUT_NAME"
+                ;;
+                
+            "character_voice_authority.md")
+                if [ ! -z "$PERSONALITY_TRAITS" ]; then
+                    sed -i.bak "s/\[Define the personality traits\]/$(escape_for_sed "$PERSONALITY_TRAITS")/g" "$OUTPUT_NAME"
+                fi
+                if [ ! -z "$COMM_STYLE" ]; then
+                    sed -i.bak "s/\[Describe communication style\]/$(escape_for_sed "$COMM_STYLE")/g" "$OUTPUT_NAME"
+                fi
+                if [ ! -z "$EXAMPLE_GREETING" ]; then
+                    sed -i.bak "s/\[Example greeting or introduction\]/$(escape_for_sed "$EXAMPLE_GREETING")/g" "$OUTPUT_NAME"
+                fi
+                ;;
+                
+            "content_operations.md")
+                if [ ! -z "$CONTENT_TYPES" ]; then
+                    sed -i.bak "s/\[List content types\]/$(escape_for_sed "$CONTENT_TYPES")/g" "$OUTPUT_NAME"
+                fi
+                if [ ! -z "$TONE_VARIATIONS" ]; then
+                    sed -i.bak "s/\[Define tone variations\]/$(escape_for_sed "$TONE_VARIATIONS")/g" "$OUTPUT_NAME"
+                fi
+                ;;
+                
+            "methodology_framework.md")
+                if [ ! -z "$ANALYSIS_TYPES" ]; then
+                    sed -i.bak "s/\[Types of analysis\]/$(escape_for_sed "$ANALYSIS_TYPES")/g" "$OUTPUT_NAME"
+                fi
+                if [ ! -z "$EVAL_CRITERIA" ]; then
+                    sed -i.bak "s/\[Evaluation criteria\]/$(escape_for_sed "$EVAL_CRITERIA")/g" "$OUTPUT_NAME"
+                fi
                 ;;
         esac
+        
+        # Final cleanup - replace any remaining generic placeholders
+        sed -i.bak "s/\[SYSTEM_CONTEXT\]/$(escape_for_sed "$AI_SYSTEM_DESC")/g" "$OUTPUT_NAME"
+        sed -i.bak "s/\[PRIMARY_FUNCTION\]/$(escape_for_sed "$AI_SYSTEM_DESC")/g" "$OUTPUT_NAME"
+        sed -i.bak "s/\[QUALITY_STANDARDS\]/$(escape_for_sed "$QUALITY_REQUIREMENTS")/g" "$OUTPUT_NAME"
         
         # Remove backup file
         rm "$OUTPUT_NAME.bak" 2>/dev/null || true
         
-        echo "      ✅ Generated $OUTPUT_NAME"
+        echo "      ✅ Generated and customized $OUTPUT_NAME"
     else
         echo "      ❌ Template not found: $template"
     fi
 done
+
+# Scan for remaining placeholders
+echo ""
+echo "   🔍 Scanning for remaining placeholders..."
+REMAINING_PLACEHOLDERS=$(grep -h "\[.*\]" *.md 2>/dev/null | grep -v "^\[x\]" | sort | uniq | head -10)
+if [ ! -z "$REMAINING_PLACEHOLDERS" ]; then
+    echo "   ⚠️  Some placeholders need manual replacement:"
+    echo "$REMAINING_PLACEHOLDERS" | sed 's/^/      /'
+else
+    echo "   ✅ All major placeholders replaced!"
+fi
 ```
 
-### Phase 5: AI_CONTEXT.md Update
+### Phase 6: Template Library Cleanup
+
+```bash
+echo ""
+echo "🧹 Cleaning up template library..."
+
+# Remove template library after successful generation
+if [ -d "_template_library" ]; then
+    echo "   ℹ️  The template library served its purpose!"
+    echo "   ℹ️  Removing _template_library/ to keep your project clean"
+    rm -rf "_template_library"
+    echo "   ✅ Template library removed"
+else
+    echo "   ℹ️  Template library already removed"
+fi
+
+# Note: Templates are preserved in the original madio-start repository
+# Users can get updates via: git pull template main
+```
+
+### Phase 7: AI_CONTEXT.md Update
 
 ```bash
 echo ""
@@ -305,7 +466,7 @@ else
 fi
 ```
 
-### Phase 6: Validation and Success
+### Phase 8: Validation and Success
 
 ```bash
 echo ""
