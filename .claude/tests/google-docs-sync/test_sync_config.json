@@ -1,8 +1,8 @@
 {
   "_comment": "Test configuration for MADIO Google Docs sync",
-  "_note": "Replace the PLACEHOLDER_DOC_ID values with actual Google Doc IDs",
+  "_note": "Updated with actual Google Doc IDs from madiotest3 project",
   
-  "test_project_system_instructions.md": "PLACEHOLDER_DOC_ID_1",
-  "test_orchestrator.md": "PLACEHOLDER_DOC_ID_2",
-  "test_methodology_framework.md": "PLACEHOLDER_DOC_ID_3"
+  "test_orchestrator.md": "1RdDNthNa0ayZu31MnKNo6RE20b_RBVzGqIDrKHkzIYc",
+  "test_methodology_framework.md": "1rl8lbQrjlRoNZ2F62g3VWfxc_eGN5D1qk17F9Fu9eY0",
+  "test_content_operations.md": "1WpUo3I9X7F9vmQdiE_ip1y4RN84__R_Vlzs85me_20M"
 }

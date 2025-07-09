@@ -1,62 +1,34 @@
 # Google Docs Sync Test Files
 
-This directory contains test files for validating the MADIO Google Docs synchronization functionality.
+Test files for validating MADIO Google Docs synchronization functionality.
 
 ## Test Files
 
-### Markdown Test Documents
-- `test_project_system_instructions.md` - Marketing Analysis AI with test behavior trigger
-- `test_orchestrator.md` - Step-by-step methodology with "ORCHESTRATOR ACTIVE" response
-- `test_methodology_framework.md` - Analysis framework with "FRAMEWORK VERSION: Original" response
+### Knowledge Base Files (3)
+- `test_orchestrator.md` → Google Doc ID: `1RdDNthNa0ayZu31MnKNo6RE20b_RBVzGqIDrKHkzIYc`
+- `test_methodology_framework.md` → Google Doc ID: `1rl8lbQrjlRoNZ2F62g3VWfxc_eGN5D1qk17F9Fu9eY0`
+- `test_content_operations.md` → Google Doc ID: `1WpUo3I9X7F9vmQdiE_ip1y4RN84__R_Vlzs85me_20M`
 
 ### Configuration
-- `test_sync_config.json` - Test configuration mapping these files to Google Doc IDs
+- `test_sync_config.json` - Maps test files to Google Doc IDs
 
 ## Test Behavior Triggers
 
-These files contain specific triggers to validate sync functionality:
+Each file contains deliberate test responses:
 
-1. **Initial Behavior Test**
-   - Trigger: "analyze test scenario"
-   - Expected Response: "INITIAL BEHAVIOR: This response confirms..."
+- **Orchestrator**: "analyze test scenario" → "ORCHESTRATOR ACTIVE"
+- **Methodology**: Test scenarios → "FRAMEWORK VERSION: Original"
+- **Content Operations**: "what are the content guidelines" → "CONTENT OPERATIONS GUIDELINES VERSION: Original"
 
-2. **Orchestrator Test**
-   - Trigger: "test orchestrator active"
-   - Expected Response: "ORCHESTRATOR ACTIVE: Step-by-step methodology engaged..."
+## Test Plan
 
-3. **Framework Version Test**
-   - Trigger: "check framework version"
-   - Expected Response: "FRAMEWORK VERSION: Original"
+1. Create Claude Project with these 3 Google Docs as knowledge
+2. Test initial behavior triggers
+3. Modify test files locally via Claude Code/MCP
+4. Run `/push-to-docs` to sync changes
+5. Verify Google Docs updated
+6. Refresh Claude Project knowledge
+7. Test behavior changes to confirm sync worked
 
-## Testing Workflow
-
-1. **Setup Google Docs**
-   - Create test Google Docs for each markdown file
-   - Get the document IDs from the URLs
-   - Update `test_sync_config.json` with actual IDs
-
-2. **Initial Sync**
-   ```bash
-   /push-to-docs --config .claude/tests/google-docs-sync/test_sync_config.json
-   ```
-
-3. **Test Initial Behavior**
-   - Create Claude Project with test docs
-   - Test triggers to verify initial responses
-
-4. **Modify and Re-sync**
-   - Change test behaviors in markdown files
-   - Re-sync to Google Docs
-   - Verify Claude Project picks up changes
-
-5. **Validate Results**
-   - Confirm modified behaviors work
-   - Test all three documents
-   - Verify sync completeness
-
-## Important Notes
-
-- These files are for framework testing only
-- Do not include in user projects during `/madio-setup`
-- Keep updated as sync functionality evolves
-- Use for regression testing when updating sync code
+## Note
+Project instructions (`test_project_system_instructions.md`) removed - goes into Claude Project Instructions, not knowledge base.

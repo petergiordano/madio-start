@@ -17,7 +17,22 @@
 - [ ] Add Google Docs sync optional setup prompt
 - [ ] Create post-setup validation and health check
 
-### 2. ✨ Quick Start Improvements
+### 2. 🚨 CRITICAL: Fix Generate AI System Command
+- [ ] **`/generate-ai-system` copies templates without customization** - Currently just copies template files instead of walking user through questions to customize them
+- [ ] **Reference inspiration**: `/Users/petergiordano/Documents/GitHub/ai-new-project-template/.claude/commands/project-setup` and `start-coding` commands
+- [ ] Should prompt user for project details and replace template placeholders
+- [ ] Should create truly customized files, not template copies
+
+### 3. 🚨 CRITICAL: Fix Template Library Cleanup
+- [ ] **`_template_library/` folder not removed during setup** - Should be cleaned up by `madio-setup` command
+- [ ] Template files should only exist during development, not in user projects
+
+### 4. 🔧 Google Docs Sync Improvements
+- [ ] **Fix Google Docs markdown export escaping** - Google Docs "Download as Markdown" adds backslashes before #, *, numbers, etc.
+- [ ] Use Google Docs API to fetch clean markdown instead of export feature
+- [ ] Add regex cleanup step: Find `\\([#*.-]|\d)` Replace `$1` as fallback
+
+### 5. ✨ Quick Start Improvements
 - [ ] Move `_GETTING-STARTED.md` to prominent location after setup
 - [ ] Create interactive setup wizard for first-time users
 - [ ] Add VS Code recommended extensions prompt
