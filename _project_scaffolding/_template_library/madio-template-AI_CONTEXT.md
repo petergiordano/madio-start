@@ -1,3 +1,8 @@
+<!-- 
+MADIO TEMPLATE FILE - Contains placeholder values in square brackets
+These are intentionally incomplete markdown links that get replaced during setup
+-->
+
 # AI_CONTEXT.md - Project Bridge File
 
 > **Purpose:** This file provides seamless context transfer between local CLI development and deployed AI systems.

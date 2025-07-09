@@ -38,5 +38,9 @@
   "git.autofetch": true,
   "git.enableSmartCommit": true,
   "explorer.excludeGitIgnore": true,
-  "workbench.startupEditor": "readme"
+  "workbench.startupEditor": "readme",
+  "markdown.validate.enabled": false,
+  "markdown.validate.fileLinks.enabled": false,
+  "markdown.validate.fragmentLinks.enabled": false,
+  "markdown.validate.referenceLinks.enabled": false
 }
