@@ -77,17 +77,40 @@ class GoogleDocsSync:
         - \\- List item → - List item 
         - \\*emphasis\\* → *emphasis*
         - \\1. Numbered → 1. Numbered
+        
+        This function gracefully handles both escaped and non-escaped content.
         """
         import re
         
         if not content:
             return content
             
-        # Store original content length for reporting
-        original_length = len(content)
+        # First, check if content appears to be escaped (heuristic)
+        escaped_indicators = [
+            r'\\#',          # Escaped headers
+            r'\\-\s',        # Escaped lists  
+            r'\\\*.*\\\*',   # Escaped emphasis
+            r'\\\d+\.',      # Escaped numbered lists
+            r'\\>',          # Escaped blockquotes
+            r'\\\[.*\\\]',   # Escaped links
+        ]
+        
+        # Count potential escaped markdown patterns
+        escape_count = 0
+        for indicator in escaped_indicators:
+            if re.search(indicator, content):
+                escape_count += 1
+        
+        # If no escaped patterns detected, return original content
+        if escape_count == 0:
+            return content
+            
+        # Report detection
+        print(f"   🔍 Detected {escape_count} types of escaped markdown patterns")
         
         # Pattern to match escaped markdown characters
         # Matches: \# \* \- \+ \. \1 \2 etc.
+        # Ordered by specificity to avoid conflicts
         patterns = [
             # Headers: \# \## \### etc. (handle escaped consecutive hashes)
             (r'\\(#{1,6})', r'\1'),
@@ -98,24 +121,21 @@ class GoogleDocsSync:
             # Numbered lists: \1. \2. etc.
             (r'(^|\s)\\(\d+)\.', r'\1\2.'),
             
-            # Emphasis: \*text\* \_text\_
-            (r'\\([*_])', r'\1'),
+            # Emphasis: \*text\* \_text\_ (but not legitimate double backslashes)
+            (r'(?<!\\)\\([*_])', r'\1'),
             
             # Inline code: \`code\`
-            (r'\\(`)', r'\1'),
+            (r'(?<!\\)\\(`)', r'\1'),
             
-            # Links: \[text\]\(url\)
-            (r'\\([\[\]])', r'\1'),
-            (r'\\([()])', r'\1'),
+            # Links: \[text\]\(url\) (but preserve legitimate escapes)
+            (r'(?<!\\)\\([\[\]])', r'\1'),
+            (r'(?<!\\)\\([()])', r'\1'),
             
             # Horizontal rules: \--- \***
-            (r'\\([-*]{3,})', r'\1'),
+            (r'(?<!\\)\\([-*]{3,})', r'\1'),
             
             # Blockquotes: \> 
             (r'(^|\s)\\(>)\s', r'\1\2 '),
-            
-            # Escape sequences that shouldn't be escaped
-            (r'\\(\\)', r'\1'),  # Keep legitimate backslashes
         ]
         
         cleaned_content = content
@@ -132,6 +152,8 @@ class GoogleDocsSync:
         # Report cleanup results
         if changes_made > 0:
             print(f"   🧹 Cleaned {changes_made} types of escaped markdown characters")
+        else:
+            print(f"   ℹ️  No escaped markdown characters found to clean")
         
         return cleaned_content
     
