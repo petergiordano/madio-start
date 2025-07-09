@@ -23,9 +23,11 @@ This file records the specific Google Cloud setup for this MADIO template projec
   - Description: "Reads and writes Google Docs documents"
   - Provider: By Google Enterprise API
 
-- **Google Drive API** - ✅ Enabled (assumed based on folder functionality)
-  - Required for folder organization features
-  - Required for CREATE_NEW_DOCUMENT functionality
+- **Google Drive API** - ❌ Not Enabled
+  - Service: `drive.googleapis.com`
+  - Status: Available but not enabled
+  - Description: "Create and manage resources in Google Drive"
+  - Note: Required for folder organization features if desired
 
 ### OAuth 2.0 Configuration
 - **Application Type**: Desktop Application
@@ -54,9 +56,9 @@ This file records the specific Google Cloud setup for this MADIO template projec
 ### Sync Configuration
 - **Sync Config File**: `.claude/scripts/sync_config.json`
 - **Documents Configured**: Multiple (based on template testing)
-- **Folder Support**: ✅ Enabled (CREATE_NEW_DOCUMENT functionality)
+- **Folder Support**: ❌ Limited (Google Drive API not enabled)
 - **Auto-Creation**: ✅ Enabled (CREATE_NEW_DOCUMENT placeholders)
-- **Google Drive Integration**: ✅ Enabled for folder organization
+- **Google Drive Integration**: ❌ Not available (Drive API not enabled)
 
 ## Current Status
 
@@ -73,7 +75,7 @@ This file records the specific Google Cloud setup for this MADIO template projec
 - **Credentials not found**: Verify `.claude/scripts/credentials.json` exists
 - **Token expired**: Delete `token.pickle` and re-authenticate
 - **API quota exceeded**: Check Google Cloud Console quotas
-- **Drive API errors**: Ensure Google Drive API is enabled
+- **Drive API errors**: Google Drive API not enabled - only basic document sync available
 
 ### Project-Specific Notes
 - Project configured specifically for MADIO template development
@@ -83,8 +85,9 @@ This file records the specific Google Cloud setup for this MADIO template projec
 - User cap: 1/100 (expandable by adding more test users)
 - Credentials secured with 600 permissions
 - Sync configuration supports multiple document types
-- Successfully tested with folder creation and organization
+- Basic document sync tested and working
 - CREATE_NEW_DOCUMENT functionality working correctly
+- Folder organization not available (Google Drive API not enabled)
 
 ## Maintenance History
 
@@ -95,7 +98,7 @@ This file records the specific Google Cloud setup for this MADIO template projec
 | July 8, 2025 | OAuth client created | ✅ Complete | MADIO Sync Client (Desktop app) |
 | July 8, 2025 | Credentials downloaded | ✅ Complete | credentials.json configured |
 | July 8, 2025 | Sync testing | ✅ Complete | Successfully tested document sync |
-| July 8, 2025 | Folder functionality | ✅ Complete | Google Drive API integration |
+| July 8, 2025 | Basic sync testing | ✅ Complete | Document sync without folders |
 
 ## Configuration Evidence
 
@@ -109,7 +112,7 @@ This file records the specific Google Cloud setup for this MADIO template projec
 
 ### Verified Functionality
 - ✅ Document creation and sync
-- ✅ Folder organization
+- ❌ Folder organization (Google Drive API not enabled)
 - ✅ CREATE_NEW_DOCUMENT placeholder replacement
 - ✅ Authentication flow
 - ✅ Python environment integration
