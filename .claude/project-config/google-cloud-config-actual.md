@@ -39,6 +39,11 @@ This file records the specific Google Cloud setup for this MADIO template projec
 - **Publishing Status**: Testing (not published to production)
 - **User Cap**: 1 user (1 test, 0 other) / 100 user cap
 - **Test Users**: `pgiordano@gmail.com`
+- **App Name**: "MADIO Google Docs Sync"
+- **User Support Email**: `pgiordano@gmail.com`
+- **Developer Contact Email**: `pgiordano@gmail.com`
+- **App Logo**: Not configured
+- **App Domain**: Not configured (optional)
 
 ### Credentials Location
 - **File**: `.claude/scripts/credentials.json`
@@ -99,6 +104,8 @@ This file records the specific Google Cloud setup for this MADIO template projec
 2. **Google Docs API**: Confirmed enabled with metrics
 3. **OAuth Clients**: Shows MADIO Sync Client configuration
 4. **Client Details**: Full OAuth client configuration details
+5. **OAuth Consent Screen**: Shows testing mode and test user configuration
+6. **Branding Configuration**: Shows app name and contact details
 
 ### Verified Functionality
 - ✅ Document creation and sync
