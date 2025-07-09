@@ -67,6 +67,74 @@ class GoogleDocsSync:
             print(f"❌ Error reading file {file_path}: {e}")
             return None
     
+    def clean_escaped_markdown(self, content):
+        """
+        Clean escaped markdown characters from Google Docs export
+        
+        Google Docs "Download as Markdown" feature escapes markdown syntax,
+        resulting in content like:
+        - \\# Header → # Header
+        - \\- List item → - List item 
+        - \\*emphasis\\* → *emphasis*
+        - \\1. Numbered → 1. Numbered
+        """
+        import re
+        
+        if not content:
+            return content
+            
+        # Store original content length for reporting
+        original_length = len(content)
+        
+        # Pattern to match escaped markdown characters
+        # Matches: \# \* \- \+ \. \1 \2 etc.
+        patterns = [
+            # Headers: \# \## \### etc. (handle escaped consecutive hashes)
+            (r'\\(#{1,6})', r'\1'),
+            
+            # Lists: \- \* \+ at start of line or after whitespace
+            (r'(^|\s)\\([-*+])\s', r'\1\2 '),
+            
+            # Numbered lists: \1. \2. etc.
+            (r'(^|\s)\\(\d+)\.', r'\1\2.'),
+            
+            # Emphasis: \*text\* \_text\_
+            (r'\\([*_])', r'\1'),
+            
+            # Inline code: \`code\`
+            (r'\\(`)', r'\1'),
+            
+            # Links: \[text\]\(url\)
+            (r'\\([\[\]])', r'\1'),
+            (r'\\([()])', r'\1'),
+            
+            # Horizontal rules: \--- \***
+            (r'\\([-*]{3,})', r'\1'),
+            
+            # Blockquotes: \> 
+            (r'(^|\s)\\(>)\s', r'\1\2 '),
+            
+            # Escape sequences that shouldn't be escaped
+            (r'\\(\\)', r'\1'),  # Keep legitimate backslashes
+        ]
+        
+        cleaned_content = content
+        changes_made = 0
+        
+        for pattern, replacement in patterns:
+            before_length = len(cleaned_content)
+            cleaned_content = re.sub(pattern, replacement, cleaned_content, flags=re.MULTILINE)
+            after_length = len(cleaned_content)
+            
+            if before_length != after_length:
+                changes_made += 1
+        
+        # Report cleanup results
+        if changes_made > 0:
+            print(f"   🧹 Cleaned {changes_made} types of escaped markdown characters")
+        
+        return cleaned_content
+    
     def update_google_doc(self, doc_id, content):
         """Update Google Doc with markdown content"""
         try:
@@ -107,13 +175,17 @@ class GoogleDocsSync:
             print(f"❌ Unexpected error updating Google Doc {doc_id}: {e}")
             return False
     
-    def sync_file(self, file_path, doc_id):
+    def sync_file(self, file_path, doc_id, clean_escapes=True):
         """Sync a single file to Google Docs"""
         print(f"📄 Syncing {file_path} to Google Doc {doc_id[:8]}...")
         
         content = self.read_markdown_file(file_path)
         if content is None:
             return False
+        
+        # Clean escaped markdown characters if requested
+        if clean_escapes:
+            content = self.clean_escaped_markdown(content)
         
         success = self.update_google_doc(doc_id, content)
         if success:
@@ -123,7 +195,7 @@ class GoogleDocsSync:
         
         return success
     
-    def sync_all_files(self, config_file='sync_config.json'):
+    def sync_all_files(self, config_file='sync_config.json', clean_escapes=True):
         """Sync all files based on configuration"""
         if not os.path.exists(config_file):
             print(f"❌ Config file not found: {config_file}")
@@ -153,7 +225,7 @@ class GoogleDocsSync:
                 continue
             
             total_count += 1
-            if self.sync_file(file_path, doc_id):
+            if self.sync_file(file_path, doc_id, clean_escapes):
                 success_count += 1
         
         print(f"\n📊 Sync complete: {success_count}/{total_count} files synced successfully")
@@ -165,6 +237,7 @@ def main():
     parser.add_argument('--file', help='Specific file to sync')
     parser.add_argument('--doc-id', help='Google Doc ID (required with --file)')
     parser.add_argument('--config', default='sync_config.json', help='Config file path')
+    parser.add_argument('--no-clean', action='store_true', help='Skip cleaning escaped markdown characters')
     parser.add_argument('--credentials', default='credentials.json', help='Google credentials file')
     parser.add_argument('--token', default='token.pickle', help='Token file for authentication')
     
@@ -184,7 +257,8 @@ def main():
             
             # Go back to project root for file access
             os.chdir('../..')
-            success = sync.sync_file(args.file, args.doc_id)
+            clean_escapes = not args.no_clean
+            success = sync.sync_file(args.file, args.doc_id, clean_escapes)
             sys.exit(0 if success else 1)
         else:
             # Handle config file path - check if it's relative to script dir or project root
@@ -202,7 +276,8 @@ def main():
                     os.chdir('../..')
                     config_path = f'.claude/scripts/{args.config}'
             
-            success = sync.sync_all_files(config_path)
+            clean_escapes = not args.no_clean
+            success = sync.sync_all_files(config_path, clean_escapes)
             sys.exit(0 if success else 1)
             
     except KeyboardInterrupt:

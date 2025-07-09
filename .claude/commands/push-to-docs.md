@@ -20,6 +20,11 @@ python3 sync_to_docs.py --config sync_config.json
 /push-to-docs --config my_sync_config.json
 ```
 
+### Skip markdown cleanup (if needed)
+```bash
+/push-to-docs --no-clean  # Skip cleaning escaped markdown characters
+```
+
 ## Setup Required
 
 ### 1. Install dependencies
@@ -51,9 +56,32 @@ Run `/push-to-docs` - browser will open for Google OAuth consent.
 ## How it works
 
 1. Reads local `.md` files
-2. Completely replaces Google Doc content
-3. Preserves document ID for Claude Project
-4. All Google Docs auto-update in Claude Project knowledge
+2. **NEW**: Automatically cleans escaped markdown characters from Google Docs exports
+3. Completely replaces Google Doc content
+4. Preserves document ID for Claude Project
+5. All Google Docs auto-update in Claude Project knowledge
+
+### ✨ New: Automatic Markdown Cleanup
+
+The sync now automatically fixes escaped markdown characters from Google Docs exports:
+
+**Before (Escaped):**
+```
+\# Header
+\- List item
+\*emphasis\*
+\1. Numbered list
+```
+
+**After (Cleaned):**
+```
+# Header
+- List item
+*emphasis*
+1. Numbered list
+```
+
+This solves the common issue where Google Docs "Download as Markdown" adds backslashes before markdown syntax.
 
 ## Command Implementation
 
