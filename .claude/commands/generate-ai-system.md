@@ -510,40 +510,59 @@ if [[ "$SETUP_SYNC" =~ ^[Yy]$ ]]; then
     echo "   ✅ Created synced_docs/ directory"
     
     # Move generated files to synced_docs
+    MOVED_COUNT=0
     for file in "${GENERATED_FILES[@]}"; do
         if [ -f "$file" ]; then
             mv "$file" "synced_docs/"
             echo "   📁 Moved $file → synced_docs/"
+            ((MOVED_COUNT++))
         fi
     done
     
     echo ""
-    echo "🚀 Flexible sync directory ready!"
+    echo "✅ Moved $MOVED_COUNT files to synced_docs/ for easy sync!"
     echo ""
     
     # Check if Google credentials are set up
     if [ -f ".claude/scripts/credentials.json" ]; then
-        echo "✅ Google credentials found - ready to sync:"
-        echo "   python .claude/scripts/sync_to_docs.py --directory synced_docs"
+        echo "🚀 Google credentials found - ready to sync!"
+        echo ""
+        echo "🎯 Quick Start (3 simple steps):"
+        echo "   1. ✅ Files already moved to synced_docs/ (done!)"
+        echo "   2. Run sync command:"
+        echo "      python .claude/scripts/sync_to_docs.py --directory synced_docs"
+        echo "   3. That's it! Google Docs will be created automatically"
+        echo ""
+        echo "📋 After first sync:"
+        echo "   • Edit files locally in synced_docs/"
+        echo "   • Run the same sync command to update Google Docs"
+        echo "   • All document IDs are saved automatically"
     else
         echo "⚠️  Google credentials needed before first sync:"
-        echo "   1. Run: ./.claude/scripts/setup.sh"
-        echo "   2. Set up Google Cloud credentials (follow prompts)"
-        echo "   3. Then run: python .claude/scripts/sync_to_docs.py --directory synced_docs"
+        echo ""
+        echo "🎯 Quick Setup (one-time only):"
+        echo "   1. Enable Google Docs sync: /madio-enable-sync"
+        echo "   2. Follow the Google Cloud setup prompts"
+        echo "   3. Then sync: python .claude/scripts/sync_to_docs.py --directory synced_docs"
+        echo ""
+        echo "💡 Your files are already organized in synced_docs/ and ready!"
     fi
     
+    echo ""
+    echo "📊 What's in synced_docs/:"
+    ls -la synced_docs/*.md 2>/dev/null | wc -l | xargs echo "   •" && echo " markdown files ready to sync"
     echo ""
     echo "💡 Benefits of flexible sync:"
     echo "   • Zero configuration - just add .md files to synced_docs/"
     echo "   • Automatic Google Doc creation for new files"
     echo "   • Persistent file→doc ID mapping in .synced_docs_mapping.json"
-    echo "   • Recursive discovery of files in subdirectories"
+    echo "   • Works with any directory structure"
     echo ""
 else
     echo ""
     echo "📋 Files remain in project root. To sync later:"
-    echo "   • Traditional mode: Configure .claude/scripts/sync_config.json"
-    echo "   • Flexible mode: Move files to synced_docs/ directory"
+    echo "   • Option 1: Move to synced_docs/ → python .claude/scripts/sync_to_docs.py --directory synced_docs"
+    echo "   • Option 2: Configure .claude/scripts/sync_config.json → /push-to-docs"
 fi
 echo ""
 echo "🚀 Next Steps:"
