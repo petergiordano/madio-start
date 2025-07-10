@@ -47,8 +47,8 @@
 madio-start/
 ├── _template_library/           # 14 production templates
 ├── .claude/                     # Claude Code commands and scripts
-│   ├── commands/               # /madio-setup, /generate-ai-system, /push-to-docs
-│   └── scripts/                # Google Docs sync system
+│   ├── commands/               # /madio-setup, /generate-ai-system, /madio-import-docs, /push-to-docs
+│   └── scripts/                # Google Docs sync system + document analysis
 ├── setup-ai-companion/        # Multi-platform AI setup guides
 ├── docs/                       # Documentation including Google Cloud setup
 └── sync_config.json            # Document mapping configuration
@@ -80,7 +80,7 @@ madio-start/
 ## Recent Major Accomplishments (January 10, 2025)
 
 ### **🚀 User Experience Transformation Completed**
-**Status**: 8 major UX improvements delivered, transforming user journey from 5+ steps to 3 simple steps
+**Status**: 9 major UX improvements delivered, transforming user journey from 5+ steps to 3 simple steps
 
 #### **Key Achievements**:
 1. **Enhanced `/generate-ai-system`**: Auto-moves files to `synced_docs/` when sync chosen
@@ -91,6 +91,7 @@ madio-start/
 6. **URL Management**: Automatic Google Doc URL display and persistent file export
 7. **Quick Start Guide**: 3-step workflow in `/madio-enable-sync` command
 8. **Dependency Update**: Added `tqdm==4.66.1` for enhanced progress visualization
+9. **NEW: Document Import**: `/madio-import-docs` with intelligent analysis and context generation
 
 #### **Impact Metrics**:
 - **Setup Reduction**: 60% fewer steps (5+ → 3 steps)
@@ -102,7 +103,9 @@ madio-start/
 
 ### **Enhanced MADIO Development Cycle**
 1. **Setup**: `/madio-setup` initializes project structure
-2. **Generation**: `/generate-ai-system` creates documents + auto-organizes for sync
+2. **Content Creation**: 
+   - **New Projects**: `/generate-ai-system` creates documents + auto-organizes for sync
+   - **Existing Documents**: `/madio-import-docs` analyzes and organizes with intelligent context generation
 3. **Development**: Local editing with automatic file discovery
 4. **Sync**: Single command with progress visualization and URL display
 5. **Monitoring**: `/sync-status` for health checks and URL access
