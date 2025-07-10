@@ -114,41 +114,53 @@ TEMP_FILE_LIST=".madio_import_files_$IMPORT_TIMESTAMP.tmp"
 # Discover MADIO documents
 echo "Scanning for MADIO documents in: $SOURCE_DIR"
 
-# Pattern matching for MADIO documents
-MADIO_PATTERNS=(
-    "project_system_instructions.md"
-    "orchestrator.md"
-    "*character_voice*.md"
-    "*content_operations*.md"
-    "*methodology_framework*.md"
-    "*rubrics_evaluation*.md"
-    "*strategic_framework*.md"
-    "*research_protocols*.md"
-    "*implementation_roadmap*.md"
-    "*document_reference_map*.md"
-    "*visual_design*.md"
-    "*visual_asset*.md"
-    "*standard*.md"
-)
+# Smart MADIO document detection - analyze content rather than filenames
+echo "Using intelligent document detection..."
 
-# Find all matching files
-> "$TEMP_FILE_LIST"
-for pattern in "${MADIO_PATTERNS[@]}"; do
-    find "$SOURCE_DIR" -name "$pattern" -type f >> "$TEMP_FILE_LIST"
-done
+# Find all .md files in source directory (non-recursive to avoid issues)
+echo "   Scanning $SOURCE_DIR for .md files..."
+timeout 30s find "$SOURCE_DIR" -maxdepth 1 -name "*.md" -type f > "$TEMP_FILE_LIST" 2>/dev/null
 
-# Also find any .md files that might be MADIO documents based on content
-find "$SOURCE_DIR" -name "*.md" -type f | while read -r file; do
-    # Skip if already in list
-    if grep -q "$file" "$TEMP_FILE_LIST"; then
-        continue
+if [ $? -eq 124 ]; then
+    echo "❌ File discovery timed out. Large directory or permission issues?"
+    echo "💡 Try using --source with a specific directory containing your MADIO files"
+    exit 1
+fi
+
+# Filter out non-MADIO files
+FILTERED_LIST=".madio_filtered_$IMPORT_TIMESTAMP.tmp"
+> "$FILTERED_LIST"
+
+while IFS= read -r file; do
+    if [ -f "$file" ]; then
+        BASENAME=$(basename "$file")
+        
+        # Skip system files
+        if [[ "$BASENAME" =~ ^(README|GETTING-STARTED|TODO|SYNC_SETUP|AI_CONTEXT|CLAUDE|GEMINI|JULES)\.md$ ]]; then
+            echo "   ⏭️  Skipping system file: $BASENAME"
+            continue
+        fi
+        
+        # Check if file contains MADIO markers
+        if grep -q -E "(# .+ \(Tier [1-3]\)|## Authority Level|## Document Purpose|Tier [1-3] Document)" "$file" 2>/dev/null; then
+            echo "   ✅ MADIO document detected: $BASENAME"
+            echo "$file" >> "$FILTERED_LIST"
+        else
+            echo "   📄 Regular markdown file: $BASENAME (checking content...)"
+            # Check for other MADIO indicators
+            if grep -q -E "(orchestrator|system instructions|methodology|framework|evaluation|strategic)" "$file" 2>/dev/null; then
+                echo "   🔍 Potential MADIO document: $BASENAME (including based on content)"
+                echo "$file" >> "$FILTERED_LIST"
+            else
+                echo "   ⏭️  Skipping non-MADIO file: $BASENAME"
+            fi
+        fi
     fi
-    
-    # Check content for MADIO markers
-    if grep -q -E "(Primary Directive|Tier [123]|MADIO|orchestrator\.md)" "$file" 2>/dev/null; then
-        echo "$file" >> "$TEMP_FILE_LIST"
-    fi
-done
+done < "$TEMP_FILE_LIST"
+
+# Use filtered list
+cp "$FILTERED_LIST" "$TEMP_FILE_LIST"
+rm -f "$FILTERED_LIST"
 
 # Remove duplicates and sort
 sort -u "$TEMP_FILE_LIST" -o "$TEMP_FILE_LIST"
