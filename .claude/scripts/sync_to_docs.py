@@ -22,44 +22,229 @@ SCOPES = ['https://www.googleapis.com/auth/documents', 'https://www.googleapis.c
 # Placeholder for new documents in config
 NEW_DOC_PLACEHOLDER = "CREATE_NEW_DOCUMENT"
 
+def find_project_root():
+    """Find project root by looking for .claude directory"""
+    current = Path.cwd().resolve()
+    while current != current.parent:
+        if (current / '.claude').exists():
+            return current
+        current = current.parent
+    raise Exception("Project root not found - no .claude directory located in parent directories")
+
+def resolve_from_root(path):
+    """Resolve path relative to project root regardless of execution context"""
+    if not path:
+        return path
+    
+    path = str(path)
+    project_root = find_project_root()
+    
+    # If path is already absolute, return as-is
+    if os.path.isabs(path):
+        return path
+    
+    # Remove leading ./ if present
+    path = path.lstrip('./')
+    
+    # Remove leading ../ patterns and resolve from project root
+    while path.startswith('../'):
+        path = path[3:]
+    
+    return str(project_root / path)
+
+def resolve_script_file(filename):
+    """Resolve a file path relative to the script directory"""
+    project_root = find_project_root()
+    return str(project_root / '.claude' / 'scripts' / filename)
+
+def handle_http_error(error, operation="operation"):
+    """Provide specific error messages and guidance for HTTP errors"""
+    error_code = getattr(error, 'resp', {}).get('status')
+    
+    if error_code == 401:
+        print(f"❌ Authentication failed during {operation}")
+        print("🔧 Solutions:")
+        print("   • Delete token.pickle and re-authenticate: rm .claude/scripts/token.pickle")
+        print("   • Verify credentials.json is valid")
+        print("   • Check if OAuth consent screen is configured")
+        print("   • Run: /madio-doctor for comprehensive diagnostics")
+        return "auth_failed"
+    
+    elif error_code == 403:
+        print(f"❌ Access forbidden during {operation}")
+        print("🔧 Solutions:")
+        print("   • Check if Google Docs API is enabled in Google Cloud Console")
+        print("   • Check if Google Drive API is enabled in Google Cloud Console")
+        print("   • Verify document/folder permissions")
+        print("   • Ensure OAuth app has proper scopes")
+        return "access_forbidden"
+    
+    elif error_code == 404:
+        print(f"❌ Resource not found during {operation}")
+        print("🔧 Solutions:")
+        print("   • Verify Google Document ID is correct")
+        print("   • Check if document was moved or deleted")
+        print("   • Ensure you have access to the document")
+        return "not_found"
+    
+    elif error_code == 429:
+        print(f"❌ Rate limit exceeded during {operation}")
+        print("🔧 Solutions:")
+        print("   • Wait a few minutes before retrying")
+        print("   • Reduce number of concurrent operations")
+        print("   • Script will automatically retry with exponential backoff")
+        return "rate_limited"
+    
+    elif error_code and error_code >= 500:
+        print(f"❌ Google server error during {operation} (HTTP {error_code})")
+        print("🔧 Solutions:")
+        print("   • This is a temporary Google server issue")
+        print("   • Wait a few minutes and try again")
+        print("   • Check Google Cloud Status page for outages")
+        return "server_error"
+    
+    else:
+        print(f"❌ HTTP error during {operation}: {error}")
+        print("🔧 Solutions:")
+        print("   • Check internet connection")
+        print("   • Verify Google Cloud Console configuration")
+        print("   • Run: /madio-doctor for troubleshooting")
+        return "unknown_http_error"
+
+def handle_auth_error(error, operation="authentication"):
+    """Handle authentication-specific errors with detailed guidance"""
+    error_msg = str(error).lower()
+    
+    if "credentials" in error_msg or "client_secrets" in error_msg:
+        print(f"❌ Credentials file error during {operation}")
+        print("🔧 Solutions:")
+        print("   • Verify credentials.json exists in .claude/scripts/")
+        print("   • Re-download credentials.json from Google Cloud Console")
+        print("   • Check file permissions: chmod 600 .claude/scripts/credentials.json")
+        print("   • See complete setup guide: SYNC_SETUP.md")
+        
+    elif "consent" in error_msg or "oauth" in error_msg:
+        print(f"❌ OAuth consent error during {operation}")
+        print("🔧 Solutions:")
+        print("   • Complete OAuth consent flow in browser")
+        print("   • Check if your Google account is added as test user")
+        print("   • Verify OAuth consent screen is configured")
+        
+    elif "scope" in error_msg:
+        print(f"❌ OAuth scope error during {operation}")
+        print("🔧 Solutions:")
+        print("   • Credentials may have insufficient permissions")
+        print("   • Re-create OAuth credentials with Docs + Drive APIs")
+        print("   • Delete token.pickle and re-authenticate")
+        
+    else:
+        print(f"❌ Authentication error during {operation}: {error}")
+        print("🔧 Solutions:")
+        print("   • Delete token.pickle: rm .claude/scripts/token.pickle")
+        print("   • Re-run sync to re-authenticate")
+        print("   • Check SYNC_SETUP.md for complete instructions")
+
+def retry_on_rate_limit(func, max_retries=3, base_delay=1):
+    """Retry function with exponential backoff on rate limit errors"""
+    import time
+    
+    for attempt in range(max_retries):
+        try:
+            return func()
+        except HttpError as error:
+            if getattr(error, 'resp', {}).get('status') == 429:
+                if attempt < max_retries - 1:
+                    delay = base_delay * (2 ** attempt)
+                    print(f"⏳ Rate limited. Retrying in {delay} seconds... (attempt {attempt + 1}/{max_retries})")
+                    time.sleep(delay)
+                    continue
+                else:
+                    print("❌ Max retry attempts reached for rate limiting")
+                    raise
+            else:
+                raise
+    
+    return None
+
 class GoogleDocsSync:
     def __init__(self, credentials_file='credentials.json', token_file='token.pickle'):
-        self.credentials_file = credentials_file
-        self.token_file = token_file
+        # Resolve file paths relative to script directory
+        self.credentials_file = resolve_script_file(credentials_file) if not os.path.isabs(credentials_file) else credentials_file
+        self.token_file = resolve_script_file(token_file) if not os.path.isabs(token_file) else token_file
         self.service = None
         self.drive_service = None
         self.target_folder_id = None
         self.authenticate()
     
     def authenticate(self):
-        """Authenticate with Google Docs API"""
+        """Authenticate with Google Docs API with enhanced error handling"""
         creds = None
         
-        # Check if token file exists
-        if os.path.exists(self.token_file):
-            creds = Credentials.from_authorized_user_file(self.token_file, SCOPES)
-        
-        # If no valid credentials, get new ones
-        if not creds or not creds.valid:
-            if creds and creds.expired and creds.refresh_token:
-                creds.refresh(Request())
-            else:
-                if not os.path.exists(self.credentials_file):
-                    print(f"❌ Credentials file not found: {self.credentials_file}")
-                    print("Please download credentials.json from Google Cloud Console")
-                    sys.exit(1)
-                
-                flow = InstalledAppFlow.from_client_secrets_file(
-                    self.credentials_file, SCOPES)
-                creds = flow.run_local_server(port=0)
+        try:
+            # Check if token file exists
+            if os.path.exists(self.token_file):
+                try:
+                    creds = Credentials.from_authorized_user_file(self.token_file, SCOPES)
+                except Exception as e:
+                    print(f"⚠️ Invalid token file, will re-authenticate: {e}")
+                    # Remove invalid token file
+                    os.remove(self.token_file)
+                    creds = None
             
-            # Save credentials for next run
-            with open(self.token_file, 'w') as token:
-                token.write(creds.to_json())
-        
-        self.service = build('docs', 'v1', credentials=creds)
-        self.drive_service = build('drive', 'v3', credentials=creds)
-        print("✅ Google Docs and Drive authentication successful")
+            # If no valid credentials, get new ones
+            if not creds or not creds.valid:
+                if creds and creds.expired and creds.refresh_token:
+                    try:
+                        print("🔄 Refreshing expired authentication token...")
+                        creds.refresh(Request())
+                    except Exception as e:
+                        print(f"⚠️ Token refresh failed, will re-authenticate: {e}")
+                        creds = None
+                
+                if not creds:
+                    if not os.path.exists(self.credentials_file):
+                        print(f"❌ Credentials file not found: {self.credentials_file}")
+                        print("🔧 Solutions:")
+                        print("   • Download credentials.json from Google Cloud Console")
+                        print("   • Place it at: .claude/scripts/credentials.json")
+                        print("   • Set permissions: chmod 600 .claude/scripts/credentials.json")
+                        print("   • See complete setup guide: SYNC_SETUP.md")
+                        sys.exit(1)
+                    
+                    try:
+                        print("🔐 Starting OAuth authentication flow...")
+                        flow = InstalledAppFlow.from_client_secrets_file(
+                            self.credentials_file, SCOPES)
+                        creds = flow.run_local_server(port=0)
+                        print("✅ OAuth authentication completed")
+                    except Exception as e:
+                        handle_auth_error(e, "OAuth flow")
+                        sys.exit(1)
+                
+                # Save credentials for next run
+                try:
+                    with open(self.token_file, 'w') as token:
+                        token.write(creds.to_json())
+                except IOError as e:
+                    print(f"⚠️ Warning: Could not save token file: {e}")
+                    print("   Authentication will be required again next time")
+            
+            # Build API services
+            try:
+                self.service = build('docs', 'v1', credentials=creds)
+                self.drive_service = build('drive', 'v3', credentials=creds)
+                print("✅ Google Docs and Drive authentication successful")
+            except Exception as e:
+                handle_auth_error(e, "API service creation")
+                sys.exit(1)
+                
+        except Exception as e:
+            print(f"❌ Unexpected authentication error: {e}")
+            print("🔧 Solutions:")
+            print("   • Delete token.pickle: rm .claude/scripts/token.pickle")
+            print("   • Verify credentials.json is valid")
+            print("   • Run: /madio-doctor for comprehensive diagnostics")
+            sys.exit(1)
     
     def find_folder_by_name(self, folder_name):
         """Search for a folder by name in Google Drive"""
@@ -89,10 +274,14 @@ class GoogleDocsSync:
                 return folder_id
                 
         except HttpError as error:
-            print(f"❌ Error searching for folder \"{folder_name}\": {error}")
+            error_type = handle_http_error(error, f"searching for folder '{folder_name}'")
             return None
         except Exception as e:
             print(f"❌ Unexpected error searching for folder \"{folder_name}\": {e}")
+            print("🔧 Solutions:")
+            print("   • Check internet connection")
+            print("   • Verify Google Drive API is enabled")
+            print("   • Run: /madio-doctor for troubleshooting")
             return None
     
     def create_folder(self, folder_name):
@@ -115,10 +304,15 @@ class GoogleDocsSync:
             return folder_id
             
         except HttpError as error:
-            print(f"❌ Error creating folder \"{folder_name}\": {error}")
+            error_type = handle_http_error(error, f"creating folder '{folder_name}'")
             return None
         except Exception as e:
             print(f"❌ Unexpected error creating folder \"{folder_name}\": {e}")
+            print("🔧 Solutions:")
+            print("   • Check internet connection")
+            print("   • Verify Google Drive API is enabled")
+            print("   • Check if you have permission to create folders")
+            print("   • Run: /madio-doctor for troubleshooting")
             return None
     
     def prompt_for_folder(self):
@@ -403,10 +597,20 @@ class GoogleDocsSync:
             return True
             
         except HttpError as error:
-            print(f"❌ Error updating Google Doc {doc_id}: {error}")
+            error_type = handle_http_error(error, f"updating Google Doc {doc_id[:15]}...")
+            if error_type == "rate_limited":
+                # Try with rate limiting retry
+                def retry_update():
+                    return self.update_google_doc(doc_id, content)
+                return retry_on_rate_limit(lambda: False) != False  # Returns True if retry succeeds
             return False
         except Exception as e:
-            print(f"❌ Unexpected error updating Google Doc {doc_id}: {e}")
+            print(f"❌ Unexpected error updating Google Doc {doc_id[:15]}...: {e}")
+            print("🔧 Solutions:")
+            print("   • Check internet connection")
+            print("   • Verify document ID is correct")
+            print("   • Ensure you have edit permissions")
+            print("   • Run: /madio-doctor for troubleshooting")
             return False
 
     def move_document_to_folder(self, doc_id, folder_id):
@@ -457,10 +661,18 @@ class GoogleDocsSync:
             
             return doc_id
         except HttpError as error:
-            print(f"❌ Error creating Google Doc \"{title}\": {error}")
+            error_type = handle_http_error(error, f"creating Google Doc '{title}'")
+            if error_type == "rate_limited":
+                # Try with rate limiting retry
+                return retry_on_rate_limit(lambda: self.create_google_doc(title))
             return None
         except Exception as e:
             print(f"❌ Unexpected error creating Google Doc \"{title}\": {e}")
+            print("🔧 Solutions:")
+            print("   • Check internet connection")
+            print("   • Verify Google Docs API is enabled")
+            print("   • Check if you have permission to create documents")
+            print("   • Run: /madio-doctor for troubleshooting")
             return None
     
     def sync_file(self, file_path, doc_id, clean_escapes=True):
@@ -636,10 +848,6 @@ def main():
     
     args = parser.parse_args()
     
-    # Change to script directory for relative paths
-    script_dir = Path(__file__).parent
-    os.chdir(script_dir)
-    
     try:
         sync = GoogleDocsSync(args.credentials, args.token)
         
@@ -648,19 +856,16 @@ def main():
                 print("❌ --doc-id is required when using --file")
                 sys.exit(1)
             
-            # Go back to project root for file access
-            os.chdir('../..')
+            # Resolve file path from project root
+            file_path = resolve_from_root(args.file)
             clean_escapes = not args.no_clean
-            success = sync.sync_file(args.file, args.doc_id, clean_escapes)
+            success = sync.sync_file(file_path, args.doc_id, clean_escapes)
             sys.exit(0 if success else 1)
         
         elif args.directory:
             # Directory mode - scan directory for markdown files
-            # Go back to project root for directory access
-            os.chdir('../..')
-            
-            # Resolve directory path
-            directory_path = os.path.abspath(args.directory)
+            # Resolve directory path from project root
+            directory_path = resolve_from_root(args.directory)
             mapping_file = args.mapping_file
             
             clean_escapes = not args.no_clean
@@ -674,20 +879,24 @@ def main():
         
         else:
             # Traditional config file mode
-            # Handle config file path - check if it's relative to script dir or project root
+            # Resolve config file path - try script directory first, then project root
             config_path = args.config
-            if not os.path.exists(config_path):
-                # Try project root
-                os.chdir('../..')
-                if not os.path.exists(config_path):
-                    # Try back in script directory
-                    os.chdir('.claude/scripts')
-                    if not os.path.exists(config_path):
-                        print(f"❌ Config file not found: {config_path}")
+            
+            # If relative path, try script directory first
+            if not os.path.isabs(config_path):
+                script_config_path = resolve_script_file(config_path)
+                if os.path.exists(script_config_path):
+                    config_path = script_config_path
+                else:
+                    # Try relative to project root
+                    root_config_path = resolve_from_root(config_path)
+                    if os.path.exists(root_config_path):
+                        config_path = root_config_path
+                    else:
+                        print(f"❌ Config file not found: {args.config}")
+                        print(f"   Tried: {script_config_path}")
+                        print(f"   Tried: {root_config_path}")
                         sys.exit(1)
-                    # Config found in script dir, but we need to be in project root for file access
-                    os.chdir('../..')
-                    config_path = f'.claude/scripts/{args.config}'
             
             clean_escapes = not args.no_clean
             success = sync.sync_all_files(config_path, clean_escapes)

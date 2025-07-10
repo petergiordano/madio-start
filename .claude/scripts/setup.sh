@@ -115,7 +115,7 @@ else
     echo "📝 Next Steps (Traditional Sync):"
     echo "1. Edit .claude/scripts/sync_config.json with your file paths and doc IDs"
     echo "2. Use CREATE_NEW_DOCUMENT for new files (auto-creation)"
-    echo "3. Run: python .claude/scripts/sync_to_docs.py --config sync_config.json"
+    echo "3. Run: python .claude/scripts/sync_to_docs.py --config .claude/scripts/sync_config.json"
 fi
 
 echo ""

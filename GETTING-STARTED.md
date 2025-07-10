@@ -88,49 +88,34 @@ Claude Code will create several `.md` files in your project:
 - `content_operations.md` - If content validation needed
 - Additional Tier 3 documents based on complexity
 
-## ✏️ Step 4: Set Up Google Docs Sync (Recommended)
+## ✏️ Step 4: Set Up Google Docs Sync (Essential for AI Integration)
 
 **Why sync to Google Docs?**
 - Claude Projects can reference Google Docs directly in knowledge base
 - Enables seamless handoff between local development and browser AI
 - Automatic updates when you edit files locally
 
-### 1. Quick Setup
+### 🚀 Essential Commands for First Success
+
 ```bash
-# Run the setup script and choose flexible sync
-./.claude/scripts/setup.sh
+# 1. Set up Google Docs sync (one-time setup)
+/madio-enable-sync
+
+# 2. Sync your documents to Google Docs  
+/push-to-docs
+
+# 3. Troubleshoot any issues
+/madio-doctor
 ```
 
-The setup will:
-- Install Python dependencies 
-- Create `synced_docs/` directory (if using flexible mode)
-- Guide you through Google Cloud credentials setup
+> 📖 **Complete Setup Guide**: For detailed step-by-step instructions, see [**SYNC_SETUP.md**](SYNC_SETUP.md)
 
-### 2. Google Cloud Credentials
-Follow the setup script prompts to:
-1. Create Google Cloud project
-2. Enable Google Docs API and Google Drive API
-3. Create OAuth2 credentials (Desktop application)
-4. Download `credentials.json` to `.claude/scripts/`
-
-### 3. First Sync
-If you chose flexible sync during `/generate-ai-system`:
-```bash
-python .claude/scripts/sync_to_docs.py --directory synced_docs
-```
-
-If files are still in project root:
-```bash
-# Move files to synced_docs first
-mkdir synced_docs
-mv *.md synced_docs/
-python .claude/scripts/sync_to_docs.py --directory synced_docs
-```
-
-The first sync will:
-- Create Google Docs for all your MADIO files
-- Set up Google Drive folder organization (interactive)
-- Save file→doc ID mappings for future syncs
+### What happens during first sync:
+- ✅ Google Cloud credentials setup
+- ✅ Google Docs created for all your MADIO files
+- ✅ Google Drive folder organization (interactive)
+- ✅ File→doc ID mappings saved for future syncs
+- ✅ Links displayed for easy access
 
 ## ✏️ Step 5: Customize Your Project
 

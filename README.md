@@ -83,6 +83,21 @@ claude mcp add-from-claude-desktop
 /generate-ai-system "[describe your AI system]"
 ```
 
+**Essential Commands for First Success:**
+
+```bash
+# 1. Set up Google Docs sync (one-time setup for AI integration)
+/madio-enable-sync
+
+# 2. Sync your documents to Google Docs (for Claude Projects, ChatGPT, etc.)
+/push-to-docs
+
+# 3. Troubleshoot any issues
+/madio-doctor
+```
+
+> 📖 **Need help with sync setup?** See the complete [**SYNC_SETUP.md**](SYNC_SETUP.md) guide
+
 **After setup, switch to Gemini CLI for ongoing development:**
 
 ```bash
@@ -91,6 +106,8 @@ gemini "Review my generated MADIO documents and suggest improvements"
 gemini "Update the project_system_instructions.md to include [specific feature]"
 gemini "Validate my MADIO project structure and identify any issues"
 ```
+
+> 📋 **Quick Start Path:** `/madio-setup` → `/generate-ai-system` → `/madio-enable-sync` → `/push-to-docs` → Success!
 
 **What `/madio-onboard` does:**
 1. ✅ Validates prerequisites (Python, Git, VS Code)
