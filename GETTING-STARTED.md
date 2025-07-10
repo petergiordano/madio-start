@@ -22,9 +22,10 @@ Before starting, verify:
 
 ## 🏗️ Step 1: Initialize Your MADIO Project
 
-**For new users, use the streamlined onboarding command:**
+### Option A: Streamlined Onboarding (Recommended for New Users)
 
 ```bash
+# Interactive setup with validation and guidance
 /madio-onboard
 ```
 
@@ -39,13 +40,27 @@ This comprehensive command will:
 - ✅ Optionally set up Google Docs sync
 - ✅ Validate setup success
 
-**Advanced users can use the individual command:**
+### Option B: Core Setup Only (Advanced Users)
 
 ```bash
+# Interactive setup (prompts for confirmation when needed)
 /madio-setup
+
+# Unattended setup (skips all prompts, perfect for automation)
+/madio-setup --yes
 ```
 
-This runs just the core MADIO setup without the comprehensive validation and guidance.
+**When to use `--yes` flag:**
+- ✅ Automation scripts or CI/CD pipelines
+- ✅ You've run setup before and know what to expect
+- ✅ Batch processing multiple projects
+- ✅ You want fastest possible setup time
+
+**The `--yes` flag will:**
+- Skip all confirmation prompts
+- Use default values for all options
+- Complete setup without user intervention
+- Still perform all safety validations
 
 ## 🤖 Step 2A: Generate Your AI System (New Documents)
 

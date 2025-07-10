@@ -33,12 +33,14 @@ The following TODO items are now comprehensively covered in `docs/ARCHITECTURAL_
 - **Note**: This is deployment/publishing specific, not covered in technical roadmap
 
 ### 2. ✨ Quick Start Improvements
+- [x] **Add unattended mode to madio-setup** → `/madio-setup --yes` flag implemented ✅
 - [ ] Move `_GETTING-STARTED.md` to prominent location after setup
 - [ ] Create interactive setup wizard for first-time users
 - [ ] Add VS Code recommended extensions prompt
 - [ ] Implement automatic git remote validation and fix
 - [ ] Generate project-specific README template
 - **Note**: These are MADIO framework improvements beyond the sync system scope
+- **Recent**: Unattended mode enables automation and faster setup for experienced users
 
 ### 3. 🎉 First-Run Experience
 - [ ] Create welcome message on VS Code open

@@ -92,17 +92,19 @@ madio-start/
 7. **Quick Start Guide**: 3-step workflow in `/madio-enable-sync` command
 8. **Dependency Update**: Added `tqdm==4.66.1` for enhanced progress visualization
 9. **NEW: Document Import**: `/madio-import-docs` with intelligent analysis and context generation
+10. **NEW: Unattended Setup**: `/madio-setup --yes` flag for automation and CI/CD integration
 
 #### **Impact Metrics**:
 - **Setup Reduction**: 60% fewer steps (5+ → 3 steps)
 - **Auto-Discovery**: Zero-configuration file detection and mapping
 - **Visual Feedback**: Progress bars for operations with 3+ files
 - **Health Monitoring**: Proactive issue detection with specific recommendations
+- **Automation Ready**: Unattended setup mode for CI/CD and batch processing
 
 ## Workflow Patterns
 
 ### **Enhanced MADIO Development Cycle**
-1. **Setup**: `/madio-setup` initializes project structure
+1. **Setup**: `/madio-setup` initializes project structure (supports `--yes` for unattended mode)
 2. **Content Creation**: 
    - **New Projects**: `/generate-ai-system` creates documents + auto-organizes for sync
    - **Existing Documents**: `/madio-import-docs` analyzes and organizes with intelligent context generation

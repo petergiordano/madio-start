@@ -293,6 +293,9 @@ your-project/
 /madio-import-docs                    # Import from current directory
 /madio-import-docs --source ./docs    # Import from specific directory
 /madio-import-docs --copy --no-sync   # Import safely without Google sync
+
+# Unattended setup for automation
+/madio-setup --yes                    # Skip all prompts for CI/CD pipelines
 ```
 
 ## 📚 MADIO Templates

@@ -14,6 +14,16 @@ This is the single entry point for all new MADIO users. It provides comprehensiv
 - **Validation First**: Check everything before attempting setup
 - **Clear Communication**: User knows exactly what's happening and why
 
+## Usage
+
+```bash
+# Standard interactive onboarding (recommended for first-time users)
+/madio-onboard
+
+# Note: This command automatically uses --yes flag for madio-setup internally
+# to provide streamlined experience while maintaining validation checks
+```
+
 ## Implementation
 
 ### Phase 1: Welcome and Environment Detection
