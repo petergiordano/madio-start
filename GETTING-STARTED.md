@@ -186,15 +186,18 @@ Your project now contains AI system documents (either generated or imported):
 # 1. Set up Google Docs sync (one-time setup)
 /madio-enable-sync
 
-# 2. Sync your documents to Google Docs
-python .claude/scripts/sync_to_docs.py --directory synced_docs
-
-# 2a. Sync to organized folder (recommended)
-python .claude/scripts/sync_to_docs.py --directory synced_docs --folder "MADIO Docs"
+# 2. Sync your documents to Google Docs (interactive folder selection)
+/push-to-docs
 
 # 3. Troubleshoot any issues
 /madio-doctor
 ```
+
+**What `/push-to-docs` does:**
+- Automatically finds all AI system documents in `synced_docs/`
+- **Prompts you to choose Google Drive folder** (with helpful default suggestion)
+- Creates Google Docs and organizes them properly
+- Works in both interactive and non-interactive environments
 
 > 📖 **Complete Setup Guide**: For detailed step-by-step instructions, see [**SYNC_SETUP.md**](SYNC_SETUP.md)
 

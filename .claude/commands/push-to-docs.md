@@ -2,49 +2,49 @@
 
 Sync local AI system documents to Google Docs for Claude Project integration.
 
-## Usage
+## Primary Usage (Recommended)
 
-### Sync all configured files (traditional mode)
+### Sync all AI system documents
 ```bash
-cd .claude/scripts
-python3 sync_to_docs.py --config sync_config.json
+/push-to-docs
 ```
 
-### NEW: Sync entire directory (flexible mode)
+**What this does:**
+1. Scans `synced_docs/` directory for AI system documents
+2. **Prompts you to choose Google Drive folder** (with clear default option)
+3. Creates folder if it doesn't exist
+4. Syncs all documents to Google Docs
+5. Updates document mappings automatically
+
+**Expected interaction:**
+```
+📁 Google Drive Folder Selection
+   Where should your Google Docs be created?
+   
+   1. Root folder (My Drive) - Press Enter
+   2. Organized folder (recommended) - Enter folder name
+   
+Enter folder name or press Enter for root [recommended: "MADIO Docs"]: 
+```
+
+## Advanced Usage (Direct Script Access)
+
+### Sync with specific folder (non-interactive)
+```bash
+cd .claude/scripts
+python3 sync_to_docs.py --directory synced_docs --folder "MADIO Docs"
+```
+
+### Sync to root folder (non-interactive)
 ```bash
 cd .claude/scripts
 python3 sync_to_docs.py --directory synced_docs
 ```
 
-### NEW: Sync to specific Google Drive folder
+### Traditional config mode
 ```bash
 cd .claude/scripts
-# Specify folder name - creates folder if it doesn't exist
-python3 sync_to_docs.py --directory synced_docs --folder "MADIO Docs"
-
-# Perfect for Claude Code CLI (non-interactive environments)
-python3 sync_to_docs.py --directory synced_docs --folder "My AI Project"
-```
-
-### NEW: Sync directory with custom mapping file
-```bash
-cd .claude/scripts
-python3 sync_to_docs.py --directory synced_docs --mapping-file my_mappings.json
-```
-
-### Sync specific file
-```bash
-/push-to-docs --file methodology_framework.md 1ABC...xyz
-```
-
-### Use custom config
-```bash
-/push-to-docs --config my_sync_config.json
-```
-
-### Skip markdown cleanup (if needed)
-```bash
-/push-to-docs --no-clean  # Skip cleaning escaped markdown characters
+python3 sync_to_docs.py --config sync_config.json
 ```
 
 ## Setup Required
@@ -233,3 +233,87 @@ chokidar "*.md" -c "/push-to-docs"
 - Large AI system documents may take longer to sync
 - Rate limiting applies to Google Docs API
 - Consider batch operations for multiple documents
+
+## Implementation
+
+```bash
+#!/bin/bash
+
+echo "🚀 MADIO Push to Google Docs"
+echo "============================"
+echo ""
+
+# Check if synced_docs directory exists
+if [ ! -d "synced_docs" ]; then
+    echo "❌ No synced_docs/ directory found"
+    echo ""
+    echo "💡 Next steps:"
+    echo "   1. Run /generate-ai-system to create AI system documents"
+    echo "   2. Or run /madio-import-docs to import existing documents"
+    echo "   3. Both commands will create the synced_docs/ directory"
+    echo ""
+    exit 1
+fi
+
+# Check if directory has any .md files
+MD_COUNT=$(find synced_docs -name "*.md" -type f | wc -l)
+if [ "$MD_COUNT" -eq 0 ]; then
+    echo "❌ No AI system documents found in synced_docs/"
+    echo ""
+    echo "💡 Next steps:"
+    echo "   1. Add your .md files to synced_docs/"
+    echo "   2. Or run /madio-import-docs to import documents"
+    echo ""
+    exit 1
+fi
+
+echo "📁 Found $MD_COUNT AI system documents in synced_docs/"
+echo ""
+
+# Check if credentials exist
+if [ ! -f ".claude/scripts/credentials.json" ]; then
+    echo "❌ Google credentials not found"
+    echo ""
+    echo "🔧 Setup required:"
+    echo "   1. Run /madio-enable-sync to set up Google credentials"
+    echo "   2. Then run /push-to-docs again"
+    echo ""
+    exit 1
+fi
+
+echo "📁 Google Drive Folder Selection"
+echo "   Where should your Google Docs be created?"
+echo ""
+echo "   1. Root folder (My Drive) - Press Enter"
+echo "   2. Organized folder (recommended) - Enter folder name"
+echo ""
+
+# Check if running in non-interactive environment
+if [ ! -t 0 ] || [ ! -t 1 ]; then
+    echo "⚠️  Non-interactive environment detected (Claude Code CLI)"
+    echo "📂 Using root folder (My Drive)"
+    echo ""
+    echo "💡 Tip: For organized folders, use:"
+    echo "   python .claude/scripts/sync_to_docs.py --directory synced_docs --folder \"MADIO Docs\""
+    echo ""
+    
+    # Run sync to root folder
+    cd .claude/scripts
+    python3 sync_to_docs.py --directory ../../synced_docs
+else
+    # Interactive environment - prompt user
+    read -p "Enter folder name or press Enter for root [recommended: \"MADIO Docs\"]: " FOLDER_NAME
+    
+    echo ""
+    
+    if [ -z "$FOLDER_NAME" ]; then
+        echo "📂 Using root folder (My Drive)"
+        cd .claude/scripts
+        python3 sync_to_docs.py --directory ../../synced_docs
+    else
+        echo "📂 Using folder: \"$FOLDER_NAME\""
+        cd .claude/scripts
+        python3 sync_to_docs.py --directory ../../synced_docs --folder "$FOLDER_NAME"
+    fi
+fi
+```
