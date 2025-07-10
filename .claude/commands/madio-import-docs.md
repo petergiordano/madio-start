@@ -402,25 +402,24 @@ if [ "$SKIP_SYNC" = false ]; then
             echo "🚀 Starting Google Docs sync..."
             
             # Create custom folder for imported AI system documents
-            IMPORT_FOLDER="AI System Import - $(date '+%Y-%m-%d')"
+            echo "Running sync to Google Docs..."
+            echo "Note: You'll be prompted to choose a Google Drive folder"
+            echo ""
             
-            python3 .claude/scripts/sync_to_docs.py \
-                --directory synced_docs \
-                --import-folder "$IMPORT_FOLDER"
+            /push-to-docs
             
             if [ $? -eq 0 ]; then
                 echo ""
                 echo "✅ AI system documents synced to Google Drive!"
-                echo "   Folder: $IMPORT_FOLDER"
             else
                 echo ""
                 echo "⚠️  Sync encountered issues. You can retry with:"
-                echo "   /push-to-docs --directory synced_docs"
+                echo "   /push-to-docs"
             fi
         else
             echo ""
             echo "📋 To sync later, run:"
-            echo "   /push-to-docs --directory synced_docs"
+            echo "   /push-to-docs"
         fi
     else
         echo "⚠️  Google Docs sync not configured"
@@ -428,7 +427,7 @@ if [ "$SKIP_SYNC" = false ]; then
         echo "To set up sync:"
         echo "1. Run: /madio-enable-sync"
         echo "2. Follow Google Cloud setup instructions"
-        echo "3. Then run: /push-to-docs --directory synced_docs"
+        echo "3. Then run: /push-to-docs"
     fi
 else
     echo ""
@@ -436,7 +435,7 @@ else
     echo ""
     echo "To sync later:"
     echo "1. Ensure Google credentials are set up (/madio-enable-sync)"
-    echo "2. Run: /push-to-docs --directory synced_docs"
+    echo "2. Run: /push-to-docs"
 fi
 ```
 
@@ -471,7 +470,7 @@ echo ""
 if [ "$SKIP_SYNC" = false ] && [ -f ".claude/scripts/credentials.json" ]; then
     echo "☁️  Google Docs Status:"
     echo "   • Ready for sync"
-    echo "   • Run: /push-to-docs --directory synced_docs"
+    echo "   • Run: /push-to-docs"
     echo ""
 fi
 

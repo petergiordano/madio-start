@@ -195,8 +195,17 @@ Your project now contains AI system documents (either generated or imported):
 
 **What `/push-to-docs` does:**
 - Automatically finds all AI system documents in `synced_docs/`
-- **Prompts you to choose Google Drive folder** (with helpful default suggestion)
-- Creates Google Docs and organizes them properly
+- **Interactively prompts for Google Drive folder organization:**
+  ```
+  📁 Google Drive Folder Selection
+     Where should your Google Docs be created?
+     
+     1. Root folder (My Drive) - Press Enter
+     2. Organized folder (recommended) - Enter folder name
+     
+  Enter folder name or press Enter for root [recommended: "MADIO Docs"]: 
+  ```
+- Creates Google Docs and organizes them in your chosen location
 - Works in both interactive and non-interactive environments
 
 > 📖 **Complete Setup Guide**: For detailed step-by-step instructions, see [**SYNC_SETUP.md**](SYNC_SETUP.md)

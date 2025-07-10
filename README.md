@@ -398,8 +398,13 @@ For users who want automatic synchronization between local AI system documents a
 
 ### **Available Commands (If Sync Enabled):**
 - `/madio-enable-sync` - One-time setup for Google Docs sync (optional)
-- `/push-to-docs` - Sync all AI system documents with interactive folder selection
-- Advanced: `python .claude/scripts/sync_to_docs.py --directory synced_docs --folder "MADIO Docs"`
+- `/push-to-docs` - Sync all AI system documents (prompts for Google Drive folder organization)
+
+**What `/push-to-docs` does:**
+- Finds all AI system documents in `synced_docs/`
+- **Interactively asks where to organize your Google Docs**
+- Creates folders and documents automatically
+- Works in both interactive and automated environments
 
 **💡 Remember: MADIO works perfectly without Google Docs sync!**
 
