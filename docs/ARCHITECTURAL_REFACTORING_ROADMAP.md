@@ -123,30 +123,34 @@ Environment:
 - [ ] **API Scope Validation**: Limited validation of Google API permissions
 - [ ] **Missing Security Steps in Manual Setup** *(Jules identified)*: Manual docs omit `chmod 600 credentials.json`
 - [ ] **🚨 SEC-5: Git Secret Leakage** *(Codex identified)*: No pre-commit hooks or CI secret scanning to prevent credential commits
-- [ ] **🚨 SEC-6: Buried Security Warnings** *(Codex identified)*: Token/credential safety warnings hidden in side docs instead of prominent core setup placement
+- [x] **🚨 SEC-6: Buried Security Warnings** *(Codex identified)*: Token/credential safety warnings hidden in side docs instead of prominent core setup placement
 
 #### Path & Configuration Complexity
 - [ ] **Multiple Working Directory Changes**: `os.chdir()` calls make debugging difficult
 - [ ] **Relative Path Dependencies**: Complex `../../` patterns in configuration
 - [ ] **Configuration Fragmentation**: Setup info spread across multiple files
 - [ ] **Hardcoded Assumptions**: Script directory dependencies
-- [ ] **🚨 CRITICAL: Configuration Path Inconsistency** *(Jules identified)*:
+- [x] **🚨 CRITICAL: Configuration Path Inconsistency** *(Jules identified)*:
   - `.claude/scripts/setup.sh` refers to `sync_config.json` in project root
   - Primary system uses `.claude/scripts/sync_config.json`
   - **Risk**: Setup failure and user confusion
   - **Action Required**: Align paths or deprecate setup.sh
-- [ ] **🚨 CFG-4: Path Resolution Failure** *(Codex identified)*: `sync_to_docs.py` breaks when run outside project root, needs `resolve_from_root(path)` helper
+  - **✅ COMPLETED**: Updated setup.sh to use correct config path
+- [x] **🚨 CFG-4: Path Resolution Failure** *(Codex identified)*: `sync_to_docs.py` breaks when run outside project root, needs `resolve_from_root(path)` helper
+  - **✅ COMPLETED**: Implemented `find_project_root()` and `resolve_from_root()` helpers, eliminated all `os.chdir()` calls
 
 #### Error Resilience
 - [ ] **Network Timeout Handling**: Missing specific timeout error management
-- [ ] **Rate Limiting**: No built-in API quota management
+- [x] **Rate Limiting**: No built-in API quota management
+  - **✅ COMPLETED**: Implemented automatic retry with exponential backoff for 429 errors
 - [ ] **Recovery Procedures**: Limited guidance for common failure scenarios
 - [ ] **Validation Gaps**: Insufficient configuration validation
-- [ ] **Granular Error Handling Gaps** *(Jules identified)*:
+- [x] **Granular Error Handling Gaps** *(Jules identified)*:
   - Network issues need more specific handling
   - Google Auth exceptions lack specificity
   - API rate limiting robustness insufficient
   - User feedback for specific error scenarios inadequate
+  - **✅ COMPLETED**: Implemented specific HTTP status code handling (401, 403, 404, 429, 500+) with actionable guidance
 
 ### 🟡 MEDIUM PRIORITY Issues
 
@@ -166,8 +170,10 @@ Environment:
   - Multiple setup paths with different requirements
   - Virtual environment activation instructions unclear
   - Conflicting setup approaches need standardization
-- [ ] **🚨 DOC-3: Missing Unified Setup Guide** *(Codex identified)*: No single SYNC_SETUP.md linking all steps (cloud setup, deps, creds, first run)
-- [ ] **🚨 DOC-4: Command Discovery Failure** *(Codex identified)*: GETTING-STARTED.md and README.md don't tell users to run `/madio-enable-sync` or `/push-to-docs`
+- [x] **🚨 DOC-3: Missing Unified Setup Guide** *(Codex identified)*: No single SYNC_SETUP.md linking all steps (cloud setup, deps, creds, first run)
+  - **✅ COMPLETED**: Created comprehensive SYNC_SETUP.md with step-by-step instructions and prominent security warnings
+- [x] **🚨 DOC-4: Command Discovery Failure** *(Codex identified)*: GETTING-STARTED.md and README.md don't tell users to run `/madio-enable-sync` or `/push-to-docs`
+  - **✅ COMPLETED**: Updated README.md and GETTING-STARTED.md with "Essential Commands for First Success" sections
 - [ ] **🚨 DOC-5: Hidden Auto-sync Feature** *(Codex identified)*: Chokidar auto-watch functionality explained only in buried push-to-docs.md, not in main docs
 
 ### 🟢 LOW PRIORITY Issues
@@ -778,18 +784,27 @@ Codex provides **specific exit tests** for every improvement:
 ## 📊 Progress Tracking Dashboard
 
 ### Overall Progress
-- **Phase 1**: ⏸️ Not Started (0/18 tasks) *+4 from Jules, +2 from Codex*
-- **Phase 2**: ⏸️ Not Started (0/10 tasks) *+1 from Jules, +1 from Codex*
-- **Phase 3**: ⏸️ Not Started (0/15 tasks) *+3 from Jules, +3 from Codex*
+- **Phase 1**: 🟡 In Progress (5/18 tasks) *Critical sync reliability improvements completed*
+- **Phase 2**: 🟡 In Progress (1/10 tasks) *Path resolution robustness completed*
+- **Phase 3**: 🟡 In Progress (2/15 tasks) *Documentation completion in progress*
 - **Phase 4**: ⏸️ Not Started (0/8 tasks)
 - **Phase 5**: ⏸️ Not Started (0/6 tasks)
 
-**Total Progress**: 0/57 tasks completed (0%) *+8 from Jules, +6 from Codex*
+**Total Progress**: 8/57 tasks completed (14%) *Critical user experience improvements delivered*
+
+### 🎯 Recent Completions (2025-01-10)
+✅ **SEC-6**: Security Warning Prominence - Warnings moved to core setup docs
+✅ **CFG-4**: Path Resolution Robustness - Script works from any directory
+✅ **Configuration Path Inconsistency**: Fixed setup.sh config path alignment
+✅ **Rate Limiting**: Implemented automatic retry with exponential backoff
+✅ **Granular Error Handling**: Specific HTTP status code handling with actionable guidance
+✅ **DOC-3**: Unified Setup Guide - Created comprehensive SYNC_SETUP.md
+✅ **DOC-4**: Command Discovery - Updated README and GETTING-STARTED with essential commands
 
 ### Current Sprint Status
-- **Active Phase**: 📋 Planning
-- **Next Milestone**: Begin Phase 1 (Security & Error Resilience)
-- **Estimated Completion**: TBD based on resource allocation
+- **Active Phase**: 🟡 Phase 1 In Progress (5 critical tasks completed)
+- **Next Milestone**: Complete remaining Phase 1 tasks (SEC-5, Authentication hardening)
+- **Estimated Completion**: Major user experience improvements delivered (14% complete)
 
 ### Risk Indicators
 - 🟢 **Low Risk**: Documentation and testing phases
