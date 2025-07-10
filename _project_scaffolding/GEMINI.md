@@ -5,7 +5,7 @@
 
 ## Overview
 
-You are helping users develop and refine AI systems using the MADIO (Modular AI Declarative Instruction and Orchestration) framework. **Claude Code handles initial setup and document generation.** Your role begins after the initial MADIO documents are created.
+You are helping users develop and refine AI systems using the MADIO (Modular AI Declarative Instruction and Orchestration) framework. **Claude Code handles initial setup and document generation.** Your role begins after the initial AI system documents are created.
 
 **Gemini CLI Responsibilities:**
 1. **Content refinement** and ongoing document improvement
@@ -17,32 +17,32 @@ You are helping users develop and refine AI systems using the MADIO (Modular AI 
 
 ### Post-Setup Development Commands
 
-**Note:** `/madio-setup` and `/generate-ai-system` are handled by Claude Code. Gemini CLI takes over for ongoing development.
+**Note:** `/madio-setup` and `/generate-ai-system` are handled by Claude Code. Gemini CLI takes over for ongoing development of AI system documents.
 
 ### Common Development Tasks
 
 When users request improvements or modifications:
 
 1. **Review Existing Documents**
-   - Read current MADIO documents to understand system architecture
+   - Read current AI system documents to understand system architecture
    - Check AI_CONTEXT.md for context and previous decisions
-   - Identify which documents need modification
+   - Identify which AI system documents need modification
 
 2. **Content Enhancement**
-   - Refine existing document content for clarity and effectiveness
+   - Refine existing AI system document content for clarity and effectiveness
    - Add new capabilities by modifying appropriate Tier 3 documents
    - Enhance personality and voice in character_voice_authority.md
    - Improve workflow steps in orchestrator.md
 
 3. **Feature Additions**
-   - Suggest additional Tier 3 templates if new capabilities are needed
+   - Suggest additional Tier 3 AI system document templates if new capabilities are needed
    - Modify project_system_instructions.md for core behavior changes
    - Update content_operations.md for new content validation rules
 
 4. **Quality Improvements**
-   - Validate document hierarchy and cross-references
+   - Validate AI system document hierarchy and cross-references
    - Check for any remaining placeholders `[BRACKETED_TEXT]`
-   - Ensure all documents maintain MADIO framework compliance
+   - Ensure all AI system documents maintain MADIO framework compliance
 
 5. **Update Documentation**
    - Update AI_CONTEXT.md with changes made

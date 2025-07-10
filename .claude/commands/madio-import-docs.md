@@ -1,10 +1,10 @@
 # MADIO Import Docs - Import Existing MADIO Documents
 
-Import existing MADIO-compliant markdown files into the framework with automatic context generation and Google Docs sync setup.
+Import existing MADIO-compliant AI system documents into the framework with automatic context generation and Google Docs sync setup.
 
 ## Command Purpose
 
-This command enables users who already have MADIO-formatted documents to:
+This command enables users who already have MADIO-formatted AI system documents to:
 - Import them into the MADIO framework structure
 - Generate appropriate context files (AI_CONTEXT.md)
 - Set up Google Docs synchronization
@@ -19,11 +19,11 @@ Perfect for:
 ## Usage
 
 ```bash
-# Import all MADIO documents from current directory
+# Import all AI system documents from current directory
 /madio-import-docs
 
 # Import from specific directory
-/madio-import-docs --source ./my-madio-docs
+/madio-import-docs --source ./my-ai-system-docs
 
 # Import without moving files (copy instead)
 /madio-import-docs --copy
@@ -67,7 +67,7 @@ for arg in "$@"; do
             echo "Usage: /madio-import-docs [options]"
             echo ""
             echo "Options:"
-            echo "  --source=DIR   Directory containing MADIO documents (default: current)"
+            echo "  --source=DIR   Directory containing AI system documents (default: current)"
             echo "  --copy         Copy files instead of moving them"
             echo "  --no-sync      Skip Google Docs sync setup"
             echo ""
@@ -112,9 +112,9 @@ echo "------------------------------"
 TEMP_FILE_LIST=".madio_import_files_$IMPORT_TIMESTAMP.tmp"
 
 # Discover MADIO documents
-echo "Scanning for MADIO documents in: $SOURCE_DIR"
+echo "Scanning for AI system documents in: $SOURCE_DIR"
 
-# Smart MADIO document detection - analyze content rather than filenames
+# Smart AI system document detection - analyze content rather than filenames
 echo "Using intelligent document detection..."
 
 # Find all .md files in source directory (non-recursive to avoid issues)
@@ -141,18 +141,18 @@ while IFS= read -r file; do
             continue
         fi
         
-        # Check if file contains MADIO markers
+        # Check if file contains AI system document markers
         if grep -q -E "(# .+ \(Tier [1-3]\)|## Authority Level|## Document Purpose|Tier [1-3] Document)" "$file" 2>/dev/null; then
-            echo "   ✅ MADIO document detected: $BASENAME"
+            echo "   ✅ AI system document detected: $BASENAME"
             echo "$file" >> "$FILTERED_LIST"
         else
             echo "   📄 Regular markdown file: $BASENAME (checking content...)"
-            # Check for other MADIO indicators
+            # Check for other AI system document indicators
             if grep -q -E "(orchestrator|system instructions|methodology|framework|evaluation|strategic)" "$file" 2>/dev/null; then
-                echo "   🔍 Potential MADIO document: $BASENAME (including based on content)"
+                echo "   🔍 Potential AI system document: $BASENAME (including based on content)"
                 echo "$file" >> "$FILTERED_LIST"
             else
-                echo "   ⏭️  Skipping non-MADIO file: $BASENAME"
+                echo "   ⏭️  Skipping non-AI system file: $BASENAME"
             fi
         fi
     fi
@@ -169,18 +169,18 @@ sort -u "$TEMP_FILE_LIST" -o "$TEMP_FILE_LIST"
 FILE_COUNT=$(wc -l < "$TEMP_FILE_LIST")
 
 if [ "$FILE_COUNT" -eq 0 ]; then
-    echo "❌ No MADIO documents found in $SOURCE_DIR"
+    echo "❌ No AI system documents found in $SOURCE_DIR"
     echo ""
-    echo "MADIO documents typically include:"
+    echo "AI system documents typically include:"
     echo "  • project_system_instructions.md"
     echo "  • orchestrator.md"
     echo "  • Various Tier 3 supporting documents"
     echo ""
-    echo "Please ensure your documents follow MADIO naming conventions."
+    echo "Please ensure your documents follow AI system document naming conventions."
     exit 1
 fi
 
-echo "✅ Found $FILE_COUNT potential MADIO documents:"
+echo "✅ Found $FILE_COUNT potential AI system documents:"
 cat "$TEMP_FILE_LIST" | while read -r file; do
     echo "   • $(basename "$file")"
 done | head -20
@@ -337,7 +337,7 @@ fi
 
 # Create import summary
 cat > ".madio_import_summary_$IMPORT_TIMESTAMP.md" << EOF
-# MADIO Import Summary
+# AI System Document Import Summary
 
 **Import Date**: $(date '+%Y-%m-%d %H:%M:%S')
 **Source Directory**: $SOURCE_DIR
@@ -351,15 +351,15 @@ import json
 with open('.madio_import_analysis_$IMPORT_TIMESTAMP.json', 'r') as f:
     analysis = json.load(f)
     
-print('### Tier 1 - Authority Documents')
+print('### Tier 1 - Authority AI System Documents')
 for doc in analysis['documents']['tier1']:
     print(f\"- {doc['filename']}\")
     
-print('\\n### Tier 2 - Orchestration Documents')
+print('\\n### Tier 2 - Orchestration AI System Documents')
 for doc in analysis['documents']['tier2']:
     print(f\"- {doc['filename']}\")
     
-print('\\n### Tier 3 - Supporting Documents')
+print('\\n### Tier 3 - Supporting AI System Documents')
 for doc in analysis['documents']['tier3']:
     print(f\"- {doc['filename']}\")
 ")
@@ -394,15 +394,15 @@ if [ "$SKIP_SYNC" = false ]; then
         echo "✅ Google credentials already configured"
         
         echo ""
-        echo "🔄 Ready to sync imported documents to Google Docs"
+        echo "🔄 Ready to sync imported AI system documents to Google Docs"
         read -p "Start sync now? (Y/n): " START_SYNC
         
         if [[ ! "$START_SYNC" =~ ^[Nn]$ ]]; then
             echo ""
             echo "🚀 Starting Google Docs sync..."
             
-            # Create custom folder for imported docs
-            IMPORT_FOLDER="MADIO Import - $(date '+%Y-%m-%d')"
+            # Create custom folder for imported AI system documents
+            IMPORT_FOLDER="AI System Import - $(date '+%Y-%m-%d')"
             
             python3 .claude/scripts/sync_to_docs.py \
                 --directory synced_docs \
@@ -410,7 +410,7 @@ if [ "$SKIP_SYNC" = false ]; then
             
             if [ $? -eq 0 ]; then
                 echo ""
-                echo "✅ Documents synced to Google Drive!"
+                echo "✅ AI system documents synced to Google Drive!"
                 echo "   Folder: $IMPORT_FOLDER"
             else
                 echo ""
@@ -458,11 +458,11 @@ mv "$IMPORT_LOG" "$ARCHIVE_DIR/" 2>/dev/null
 echo "✅ Archived import artifacts to $ARCHIVE_DIR/"
 
 echo ""
-echo "🎉 MADIO Document Import Complete!"
+echo "🎉 AI System Document Import Complete!"
 echo "=================================="
 echo ""
 echo "📊 Summary:"
-echo "   • Documents imported: $FILE_COUNT"
+echo "   • AI system documents imported: $FILE_COUNT"
 echo "   • Location: synced_docs/"
 echo "   • Context: AI_CONTEXT.md generated"
 echo "   • Import summary: .madio_import_summary_$IMPORT_TIMESTAMP.md"

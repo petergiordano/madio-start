@@ -40,14 +40,14 @@ These are intentionally incomplete markdown links that get replaced during setup
 
 ## DOCUMENT ARCHITECTURE
 
-### Generated MADIO Documents
+### Generated AI System Documents
 **Tier 1 (Authority):**
 - `project_system_instructions.md` - [Status: generated|customized|finalized]
 
 **Tier 2 (Orchestration):**
 - `orchestrator.md` - [Status: generated|customized|finalized]
 
-**Tier 3 (Supporting Documents):**
+**Tier 3 (Supporting AI System Documents):**
 - `[document_name].md` - [Purpose] - [Status]
 - `[document_name].md` - [Purpose] - [Status]
 - `[document_name].md` - [Purpose] - [Status]

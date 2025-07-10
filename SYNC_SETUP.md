@@ -104,7 +104,7 @@ pip install -r requirements.txt
 
 **Setup:**
 1. Create sync directory: `mkdir synced_docs`
-2. Add markdown files: `echo "# My Document" > synced_docs/example.md`
+2. Add AI system documents: `echo "# My Document" > synced_docs/example.md`
 3. Run sync: `python3 .claude/scripts/sync_to_docs.py --directory synced_docs`
 
 **Benefits:**
@@ -225,7 +225,7 @@ npm run watch-sync  # Automatically syncs when files change
 - **Claude Projects:** Copy Google Doc URLs to your Claude Project knowledge
 - **AI Integration:** Documents now accessible by your AI companions
 - **Team Collaboration:** Share Google Docs for collaborative editing
-- **Version Control:** Keep markdown files in Git, sync to Docs for AI access
+- **Version Control:** Keep AI system documents in Git, sync to Docs for AI access
 
 ---
 

@@ -1,21 +1,21 @@
-# MADIO Core Document Templates
+# MADIO Core AI System Document Templates
 
 ## OVERVIEW
-This document serves as the authoritative template library for the MADIO (Modular AI Declarative Instruction and Orchestration) framework. All MADIO projects must be built using these templates to ensure consistency, maintainability, and proper hierarchical authority structure.
+This document serves as the authoritative AI system document template library for the MADIO (Modular AI Declarative Instruction and Orchestration) framework. All MADIO projects must be built using these AI system document templates to ensure consistency, maintainability, and proper hierarchical authority structure.
 
 ## CRITICAL USAGE INSTRUCTION
 When creating a new MADIO project, the AI system MUST:
-1. Reference this template library located in `_template_library/`
-2. Use the appropriate templates based on project complexity
+1. Reference this AI system document template library located in `_template_library/`
+2. Use the appropriate AI system document templates based on project complexity
 3. Replace ALL placeholder text `[LIKE_THIS]` with project-specific content
 4. Maintain the hierarchical authority structure (Tier 1 → Tier 2 → Tier 3)
 
 ## FILE NAMING CONVENTION
-All MADIO template files follow this strict naming pattern:
+All MADIO AI system document template files follow this strict naming pattern:
 madio_template_[tier]_[document_name].md
 
-## TEMPLATE LIBRARY LOCATION
-All templates are stored in the `_template_library/` directory:
+## AI SYSTEM DOCUMENT TEMPLATE LIBRARY LOCATION
+All AI system document templates are stored in the `_template_library/` directory:
 _template_library/
 ├── madio_template_tier1_project_system_instructions.md
 ├── madio_template_tier2_orchestrator.md
@@ -31,7 +31,7 @@ _template_library/
 ├── madio_template_tier3_visual_asset_generation.md
 └── madio_template_tier3_visual_design_standards.md
 
-## HIERARCHICAL TEMPLATE STRUCTURE
+## HIERARCHICAL AI SYSTEM DOCUMENT TEMPLATE STRUCTURE
 
 ### TIER 1: PROJECT AUTHORITY (Mandatory)
 **Template:** `madio_template_tier1_project_system_instructions.md`

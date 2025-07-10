@@ -55,7 +55,7 @@ Analyze the current directory structure for MADIO components:
 - `AI_CONTEXT.md` - Project bridge file and current status
 - `GEMINI.md` / `CLAUDE.md` - CLI context files
 - `.madio` - Project configuration
-- Generated MADIO documents (project_system_instructions.md, orchestrator.md, etc.)
+- Generated AI system documents (project_system_instructions.md, orchestrator.md, etc.)
 
 **MADIO Workflow Stage Detection Logic:**
 ```
@@ -66,7 +66,7 @@ ELIF no AI_CONTEXT.md exists:
   → "Setup Incomplete" - framework available but bridge file missing
 
 ELIF no project_system_instructions.md exists:
-  → "Generation Phase" - ready to generate core MADIO documents
+  → "Generation Phase" - ready to generate core AI system documents
 
 ELIF project_system_instructions.md exists but few Tier 3 documents:
   → "Expansion Phase" - ready to add supporting templates
@@ -111,8 +111,8 @@ Based on detected stage, provide numbered options:
 ```
 📍 Status: MADIO System Expansion
 🎯 Next Actions:
-1. Add templates: gemini "Add [template_name] to my MADIO system for [purpose]"
-2. Enhance system: gemini "Expand my MADIO system with [capability]"
+1. Add templates: gemini "Add [template_name] to my AI system for [purpose]"
+2. Enhance system: gemini "Expand my AI system with [capability]"
 3. Review hierarchy: Validate Tier 1 → Tier 2 → Tier 3 relationships
 4. Update context: gemini "Document template additions in AI_CONTEXT.md"
 5. Available templates: [list unused templates from madio_core_templates.md]
@@ -134,9 +134,9 @@ Based on detected stage, provide numbered options:
 📍 Status: MADIO System in Production
 🎯 Next Actions:
 1. Monitor performance: Check quality gates and user feedback
-2. Iterate system: gemini "Improve [aspect] of my MADIO system"
-3. Add capabilities: gemini "Add [new feature] using MADIO templates"
-4. Get updates: git pull template main (latest MADIO improvements)
+2. Iterate system: gemini "Improve [aspect] of my AI system"
+3. Add capabilities: gemini "Add [new feature] using AI system document templates"
+4. Get updates: git pull template main (latest AI system document improvements)
 5. New project: Use madio-start template for next AI system
 ```
 
@@ -165,7 +165,7 @@ Show current template usage and availability:
 📚 MADIO Template Status:
 
 ✅ Generated Documents:
-[List existing MADIO documents with their purposes]
+[List existing AI system documents with their purposes]
 
 🔄 Available Templates:
 [List unused templates with brief descriptions and use cases]
@@ -201,8 +201,8 @@ Complexity Level: [simple/moderate/complex/enterprise]
 4. [Action 4 with exact command]
 
 📚 MADIO TEMPLATE INSIGHTS
-Current System: [description based on generated documents]
-Available Templates: [count] unused templates ready for integration
+Current System: [description based on generated AI system documents]
+Available Templates: [count] unused AI system document templates ready for integration
 Recommended Next: [specific template suggestions]
 
 💡 NEED MORE HELP?
@@ -234,9 +234,9 @@ Recommended Next: [specific template suggestions]
 - Suggests quality improvement actions
 
 ### **Framework Evolution**
-- Shows available template updates from madio-start
-- Indicates when framework improvements are available
-- Guides template update integration process
+- Shows available AI system document template updates from madio-start
+- Indicates when AI system document framework improvements are available
+- Guides AI system document template update integration process
 - Preserves custom adaptations during updates
 
 ## Notes

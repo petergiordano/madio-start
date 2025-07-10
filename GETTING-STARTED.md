@@ -1,6 +1,10 @@
 # 🚀 Getting Started with MADIO
 
-Welcome! You're about to create a professional AI system using the MADIO framework. This guide will walk you through your first project.
+Welcome! You're about to create a professional AI system using the MADIO framework. 
+
+**What are AI system documents?** These are structured markdown files containing declarations, instructions, orchestration logic, methodology frameworks, and other specifications that drive AI agents. MADIO organizes these documents systematically to create production-ready AI systems.
+
+This guide will walk you through your first project.
 
 ## ⚠️ IMPORTANT: Did You Use the Template?
 
@@ -64,7 +68,7 @@ This comprehensive command will:
 
 ## 📥 Step 2A: Import Existing AI System Documents (Recommended First Option)
 
-**Use this option if you already have AI specification documents (.md files containing system instructions, orchestration logic, methodology frameworks, etc.):**
+**Use this option if you already have AI system documents (containing system instructions, orchestration logic, methodology frameworks, etc.):**
 
 ### Best Practice: Organized Import Workflow
 
@@ -149,7 +153,7 @@ gemini "Analyze the document structure and identify any gaps"
 
 ```bash
 # Use Gemini CLI for ongoing development
-gemini "Review my generated MADIO documents and suggest improvements"
+gemini "Review my generated AI system documents and suggest improvements"
 gemini "Add SEO optimization capabilities to my content writer AI"
 gemini "Validate my MADIO project structure and check for any issues"
 ```
@@ -193,7 +197,7 @@ Your project now contains AI system documents (either generated or imported):
 
 ### What happens during first sync:
 - ✅ Google Cloud credentials setup
-- ✅ Google Docs created for all your MADIO files
+- ✅ Google Docs created for all your AI system documents
 - ✅ Google Drive folder organization (interactive)
 - ✅ File→doc ID mappings saved for future syncs
 - ✅ Links displayed for easy access
@@ -230,8 +234,8 @@ Ensure:
 ### For OpenAI CustomGPT:
 1. Visit [chat.openai.com](https://chat.openai.com)
 2. Click "Create a GPT"
-3. Copy entire `project_system_instructions.md` → Instructions
-4. Upload other `.md` files → Knowledge
+3. Copy entire `project_system_instructions.md` AI system document → Instructions
+4. Upload other AI system documents → Knowledge
 5. Test thoroughly before publishing
 
 ### For Google Gemini Gem:
@@ -244,7 +248,7 @@ Ensure:
 1. Visit [claude.ai](https://claude.ai)
 2. Create new Project
 3. Use `project_system_instructions.md` as instructions
-4. Add other documents to project knowledge
+4. Add other AI system documents to project knowledge
    
    **💡 Pro Tip:** If you set up Google Docs sync, you can add the Google Docs URLs directly to Claude Project knowledge instead of uploading files manually.
 
@@ -260,7 +264,7 @@ Ensure:
 ### Advanced Testing:
 ```bash
 # Generate test scenarios
-gemini "Create test cases for my MADIO AI system based on the generated documents"
+gemini "Create test cases for my AI system based on the generated AI system documents"
 ```
 
 ## 🔧 Step 7: Iterate and Improve
@@ -327,14 +331,14 @@ your-ai-project/
 ### "Generated files seem incomplete"
 ```bash
 # Use Gemini CLI for completion after initial setup
-gemini "Complete the [document_name] using the MADIO framework"
-gemini "Review my MADIO project and identify any missing components"
+gemini "Complete the [document_name] AI system document using the MADIO framework"
+gemini "Review my AI system documents and identify any missing components"
 ```
 
 ### "Not sure about document hierarchy"
 ```bash
 # Use Gemini CLI for validation
-gemini "Validate the document hierarchy in my MADIO project and identify any issues"
+gemini "Validate the AI system document hierarchy and identify any issues"
 ```
 
 ### "AI doesn't understand my project context"

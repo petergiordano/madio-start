@@ -2,7 +2,9 @@
 
 ### **Build production-ready AI systems using structured English**
 
-The MADIO (Modular AI Declarative Instruction and Orchestration) framework enables you to create sophisticated AI applications for ChatGPT Custom GPTs, Gemini Gems, or Claude Projects using a systematic, template-driven approach.
+The MADIO (Modular AI Declarative Instruction and Orchestration) framework enables you to create sophisticated AI applications for ChatGPT Custom GPTs, Gemini Gems, or Claude Projects using **AI system documents** - structured markdown files containing declarations, instructions, orchestration logic, methodology frameworks, and other specifications that drive AI agents.
+
+MADIO uses a systematic, template-driven approach with these AI system documents.
 
 ## 🚀 Getting Started (5 minutes)
 
@@ -102,9 +104,9 @@ claude mcp add-from-claude-desktop
 
 ```bash
 # Use Gemini CLI for refinement and iteration
-gemini "Review my generated MADIO documents and suggest improvements"
-gemini "Update the project_system_instructions.md to include [specific feature]"
-gemini "Validate my MADIO project structure and identify any issues"
+gemini "Review my generated AI system documents and suggest improvements"
+gemini "Update the project_system_instructions.md AI system document to include [specific feature]"
+gemini "Validate my AI system documents and identify any issues"
 ```
 
 > 📋 **Quick Start Path:** `/madio-setup` → `/madio-import-docs` (existing AI docs) OR `/generate-ai-system` (new AI system) → `/madio-enable-sync` → `/push-to-docs` → Success!
@@ -131,7 +133,7 @@ gemini "Validate my MADIO project structure and identify any issues"
 4. Open in VS Code → Professional IDE environment
 5. /madio-onboard → Streamlined setup with validation (recommended)
    OR /madio-setup → Advanced users only
-6. Generate AI system → Creates hierarchical MADIO documents
+6. Generate AI system → Creates hierarchical AI system documents
 7. Customize & Deploy → Ready for production use
 ```
 
@@ -202,7 +204,7 @@ your-project/
 │   ├── commands/               # Available slash commands
 │   │   ├── madio-setup.md      # One-time project initialization
 │   │   ├── generate-ai-system.md # AI system generation with customization
-│   │   ├── madio-import-docs.md # Import existing MADIO documents
+│   │   ├── madio-import-docs.md # Import existing AI system documents
 │   │   ├── madio-doctor.md     # Project health diagnostics
 │   │   ├── madio-enable-sync.md # Optional Google Docs sync setup
 │   │   ├── push-to-docs.md     # Sync documents to Google Docs
@@ -230,7 +232,7 @@ your-project/
 ├── madio_core_templates.md     # Template selection guide
 ├── your-project.code-workspace # VS Code workspace
 ├── README.md                   # Your project documentation
-└── [Generated MADIO documents after /generate-ai-system]
+└── [Generated AI system documents after /generate-ai-system]
     ├── project_system_instructions.md # Core AI identity (Tier 1)
     ├── orchestrator.md                # Workflow controller (Tier 2)
     └── [Additional documents based on complexity]
@@ -276,7 +278,7 @@ your-project/
 **AI System Generation:**
 - `/generate-ai-system` - Interactive MADIO system creation with deep customization
 - `/generate-ai-system "[description]"` - Direct system generation
-- `/madio-import-docs` - Import existing MADIO documents with automatic context generation
+- `/madio-import-docs` - Import existing AI system documents with automatic context generation
 
 **Optional Features:**
 - `/madio-enable-sync` - Set up Google Docs sync (optional, most users don't need this)
@@ -289,7 +291,7 @@ your-project/
 /generate-ai-system "content writing AI with SEO optimization" 
 /generate-ai-system "data analysis system with evaluation frameworks"
 
-# Import existing MADIO documents
+# Import existing AI system documents
 /madio-import-docs                    # Import from current directory
 /madio-import-docs --source ./docs    # Import from specific directory
 /madio-import-docs --copy --no-sync   # Import safely without Google sync
@@ -325,7 +327,7 @@ your-project/
 
 ## 🚀 Deployment
 
-After generating and customizing your MADIO documents:
+After generating and customizing your AI system documents:
 
 ### **OpenAI CustomGPT**
 1. Copy `project_system_instructions.md` content
@@ -371,7 +373,7 @@ Local CLI (Development) ↔ AI_CONTEXT.md Bridge ↔ Browser AI (Strategy)
 
 **⚠️ IMPORTANT: This is an OPTIONAL feature that most users don't need.**
 
-For users who want automatic synchronization between local MADIO documents and Google Docs:
+For users who want automatic synchronization between local AI system documents and Google Docs:
 
 **When You Might Want This:**
 - Using Claude Projects as your primary AI platform
@@ -445,7 +447,7 @@ git pull template main
 **"Commands not working after setup"**
 - Ensure you used Claude Code for initial setup: `/madio-setup`
 - For ongoing development, switch to Gemini CLI
-- Reference generated documents: "Use the MADIO documents in my project"
+- Reference generated documents: "Use the AI system documents in my project"
 
 **"Which templates should I use?"**
 - Let Claude Code decide during `/generate-ai-system`

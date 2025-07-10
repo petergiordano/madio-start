@@ -4,7 +4,7 @@ One-time MADIO project initialization after creating project from madio-start te
 
 ## Command Purpose
 
-Run **once only** after creating and cloning a project from the madio-start template to transform scaffolding into a clean MADIO project workspace. Sets up templates, generates bridge files, and configures git for template updates.
+Run **once only** after creating and cloning a project from the madio-start template to transform scaffolding into a clean MADIO project workspace. Sets up AI system document templates, generates bridge files, and configures git for template updates.
 
 **🔄 Note**: This command is automatically called by `/madio-onboard` but can be run independently for advanced users.
 
@@ -171,7 +171,7 @@ echo "📁 Setting up MADIO project workspace..."
 # Copy template library to project root
 if [ -d "_project_scaffolding/_template_library" ]; then
     cp -r "_project_scaffolding/_template_library" "_template_library"
-    echo "   ✅ Copied _template_library/ (14 MADIO templates)"
+    echo "   ✅ Copied _template_library/ (14 AI system document templates)"
 else
     echo "   ❌ Template library not found in scaffolding"
     exit 1
@@ -296,7 +296,7 @@ This project uses the MADIO (Modular AI Declarative Instruction and Orchestratio
 
 \`\`\`
 $PROJECT_NAME/
-├── _template_library/          # 14 MADIO templates for AI system creation
+├── _template_library/          # 14 AI system document templates for AI system creation
 ├── madio_core_templates.md     # Template selection guide
 ├── CLAUDE.md                   # Claude Code CLI context
 ├── GEMINI.md                   # Gemini CLI context  
@@ -338,7 +338,7 @@ gemini "review my MADIO documents and suggest improvements"
 | \`/generate-ai-system\` | Generate complete AI system from templates |
 | \`/madio-doctor\` | Diagnose project issues |
 | \`/madio-enable-sync\` | Set up Google Docs synchronization |
-| \`/push-to-docs\` | Sync documents to Google Docs (traditional config mode) |
+| \`/push-to-docs\` | Sync AI system documents to Google Docs (traditional config mode) |
 | **NEW:** Directory sync | \`python .claude/scripts/sync_to_docs.py --directory synced_docs\` |
 
 ## 📚 Documentation
@@ -401,7 +401,7 @@ echo "💾 Creating MADIO setup commit..."
 git add -A
 git commit -m "feat: initialize MADIO project workspace
 
-- Copy _template_library/ (14 MADIO templates)
+- Copy _template_library/ (14 AI system document templates)
 - Copy madio_core_templates.md (template selection guide)
 - Copy GEMINI.md (Gemini CLI context)
 - Copy CLAUDE.md (Claude Code CLI context)  
@@ -471,7 +471,7 @@ echo ""
 echo "🎉 MADIO project setup complete!"
 echo ""
 echo "📁 Your MADIO project structure:"
-echo "   ✅ _template_library/ (14 MADIO templates)"
+echo "   ✅ _template_library/ (14 AI system document templates)"
 echo "   ✅ madio_core_templates.md (template selection guide)"
 echo "   ✅ GEMINI.md (Gemini CLI context)"
 echo "   ✅ CLAUDE.md (Claude Code CLI context)"
@@ -492,7 +492,7 @@ echo ""
 echo "   1. ✅ Use template on GitHub → your-username/your-project-name"
 echo "   2. ✅ Clone YOUR repository → local development"
 echo "   3. ✅ /madio-setup (workspace setup + template remote) ← YOU ARE HERE"
-echo "   4. 🔄 Generate AI system using MADIO templates"
+echo "   4. 🔄 Generate AI system using AI system document templates"
 echo "   5. 🔄 Customize & Deploy to production platforms"
 echo ""
 echo "💡 Next Steps - Generate Your AI System:"
@@ -540,13 +540,13 @@ echo "Ready to create your AI system with MADIO! 🚀"
 4. **Selective updates** - Users can review changes before merging
 
 ### **What Gets Updated:**
-- **Template library** (`_template_library/`) - New and improved MADIO templates
+- **Template library** (`_template_library/`) - New and improved AI system document templates
 - **Documentation** (`madio_core_templates.md`) - Updated template guidance
 - **CLI context** (`GEMINI.md`, `CLAUDE.md`) - Enhanced command workflows
 - **Framework files** - Latest MADIO framework improvements
 
 ### **What Stays Custom:**
-- **Generated documents** (project-specific MADIO files) - User's AI system
+- **Generated documents** (project-specific AI system documents) - User's AI system
 - **Project context** (`AI_CONTEXT.md`) - User's bridge file
 - **Configuration** (`.madio`) - User's project settings
 - **Customizations** - User's modifications and adaptations
@@ -624,7 +624,7 @@ Use madio-start template → Clone YOUR repository → cd your-project → /madi
 ### **MADIO Evolution Support**
 - **`/madio-setup`** = One-time MADIO workspace preparation
 - **`git pull template main`** = Get latest MADIO framework improvements
-- **Gemini CLI** = AI system generation using MADIO templates
+- **Gemini CLI** = AI system generation using AI system document templates
 - **AI_CONTEXT.md** = Bridge for browser AI deployment
 
 ## Key Benefits

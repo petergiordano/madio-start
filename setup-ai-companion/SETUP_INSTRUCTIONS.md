@@ -2,24 +2,24 @@
 
 ## Creating Your MADIO AI Companion
 
-Your MADIO AI Companion works alongside your local CLI tools (Gemini CLI + Claude Code) to provide strategic guidance, context management, and deployment support for your MADIO AI systems.
+Your MADIO AI Companion works alongside your local CLI tools (Gemini CLI + Claude Code) to provide strategic guidance, context management, and deployment support for your AI systems built with MADIO framework.
 
 ## Platform Options
 
 Choose your preferred AI platform for your companion:
 
 ### **🎯 Claude Project (Recommended)**
-- **Best for:** Strategic analysis, document review, deployment guidance
-- **Strengths:** Excellent at understanding MADIO framework and document hierarchy
+- **Best for:** Strategic analysis, AI system document review, deployment guidance
+- **Strengths:** Excellent at understanding MADIO framework and AI system document hierarchy
 - **Setup:** Most comprehensive with full project knowledge integration
 
 ### **🎯 Google Gemini Gem**  
-- **Best for:** Template selection, system generation guidance
-- **Strengths:** Native integration with Gemini CLI workflow
+- **Best for:** AI system document template selection, system generation guidance
+- **Strengths:** Native integration with Gemini CLI workflow for AI system documents
 - **Setup:** Streamlined for Gemini CLI users
 
 ### **🎯 ChatGPT Custom GPT**
-- **Best for:** Interactive system design, requirement analysis
+- **Best for:** Interactive AI system design, requirement analysis
 - **Strengths:** Conversational interface for planning and ideation
 - **Setup:** Simple knowledge base upload approach
 

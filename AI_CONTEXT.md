@@ -66,15 +66,15 @@ madio-start/
 - **Challenge**: Bridge local development (Claude write access) with cloud knowledge (Claude Project)
 - **Solution**: Python sync script with OAuth2 authentication and full document replacement
 - **Files Added**: 
-  - `sync_to_docs.py` - Main synchronization engine
+  - `sync_to_docs.py` - Main synchronization engine for AI system documents
   - `push-to-docs.md` - Claude command documentation
   - `setup.sh` - Automated dependency installation
   - `GOOGLE_CLOUD_SETUP.md` - Complete configuration guide
 
 ### **Integration Points**
-- **MCP Filesystem**: Claude Desktop can edit local markdown files directly
+- **MCP Filesystem**: Claude Desktop can edit local AI system documents directly
 - **Google Cloud**: OAuth2 project "markdown-to-docs" (testing mode)
-- **Document Mapping**: `sync_config.json` maps local files to Google Doc IDs
+- **Document Mapping**: `sync_config.json` maps local AI system documents to Google Doc IDs
 - **Claude Project**: Google Docs automatically refresh project knowledge
 
 ## Recent Major Accomplishments (January 10, 2025)
@@ -91,7 +91,7 @@ madio-start/
 6. **URL Management**: Automatic Google Doc URL display and persistent file export
 7. **Quick Start Guide**: 3-step workflow in `/madio-enable-sync` command
 8. **Dependency Update**: Added `tqdm==4.66.1` for enhanced progress visualization
-9. **NEW: Document Import**: `/madio-import-docs` with intelligent analysis and context generation
+9. **NEW: AI System Document Import**: `/madio-import-docs` with intelligent analysis and context generation
 10. **NEW: Unattended Setup**: `/madio-setup --yes` flag for automation and CI/CD integration
 
 #### **Impact Metrics**:
@@ -116,8 +116,8 @@ madio-start/
 ### **Framework Evolution**
 - **Local Innovation**: Claude can directly edit templates and documents
 - **Quality Validation**: Built-in validation ensures system integrity
-- **Cloud Propagation**: Changes sync to Google Docs for immediate availability
-- **Community Distribution**: Template updates flow through Git inheritance
+- **Cloud Propagation**: AI system document changes sync to Google Docs for immediate availability
+- **Community Distribution**: AI system document template updates flow through Git inheritance
 
 ## Technical Specifications
 

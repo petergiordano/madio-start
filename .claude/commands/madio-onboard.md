@@ -710,7 +710,7 @@ fi
 
 echo "📝 Support Resources:"
 echo "   • GitHub: https://github.com/petergiordano/madio-start"
-echo "   • Documentation: All .md files in this project"
+echo "   • Documentation: All AI system documents in this project"
 echo "   • Community: Coming soon!"
 echo ""
 

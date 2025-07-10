@@ -145,7 +145,7 @@ if [ "$SYNC_MODE" = "directory" ]; then
         exit 1
     fi
     
-    # Count markdown files
+    # Count AI system documents
     TOTAL_MD_FILES=$(find "$DIRECTORY_PATH" -name "*.md" -type f | wc -l)
     echo "Markdown files found: $TOTAL_MD_FILES"
     

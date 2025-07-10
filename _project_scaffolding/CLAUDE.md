@@ -1,22 +1,22 @@
 # Claude Code Context - MADIO Framework
 
-**Role:** Initial Setup & MADIO Document Generation
+**Role:** Initial Setup & AI System Document Generation
 **Handoff:** After setup, development continues with Gemini CLI
 
-**Primary Context Source:** Read the complete project context from `AI_CONTEXT.md` - it contains all MADIO project-specific guidelines, template selection rationale, and development context needed for this project.
+**Primary Context Source:** Read the complete project context from `AI_CONTEXT.md` - it contains all MADIO project-specific guidelines, AI system document template selection rationale, and development context needed for this project.
 
 ## MADIO Framework Overview
 You are working within a MADIO (Modular AI Declarative Instruction and Orchestration) project that uses structured templates to create production-ready AI systems.
 
 **Claude Code's Responsibilities:**
 1. **Initial project setup** via `/madio-setup` command
-2. **MADIO document generation** via `/generate-ai-system` command
+2. **AI system document generation** via `/generate-ai-system` command
 3. **Handoff preparation** by updating AI_CONTEXT.md for Gemini CLI
 
 ## Quick Reference
 - **Always read AI_CONTEXT.md completely before starting any work**
 - **Framework Type:** MADIO-based AI system development
-- **Template Library:** Check `_template_library/` for available MADIO templates
+- **Template Library:** Check `_template_library/` for available AI system document templates
 - **Project Phase:** [Determined from AI_CONTEXT.md Current Status section]
 - **Document Hierarchy:** Tier 1 (Authority) → Tier 2 (Orchestration) → Tier 3 (Supporting)
 
@@ -25,25 +25,25 @@ You are working within a MADIO (Modular AI Declarative Instruction and Orchestra
 ### 1. Initial Assessment
 1. **Use Plan Mode (Shift+Tab twice)** for complex tasks and initial analysis
 2. **Read AI_CONTEXT.md** to understand current project state and template selection
-3. **Check Document Architecture section** for current MADIO documents and their status
-4. **Review Key Decisions** to understand template selection rationale
+3. **Check Document Architecture section** for current AI system documents and their status
+4. **Review Key Decisions** to understand AI system document template selection rationale
 
-### 2. MADIO Document Operations
+### 2. AI System Document Operations
 - **Template Selection:** Reference `madio_core_templates.md` for template guidance
 - **Document Generation:** Follow MADIO hierarchical structure (Tier 1 → 2 → 3)
 - **Placeholder Replacement:** Ensure all `[BRACKETED_TEXT]` is replaced with project-specific content
-- **Cross-References:** Maintain proper document interconnections
+- **Cross-References:** Maintain proper AI system document interconnections
 
 ### 3. Quality Validation
 - **Hierarchical Integrity:** Verify Tier 1 has supreme authority over Tier 2 and 3
-- **Template Compliance:** Ensure generated documents follow template structure
-- **Deployment Readiness:** Confirm documents can be directly deployed to target platforms
+- **Template Compliance:** Ensure generated AI system documents follow template structure
+- **Deployment Readiness:** Confirm AI system documents can be directly deployed to target platforms
 
 ## MADIO-Specific Commands
 
-### Document Generation
+### AI System Document Generation
 ```bash
-# Generate core MADIO documents
+# Generate core AI system documents
 claude "Create project_system_instructions.md using the MADIO Tier 1 template"
 claude "Generate orchestrator.md that references the Tier 3 documents"
 ```

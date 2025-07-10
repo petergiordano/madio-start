@@ -18,7 +18,7 @@ Before running this command, ensure:
 
 1. **Project Analysis** - Understand current state and requirements
 2. **Template Selection** - Choose appropriate templates based on complexity
-3. **Document Generation** - Create hierarchical MADIO documents
+3. **Document Generation** - Create hierarchical AI system documents
 4. **Context Updates** - Update AI_CONTEXT.md with generation details
 5. **Validation** - Ensure system completeness and deployment readiness
 
@@ -48,7 +48,7 @@ echo "   ✅ Found $TEMPLATE_COUNT MADIO templates"
 # Check for existing generated documents
 EXISTING_DOCS=$(ls *.md 2>/dev/null | grep -E "(project_system_instructions|orchestrator)" | wc -l)
 if [ "$EXISTING_DOCS" -gt 0 ]; then
-    echo "   ⚠️  Existing MADIO documents found:"
+    echo "   ⚠️  Existing AI system documents found:"
     ls *.md 2>/dev/null | grep -E "(project_system_instructions|orchestrator|character_|content_|methodology_)" | sed 's/^/      /'
     echo ""
     read -p "   Continue and potentially overwrite? (y/N): " CONTINUE
@@ -273,7 +273,7 @@ echo ""
 echo "   ✅ Project details collected"
 ```
 
-### Phase 5: Document Generation with Deep Customization
+### Phase 5: AI System Document Generation with Deep Customization
 
 ```bash
 echo ""
@@ -496,7 +496,7 @@ echo ""
 echo "Would you like to set up flexible Google Docs sync for your generated files?"
 echo "This will:"
 echo "• Create a synced_docs/ directory"
-echo "• Move your generated MADIO files there"
+echo "• Move your generated AI system documents there"
 echo "• Enable automatic Google Docs creation and sync"
 echo ""
 read -p "Set up flexible sync? (y/N): " SETUP_SYNC
@@ -550,10 +550,10 @@ if [[ "$SETUP_SYNC" =~ ^[Yy]$ ]]; then
     
     echo ""
     echo "📊 What's in synced_docs/:"
-    ls -la synced_docs/*.md 2>/dev/null | wc -l | xargs echo "   •" && echo " markdown files ready to sync"
+    ls -la synced_docs/*.md 2>/dev/null | wc -l | xargs echo "   •" && echo " AI system documents ready to sync"
     echo ""
     echo "💡 Benefits of flexible sync:"
-    echo "   • Zero configuration - just add .md files to synced_docs/"
+    echo "   • Zero configuration - just add AI system documents to synced_docs/"
     echo "   • Automatic Google Doc creation for new files"
     echo "   • Persistent file→doc ID mapping in .synced_docs_mapping.json"
     echo "   • Works with any directory structure"

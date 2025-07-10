@@ -1,6 +1,6 @@
 # Push to Google Docs Command
 
-Sync local markdown files to Google Docs for Claude Project integration.
+Sync local AI system documents to Google Docs for Claude Project integration.
 
 ## Usage
 
@@ -68,16 +68,16 @@ Create `sync_config.json` in `.claude/scripts/`:
 ```
 
 ### 3b. NEW: Set up directory sync (flexible mode)
-Create a `synced_docs/` directory in your project root and add markdown files:
+Create a `synced_docs/` directory in your project root and add AI system documents:
 ```bash
 mkdir synced_docs
 echo "# My Document" > synced_docs/example.md
 ```
 
 **No configuration needed!** The script automatically:
-- Discovers all `.md` files in the directory
-- Creates Google Docs for new files
-- Saves file→doc mappings in `.synced_docs_mapping.json`
+- Discovers all AI system documents in the directory
+- Creates Google Docs for new AI system documents
+- Saves document→doc mappings in `.synced_docs_mapping.json`
 - Organizes documents in Google Drive folders (with prompts)
 
 **✨ NEW: Google Drive Folder Organization**
@@ -101,7 +101,7 @@ Run `/push-to-docs` - browser will open for Google OAuth consent.
 ### Traditional Config Mode
 1. Reads configuration from `sync_config.json`
 2. **NEW**: Configures Google Drive folder organization (interactive prompts)
-3. Reads local `.md` files from configured paths
+3. Reads local AI system documents from configured paths
 4. **NEW**: Auto-creates Google Docs for `CREATE_NEW_DOCUMENT` placeholders
 5. **NEW**: Places documents in specified Google Drive folders
 6. **NEW**: Automatically cleans escaped markdown characters from Google Docs exports
@@ -111,13 +111,13 @@ Run `/push-to-docs` - browser will open for Google OAuth consent.
 10. All Google Docs auto-update in Claude Project knowledge
 
 ### NEW: Directory Mode
-1. **NEW**: Scans specified directory for all `.md` files (recursive)
-2. **NEW**: Loads existing file→doc mappings from `.synced_docs_mapping.json`
-3. **NEW**: Auto-creates Google Docs for new files found
+1. **NEW**: Scans specified directory for all AI system documents (recursive)
+2. **NEW**: Loads existing document→doc mappings from `.synced_docs_mapping.json`
+3. **NEW**: Auto-creates Google Docs for new AI system documents found
 4. **NEW**: Configures Google Drive folder organization (interactive prompts)
 5. **NEW**: Places documents in specified Google Drive folders
 6. **NEW**: Automatically cleans escaped markdown characters
-7. Completely replaces Google Doc content with local file content
+7. Completely replaces Google Doc content with local document content
 8. **NEW**: Updates `.synced_docs_mapping.json` with new document IDs
 9. Preserves document IDs for Claude Project integration
 10. All Google Docs auto-update in Claude Project knowledge
@@ -171,7 +171,7 @@ if __name__ == "__main__":
 
 #### Traditional Config Mode
 1. Configure file mappings in `sync_config.json`
-2. Create local `.md` files (or let Claude edit via MCP filesystem)
+2. Create local AI system documents (or let Claude edit via MCP filesystem)
 3. Run `/push-to-docs` to configure Google Drive folders (first time only)
 4. Auto-create Google Docs and sync content to organized folders
 5. Configuration automatically updates with new Google Doc IDs and folder settings
@@ -180,11 +180,11 @@ if __name__ == "__main__":
 
 #### NEW: Directory Mode (Recommended)
 1. Create `synced_docs/` directory in project root
-2. Add any `.md` files to the directory (organize however you like)
+2. Add any AI system documents to the directory (organize however you like)
 3. Run `python sync_to_docs.py --directory synced_docs`
-4. Script discovers all files automatically and creates Google Docs
-5. File→Doc mappings saved in `.synced_docs_mapping.json`
-6. Add more files anytime - they'll be auto-discovered and synced
+4. Script discovers all documents automatically and creates Google Docs
+5. Document→Doc mappings saved in `.synced_docs_mapping.json`
+6. Add more documents anytime - they'll be auto-discovered and synced
 7. Claude Project automatically picks up changes
 8. Zero-configuration continuous sync workflow
 
@@ -208,11 +208,11 @@ chokidar "*.md" -c "/push-to-docs"
 ### Sync Failures
 - Verify Google Doc IDs in `sync_config.json`
 - Ensure you have edit access to all Google Docs
-- Check file permissions for local markdown files
+- Check permissions for local AI system documents
 - **NEW**: Ensure Google Drive API is enabled in Google Cloud Console
 - **NEW**: Verify folder permissions if using custom folders
 
 ### Performance
-- Large documents may take longer to sync
+- Large AI system documents may take longer to sync
 - Rate limiting applies to Google Docs API
-- Consider batch operations for multiple files
+- Consider batch operations for multiple documents
