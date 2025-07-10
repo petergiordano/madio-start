@@ -107,7 +107,7 @@ gemini "Update the project_system_instructions.md to include [specific feature]"
 gemini "Validate my MADIO project structure and identify any issues"
 ```
 
-> 📋 **Quick Start Path:** `/madio-setup` → `/generate-ai-system` OR `/madio-import-docs` → `/madio-enable-sync` → `/push-to-docs` → Success!
+> 📋 **Quick Start Path:** `/madio-setup` → `/madio-import-docs` (existing AI docs) OR `/generate-ai-system` (new AI system) → `/madio-enable-sync` → `/push-to-docs` → Success!
 
 **What `/madio-onboard` does:**
 1. ✅ Validates prerequisites (Python, Git, VS Code)

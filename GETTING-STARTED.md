@@ -62,9 +62,71 @@ This comprehensive command will:
 - Complete setup without user intervention
 - Still perform all safety validations
 
-## 🤖 Step 2A: Generate Your AI System (New Documents)
+## 📥 Step 2A: Import Existing AI System Documents (Recommended First Option)
 
-**Use this option if you're starting from scratch:**
+**Use this option if you already have AI specification documents (.md files containing system instructions, orchestration logic, methodology frameworks, etc.):**
+
+### Best Practice: Organized Import Workflow
+
+**1. Create a staging directory for clean import:**
+```bash
+# Create temporary staging area
+mkdir import-staging
+
+# Copy your AI system documents there
+cp your-existing-docs/*.md import-staging/
+
+# Import from the clean staging directory
+/madio-import-docs --source ./import-staging --copy
+```
+
+**2. Alternative: Import from existing directory structure:**
+```bash
+# If you have an organized docs/ folder
+/madio-import-docs --source ./docs --copy
+
+# Or from any directory containing your AI system documents
+/madio-import-docs --source ./path/to/your/ai-docs --copy
+```
+
+**3. Import from project root (if files are already there):**
+```bash
+# Import directly from current directory
+/madio-import-docs
+```
+
+### 🔍 **Filename Independence**
+The import process detects AI system documents by **content analysis**, not filename patterns. Your documents can have any names like:
+- `my-chatbot-personality.md`
+- `business-analysis-framework.md` 
+- `customer-support-workflows.md`
+- `strategic-planning-methodology.md`
+
+### ✅ **What Gets Detected**
+The system identifies AI specification documents by looking for content markers such as:
+- Tier structure indicators (Tier 1, Tier 2, Tier 3)
+- MADIO framework elements
+- Keywords: orchestrator, system instructions, methodology, framework, evaluation, strategic
+- Authority level declarations
+- Document purpose statements
+
+### 📁 **Import Process Results**
+After import, you'll have:
+- `synced_docs/` directory with your organized AI system documents
+- Updated `AI_CONTEXT.md` with project analysis
+- Analysis report showing document tiers and relationships
+- Ready for Google Docs sync (optional)
+
+**After import, continue with ongoing development:**
+```bash
+# Use Gemini CLI for refinement
+gemini "Review my imported AI system documents and suggest improvements"
+gemini "Analyze the document structure and identify any gaps"
+```
+
+## 🤖 Step 2B: Generate Your AI System (New Documents)
+
+**Use this option if you're starting from scratch and want to create new AI system documents:**
 
 **Use Claude Code for initial generation:**
 
@@ -92,43 +154,10 @@ gemini "Add SEO optimization capabilities to my content writer AI"
 gemini "Validate my MADIO project structure and check for any issues"
 ```
 
-## 📥 Step 2B: Import Existing MADIO Documents (Alternative)
 
-**Use this option if you already have MADIO-compliant documents:**
+## 📝 Step 3: Review Your AI System Documents
 
-### Option A: Import from Current Directory
-```bash
-/madio-import-docs
-```
-
-### Option B: Import from Specific Location
-```bash
-/madio-import-docs --source ./my-docs
-```
-
-### Option C: Safe Import (Copy Instead of Move)
-```bash
-/madio-import-docs --copy --no-sync
-```
-
-**What the import command does:**
-- ✅ **Analyzes** your documents to detect MADIO tier structure
-- ✅ **Validates** document compliance and relationships
-- ✅ **Generates** AI_CONTEXT.md from your existing content
-- ✅ **Organizes** files into `synced_docs/` for Google Docs sync
-- ✅ **Creates** folder structure and mapping configurations
-- ✅ **Reports** analysis results and compliance scoring
-
-**After import, continue with ongoing development:**
-```bash
-# Use Gemini CLI for refinement
-gemini "Review my imported MADIO documents and suggest improvements"
-gemini "Analyze the document structure and identify any gaps"
-```
-
-## 📝 Step 3: Review Your Files
-
-Your project now contains MADIO documents (either generated or imported):
+Your project now contains AI system documents (either generated or imported):
 
 **Core Documents (Always Present):**
 - `project_system_instructions.md` - Your AI's core identity (Tier 1)
