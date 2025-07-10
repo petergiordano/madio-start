@@ -47,7 +47,9 @@ This comprehensive command will:
 
 This runs just the core MADIO setup without the comprehensive validation and guidance.
 
-## 🤖 Step 2: Generate Your AI System
+## 🤖 Step 2A: Generate Your AI System (New Documents)
+
+**Use this option if you're starting from scratch:**
 
 **Use Claude Code for initial generation:**
 
@@ -75,18 +77,53 @@ gemini "Add SEO optimization capabilities to my content writer AI"
 gemini "Validate my MADIO project structure and check for any issues"
 ```
 
-## 📝 Step 3: Review Generated Files
+## 📥 Step 2B: Import Existing MADIO Documents (Alternative)
 
-Claude Code will create several `.md` files in your project:
+**Use this option if you already have MADIO-compliant documents:**
 
-**Always Generated:**
-- `project_system_instructions.md` - Your AI's core identity
-- `orchestrator.md` - Workflow controller
+### Option A: Import from Current Directory
+```bash
+/madio-import-docs
+```
 
-**Commonly Added:**
-- `character_voice_authority.md` - If personality specified
-- `content_operations.md` - If content validation needed
-- Additional Tier 3 documents based on complexity
+### Option B: Import from Specific Location
+```bash
+/madio-import-docs --source ./my-docs
+```
+
+### Option C: Safe Import (Copy Instead of Move)
+```bash
+/madio-import-docs --copy --no-sync
+```
+
+**What the import command does:**
+- ✅ **Analyzes** your documents to detect MADIO tier structure
+- ✅ **Validates** document compliance and relationships
+- ✅ **Generates** AI_CONTEXT.md from your existing content
+- ✅ **Organizes** files into `synced_docs/` for Google Docs sync
+- ✅ **Creates** folder structure and mapping configurations
+- ✅ **Reports** analysis results and compliance scoring
+
+**After import, continue with ongoing development:**
+```bash
+# Use Gemini CLI for refinement
+gemini "Review my imported MADIO documents and suggest improvements"
+gemini "Analyze the document structure and identify any gaps"
+```
+
+## 📝 Step 3: Review Your Files
+
+Your project now contains MADIO documents (either generated or imported):
+
+**Core Documents (Always Present):**
+- `project_system_instructions.md` - Your AI's core identity (Tier 1)
+- `orchestrator.md` - Workflow controller (Tier 2)
+
+**Supporting Documents (Tier 3, varies by complexity):**
+- `character_voice_authority.md` - Personality and voice guidelines
+- `content_operations.md` - Content creation and validation
+- `methodology_framework.md` - Analysis and evaluation processes
+- Additional specialized documents based on your system's needs
 
 ## ✏️ Step 4: Set Up Google Docs Sync (Essential for AI Integration)
 

@@ -107,7 +107,7 @@ gemini "Update the project_system_instructions.md to include [specific feature]"
 gemini "Validate my MADIO project structure and identify any issues"
 ```
 
-> 📋 **Quick Start Path:** `/madio-setup` → `/generate-ai-system` → `/madio-enable-sync` → `/push-to-docs` → Success!
+> 📋 **Quick Start Path:** `/madio-setup` → `/generate-ai-system` OR `/madio-import-docs` → `/madio-enable-sync` → `/push-to-docs` → Success!
 
 **What `/madio-onboard` does:**
 1. ✅ Validates prerequisites (Python, Git, VS Code)
@@ -202,6 +202,7 @@ your-project/
 │   ├── commands/               # Available slash commands
 │   │   ├── madio-setup.md      # One-time project initialization
 │   │   ├── generate-ai-system.md # AI system generation with customization
+│   │   ├── madio-import-docs.md # Import existing MADIO documents
 │   │   ├── madio-doctor.md     # Project health diagnostics
 │   │   ├── madio-enable-sync.md # Optional Google Docs sync setup
 │   │   ├── push-to-docs.md     # Sync documents to Google Docs
@@ -275,6 +276,7 @@ your-project/
 **AI System Generation:**
 - `/generate-ai-system` - Interactive MADIO system creation with deep customization
 - `/generate-ai-system "[description]"` - Direct system generation
+- `/madio-import-docs` - Import existing MADIO documents with automatic context generation
 
 **Optional Features:**
 - `/madio-enable-sync` - Set up Google Docs sync (optional, most users don't need this)
@@ -282,9 +284,15 @@ your-project/
 
 **Examples:**
 ```bash
+# Generate new AI system from templates
 /generate-ai-system "customer support bot with friendly personality"
 /generate-ai-system "content writing AI with SEO optimization" 
 /generate-ai-system "data analysis system with evaluation frameworks"
+
+# Import existing MADIO documents
+/madio-import-docs                    # Import from current directory
+/madio-import-docs --source ./docs    # Import from specific directory
+/madio-import-docs --copy --no-sync   # Import safely without Google sync
 ```
 
 ## 📚 MADIO Templates
@@ -440,6 +448,12 @@ git pull template main
 - Let Claude Code decide during `/generate-ai-system`
 - Check the Template Selection Matrix in `madio_core_templates.md`
 - Use Gemini CLI for refinements: "Suggest additional templates for my use case"
+
+**"Import command not working with my documents"**
+- Ensure documents follow MADIO naming conventions (e.g., `project_system_instructions.md`, `orchestrator.md`)
+- Check documents contain tier markers in content (`Tier 1`, `Tier 2`, etc.)
+- Use `--copy` flag to preserve originals during testing: `/madio-import-docs --copy`
+- Run `/madio-doctor` for comprehensive project diagnostics
 
 ## 📈 Why MADIO Works
 
