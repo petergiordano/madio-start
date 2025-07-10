@@ -8,6 +8,19 @@ Run **once only** after creating and cloning a project from the madio-start temp
 
 **🔄 Note**: This command is automatically called by `/madio-onboard` but can be run independently for advanced users.
 
+## Usage
+
+```bash
+# Interactive setup (prompts for confirmation when needed)
+/madio-setup
+
+# Unattended setup (skips all prompts, assumes "yes" to all questions)
+/madio-setup --yes
+```
+
+**Flags:**
+- `--yes` or `-y`: Run in unattended mode, automatically accepting all prompts
+
 ## Execution Process
 
 ### Phase 1: Safety Validation
@@ -15,6 +28,17 @@ Run **once only** after creating and cloning a project from the madio-start temp
 First, check if this MADIO project has already been set up:
 
 ```bash
+# Parse command line arguments
+YES_FLAG=false
+for arg in "$@"; do
+    case $arg in
+        --yes|-y)
+            YES_FLAG=true
+            shift
+            ;;
+    esac
+done
+
 # Check for setup completion marker
 if [ -f ".madio-setup-complete" ]; then
     echo "❌ MADIO project already set up."
@@ -78,11 +102,16 @@ if echo "$ORIGIN_URL" | grep -q "madio-start"; then
     echo "   1. Use the GitHub template to create YOUR repository"
     echo "   2. Clone YOUR repository instead of madio-start"
     echo ""
-    echo "   Continue anyway? (y/N)"
-    read -r confirm
-    if [ "$confirm" != "y" ] && [ "$confirm" != "Y" ]; then
-        echo "   Setup cancelled. Please create your own repository from the template."
-        exit 1
+    
+    if [ "$YES_FLAG" = true ]; then
+        echo "   --yes flag provided, continuing setup anyway..."
+    else
+        echo "   Continue anyway? (y/N)"
+        read -r confirm
+        if [ "$confirm" != "y" ] && [ "$confirm" != "Y" ]; then
+            echo "   Setup cancelled. Please create your own repository from the template."
+            exit 1
+        fi
     fi
 fi
 

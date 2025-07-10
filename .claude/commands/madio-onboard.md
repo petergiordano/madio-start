@@ -324,7 +324,7 @@ if [ ! -f ".madio-setup-complete" ]; then
     
     # Check if madio-setup command exists
     if [ -f ".claude/commands/madio-setup.md" ]; then
-        /madio-setup
+        /madio-setup --yes
         if [ $? -eq 0 ]; then
             echo "✅ MADIO project initialized"
         else

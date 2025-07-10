@@ -269,7 +269,7 @@ your-project/
 ### **Claude Code Commands Available:**
 
 **Setup & Navigation:**
-- `/madio-setup` - One-time project initialization
+- `/madio-setup` - One-time project initialization (add `--yes` for unattended mode)
 - `/orient` - Check current project status and next steps
 - `/madio-doctor` - Comprehensive project health check and diagnostics
 
