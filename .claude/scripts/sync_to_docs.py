@@ -331,8 +331,19 @@ class GoogleDocsSync:
             print("   • Run: /madio-doctor for troubleshooting")
             return None
     
-    def prompt_for_folder(self):
-        """Prompt user for Google Drive folder selection"""
+    def prompt_for_folder(self, force_interactive=False):
+        """Prompt user for Google Drive folder selection with terminal detection"""
+        
+        # Check if we're in an interactive terminal
+        is_interactive = force_interactive or (sys.stdin.isatty() and sys.stdout.isatty())
+        
+        if not is_interactive:
+            print("\n📁 Google Drive Folder Configuration")
+            print("   ⚠️  Non-interactive environment detected (Claude Code CLI, CI/CD, etc.)")
+            print("   📂 Using root folder (My Drive)")
+            print("   💡 Tip: Use --folder 'Your Folder Name' to specify a folder")
+            return None
+        
         print("\n📁 Google Drive Folder Configuration")
         print("   Choose where to create your Google Docs:")
         print("   • Press Enter for root folder (My Drive)")
@@ -340,7 +351,11 @@ class GoogleDocsSync:
         print("   • If folder doesn't exist, you'll be asked to create it")
         
         while True:
-            folder_name = input("\nEnter Google Drive folder name (or press Enter for root): ").strip()
+            try:
+                folder_name = input("\nEnter Google Drive folder name (or press Enter for root): ").strip()
+            except (EOFError, KeyboardInterrupt):
+                print("\n📂 Using root folder (My Drive)")
+                return None
             
             if not folder_name:
                 print("📂 Using root folder (My Drive)")
@@ -754,7 +769,7 @@ class GoogleDocsSync:
         
         return success
     
-    def sync_all_files(self, config_file='sync_config.json', clean_escapes=True, directory_path=None, mapping_file='.synced_docs_mapping.json', include_pattern=None, exclude_pattern=None):
+    def sync_all_files(self, config_file='sync_config.json', clean_escapes=True, directory_path=None, mapping_file='.synced_docs_mapping.json', include_pattern=None, exclude_pattern=None, target_folder=None):
         """Sync all files based on configuration or directory discovery"""
         config = {}
         config_updated = False
@@ -802,25 +817,52 @@ class GoogleDocsSync:
                 print(f"❌ Configured folder \"{folder_name}\" not found")
                 return False
         else:
-            # No folder configured - prompt user or use root
-            try:
-                folder_info = self.prompt_for_folder()
-                if folder_info:
-                    print(f"📂 Selected folder: \"{folder_info['name']}\" ({folder_info['id'][:15]}...)")
-                    self.target_folder_id = folder_info['id']
-                    # Update config with selected folder
+            # No folder configured - check for command-line folder or prompt user
+            if target_folder:
+                # Folder specified via command line
+                print(f"📁 Command-line folder specified: \"{target_folder}\"")
+                folder_id = self.find_folder_by_name(target_folder)
+                if folder_id:
+                    print(f"📂 Found existing folder: \"{target_folder}\" ({folder_id[:15]}...)")
+                    self.target_folder_id = folder_id
+                else:
+                    print(f"📁 Folder \"{target_folder}\" not found, creating...")
+                    folder_id = self.create_folder(target_folder)
+                    if folder_id:
+                        print(f"✅ Created folder: \"{target_folder}\" ({folder_id[:15]}...)")
+                        self.target_folder_id = folder_id
+                    else:
+                        print(f"❌ Failed to create folder \"{target_folder}\", using root folder")
+                        self.target_folder_id = None
+                
+                # Update config if folder was found/created
+                if self.target_folder_id:
                     config['_google_drive_folder'] = {
-                        'name': folder_info['name'],
-                        'id': folder_info['id'],
+                        'name': target_folder,
+                        'id': self.target_folder_id,
                         'description': "Google Drive folder for documents. Leave name empty for root folder."
                     }
                     config_updated = True
-                else:
-                    print("📂 Using root folder (My Drive)")
+            else:
+                # No command-line folder - prompt user or use root
+                try:
+                    folder_info = self.prompt_for_folder()
+                    if folder_info:
+                        print(f"📂 Selected folder: \"{folder_info['name']}\" ({folder_info['id'][:15]}...)")
+                        self.target_folder_id = folder_info['id']
+                        # Update config with selected folder
+                        config['_google_drive_folder'] = {
+                            'name': folder_info['name'],
+                            'id': folder_info['id'],
+                            'description': "Google Drive folder for documents. Leave name empty for root folder."
+                        }
+                        config_updated = True
+                    else:
+                        print("📂 Using root folder (My Drive)")
+                        self.target_folder_id = None
+                except (EOFError, KeyboardInterrupt):
+                    print("\n📂 Using root folder (My Drive)")
                     self.target_folder_id = None
-            except (EOFError, KeyboardInterrupt):
-                print("\n📂 Using root folder (My Drive)")
-                self.target_folder_id = None
         
         success_count = 0
         total_count = 0
@@ -959,12 +1001,14 @@ def main():
     parser.add_argument('--doc-id', help='Google Doc ID (required with --file)')
     parser.add_argument('--config', default='sync_config.json', help='Config file path')
     parser.add_argument('--directory', help='Directory to scan for markdown files (e.g., synced_docs)')
+    parser.add_argument('--folder', help='Google Drive folder name for documents (e.g., "MADIO Docs"). Creates folder if needed.')
     parser.add_argument('--mapping-file', default='.synced_docs_mapping.json', help='File to store directory-to-doc-ID mappings')
     parser.add_argument('--pattern', help='Glob pattern to include specific files (e.g., "tier3_*.md")')
     parser.add_argument('--exclude', help='Glob pattern to exclude files (e.g., "test_*.md")')
     parser.add_argument('--no-clean', action='store_true', help='Skip cleaning escaped markdown characters')
     parser.add_argument('--credentials', default='credentials.json', help='Google credentials file')
     parser.add_argument('--token', default='token.pickle', help='Token file for authentication')
+    parser.add_argument('--interactive', action='store_true', help='Force interactive mode even in non-TTY environments')
     
     args = parser.parse_args()
     
@@ -995,7 +1039,8 @@ def main():
                 directory_path=directory_path,
                 mapping_file=mapping_file,
                 include_pattern=args.pattern,
-                exclude_pattern=args.exclude
+                exclude_pattern=args.exclude,
+                target_folder=args.folder
             )
             sys.exit(0 if success else 1)
         

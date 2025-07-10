@@ -16,6 +16,16 @@ cd .claude/scripts
 python3 sync_to_docs.py --directory synced_docs
 ```
 
+### NEW: Sync to specific Google Drive folder
+```bash
+cd .claude/scripts
+# Specify folder name - creates folder if it doesn't exist
+python3 sync_to_docs.py --directory synced_docs --folder "MADIO Docs"
+
+# Perfect for Claude Code CLI (non-interactive environments)
+python3 sync_to_docs.py --directory synced_docs --folder "My AI Project"
+```
+
 ### NEW: Sync directory with custom mapping file
 ```bash
 cd .claude/scripts
@@ -211,6 +221,13 @@ chokidar "*.md" -c "/push-to-docs"
 - Check permissions for local AI system documents
 - **NEW**: Ensure Google Drive API is enabled in Google Cloud Console
 - **NEW**: Verify folder permissions if using custom folders
+
+### Folder Selection Issues
+- **Problem**: Interactive folder prompt doesn't wait for input in Claude Code CLI
+- **Solution**: Use `--folder` argument to specify folder name directly
+- **Example**: `python3 sync_to_docs.py --directory synced_docs --folder "MADIO Docs"`
+- **Automatic**: Folder is created if it doesn't exist
+- **Default**: If no folder specified, documents go to root folder (My Drive)
 
 ### Performance
 - Large AI system documents may take longer to sync
