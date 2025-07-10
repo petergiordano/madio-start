@@ -8,6 +8,7 @@ import json
 import os
 import sys
 import argparse
+import glob
 from pathlib import Path
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -155,6 +156,97 @@ class GoogleDocsSync:
                 else:
                     print("📂 Using root folder (My Drive)")
                     return None
+    
+    def discover_markdown_files(self, directory_path):
+        """Discover all markdown files in the specified directory"""
+        if not os.path.exists(directory_path):
+            print(f"❌ Directory not found: {directory_path}")
+            return []
+        
+        if not os.path.isdir(directory_path):
+            print(f"❌ Path is not a directory: {directory_path}")
+            return []
+        
+        print(f"🔍 Discovering markdown files in: {directory_path}")
+        
+        # Use glob to find all .md files recursively
+        pattern = os.path.join(directory_path, "**", "*.md")
+        markdown_files = glob.glob(pattern, recursive=True)
+        
+        # Filter out hidden files and directories
+        filtered_files = []
+        for file_path in markdown_files:
+            relative_path = os.path.relpath(file_path, directory_path)
+            # Skip files in hidden directories or hidden files
+            if not any(part.startswith('.') for part in relative_path.split(os.sep)):
+                filtered_files.append(file_path)
+        
+        print(f"📄 Found {len(filtered_files)} markdown files")
+        for file_path in filtered_files:
+            print(f"   • {os.path.relpath(file_path, os.getcwd())}")
+        
+        return filtered_files
+    
+    def load_directory_mapping(self, mapping_file='.synced_docs_mapping.json'):
+        """Load the persistent mapping of files to Google Doc IDs"""
+        if os.path.exists(mapping_file):
+            try:
+                with open(mapping_file, 'r') as f:
+                    mapping = json.load(f)
+                print(f"📋 Loaded directory mapping from {mapping_file}")
+                return mapping
+            except (json.JSONDecodeError, IOError) as e:
+                print(f"⚠️  Error loading directory mapping: {e}")
+                return {}
+        else:
+            print(f"📋 No existing directory mapping found, starting fresh")
+            return {}
+    
+    def save_directory_mapping(self, mapping, mapping_file='.synced_docs_mapping.json'):
+        """Save the persistent mapping of files to Google Doc IDs"""
+        try:
+            with open(mapping_file, 'w') as f:
+                json.dump(mapping, f, indent=2)
+            print(f"💾 Saved directory mapping to {mapping_file}")
+            return True
+        except IOError as e:
+            print(f"❌ Error saving directory mapping: {e}")
+            return False
+    
+    def create_directory_config(self, directory_path, mapping_file='.synced_docs_mapping.json'):
+        """Create a temporary config from directory discovery"""
+        markdown_files = self.discover_markdown_files(directory_path)
+        if not markdown_files:
+            return {}
+        
+        # Load existing mappings
+        existing_mapping = self.load_directory_mapping(mapping_file)
+        
+        # Create config with discovered files
+        config = {}
+        updated_mapping = existing_mapping.copy()
+        
+        for file_path in markdown_files:
+            # Use relative path as key for consistency
+            relative_path = os.path.relpath(file_path, os.getcwd())
+            
+            # Check if we already have a doc ID for this file
+            if relative_path in existing_mapping:
+                doc_id = existing_mapping[relative_path]
+                print(f"📄 Using existing Doc ID for {relative_path}: {doc_id[:8]}...")
+            else:
+                # New file, use placeholder for auto-creation
+                doc_id = NEW_DOC_PLACEHOLDER
+                print(f"📄 Will create new Doc for {relative_path}")
+                updated_mapping[relative_path] = doc_id
+            
+            config[relative_path] = doc_id
+        
+        # Save updated mapping if there were changes
+        if updated_mapping != existing_mapping:
+            self.save_directory_mapping(updated_mapping, mapping_file)
+        
+        return config
     
     def read_markdown_file(self, file_path):
         """Read markdown file content"""
@@ -391,18 +483,30 @@ class GoogleDocsSync:
         
         return success
     
-    def sync_all_files(self, config_file='sync_config.json', clean_escapes=True):
-        """Sync all files based on configuration"""
-        if not os.path.exists(config_file):
-            print(f"❌ Config file not found: {config_file}")
-            return False
+    def sync_all_files(self, config_file='sync_config.json', clean_escapes=True, directory_path=None, mapping_file='.synced_docs_mapping.json'):
+        """Sync all files based on configuration or directory discovery"""
+        config = {}
+        config_updated = False
         
-        try:
-            with open(config_file, 'r') as f:
-                config = json.load(f)
-        except json.JSONDecodeError as e:
-            print(f"❌ Invalid JSON in config file: {e}")
-            return False
+        if directory_path:
+            # Directory mode - discover files and create temporary config
+            print(f"🔍 Directory mode: scanning {directory_path} for markdown files")
+            config = self.create_directory_config(directory_path, mapping_file)
+            if not config:
+                print(f"❌ No markdown files found in directory: {directory_path}")
+                return False
+        else:
+            # Traditional config file mode
+            if not os.path.exists(config_file):
+                print(f"❌ Config file not found: {config_file}")
+                return False
+            
+            try:
+                with open(config_file, 'r') as f:
+                    config = json.load(f)
+            except json.JSONDecodeError as e:
+                print(f"❌ Invalid JSON in config file: {e}")
+                return False
         
         # Handle folder configuration
         folder_config = config.get('_google_drive_folder', {})
@@ -449,6 +553,7 @@ class GoogleDocsSync:
         
         success_count = 0
         total_count = 0
+        mapping_updated = False
         
         # Create a copy of keys to iterate over, allowing modification of original dict
         for file_path in list(config.keys()):
@@ -471,8 +576,19 @@ class GoogleDocsSync:
                 if new_doc_id:
                     config[file_path] = new_doc_id
                     doc_id = new_doc_id  # Use the new ID for syncing this iteration
-                    config_updated = True
-                    print(f"   🔄 Updated config for {file_path} with new Doc ID: {new_doc_id[:15]}...")
+                    
+                    # Update appropriate mapping
+                    if directory_path:
+                        # Update directory mapping
+                        existing_mapping = self.load_directory_mapping(mapping_file)
+                        existing_mapping[file_path] = new_doc_id
+                        self.save_directory_mapping(existing_mapping, mapping_file)
+                        mapping_updated = True
+                    else:
+                        # Update config file
+                        config_updated = True
+                    
+                    print(f"   🔄 Updated mapping for {file_path} with new Doc ID: {new_doc_id[:15]}...")
                 else:
                     print(f"❌ Failed to create Google Doc for {file_path}. Skipping sync for this file.")
                     continue  # Skip to the next file if creation failed
@@ -492,7 +608,8 @@ class GoogleDocsSync:
             if self.sync_file(file_path, doc_id, clean_escapes):
                 success_count += 1
         
-        if config_updated:
+        # Save updates based on mode
+        if config_updated and not directory_path:
             print(f"\n💾 Updating configuration file: {config_file}...")
             try:
                 with open(config_file, 'w') as f:
@@ -511,6 +628,8 @@ def main():
     parser.add_argument('--file', help='Specific file to sync')
     parser.add_argument('--doc-id', help='Google Doc ID (required with --file)')
     parser.add_argument('--config', default='sync_config.json', help='Config file path')
+    parser.add_argument('--directory', help='Directory to scan for markdown files (e.g., synced_docs)')
+    parser.add_argument('--mapping-file', default='.synced_docs_mapping.json', help='File to store directory-to-doc-ID mappings')
     parser.add_argument('--no-clean', action='store_true', help='Skip cleaning escaped markdown characters')
     parser.add_argument('--credentials', default='credentials.json', help='Google credentials file')
     parser.add_argument('--token', default='token.pickle', help='Token file for authentication')
@@ -534,7 +653,27 @@ def main():
             clean_escapes = not args.no_clean
             success = sync.sync_file(args.file, args.doc_id, clean_escapes)
             sys.exit(0 if success else 1)
+        
+        elif args.directory:
+            # Directory mode - scan directory for markdown files
+            # Go back to project root for directory access
+            os.chdir('../..')
+            
+            # Resolve directory path
+            directory_path = os.path.abspath(args.directory)
+            mapping_file = args.mapping_file
+            
+            clean_escapes = not args.no_clean
+            success = sync.sync_all_files(
+                config_file=args.config, 
+                clean_escapes=clean_escapes,
+                directory_path=directory_path,
+                mapping_file=mapping_file
+            )
+            sys.exit(0 if success else 1)
+        
         else:
+            # Traditional config file mode
             # Handle config file path - check if it's relative to script dir or project root
             config_path = args.config
             if not os.path.exists(config_path):
