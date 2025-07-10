@@ -16,6 +16,22 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
+# Import tqdm for progress bars (with fallback if not available)
+try:
+    from tqdm import tqdm
+    TQDM_AVAILABLE = True
+except ImportError:
+    TQDM_AVAILABLE = False
+    # Fallback: simple progress indicator
+    def tqdm(iterable, desc="Processing", total=None, unit="file"):
+        for i, item in enumerate(iterable):
+            if total:
+                print(f"\r{desc}: {i+1}/{total} {unit}s", end="", flush=True)
+            else:
+                print(f"\r{desc}: {i+1} {unit}s", end="", flush=True)
+            yield item
+        print()  # New line after completion
+
 # Scopes required for Google Docs and Drive APIs
 SCOPES = ['https://www.googleapis.com/auth/documents', 'https://www.googleapis.com/auth/drive']
 
@@ -351,8 +367,8 @@ class GoogleDocsSync:
                     print("📂 Using root folder (My Drive)")
                     return None
     
-    def discover_markdown_files(self, directory_path):
-        """Discover all markdown files in the specified directory"""
+    def discover_markdown_files(self, directory_path, include_pattern=None, exclude_pattern=None):
+        """Discover all markdown files in the specified directory with optional pattern filtering"""
         if not os.path.exists(directory_path):
             print(f"❌ Directory not found: {directory_path}")
             return []
@@ -362,24 +378,61 @@ class GoogleDocsSync:
             return []
         
         print(f"🔍 Discovering markdown files in: {directory_path}")
+        if include_pattern:
+            print(f"   📋 Include pattern: {include_pattern}")
+        if exclude_pattern:
+            print(f"   🚫 Exclude pattern: {exclude_pattern}")
         
         # Use glob to find all .md files recursively
-        pattern = os.path.join(directory_path, "**", "*.md")
+        if include_pattern:
+            # Use custom pattern if provided
+            pattern = os.path.join(directory_path, "**", include_pattern)
+        else:
+            # Default to all .md files
+            pattern = os.path.join(directory_path, "**", "*.md")
+            
         markdown_files = glob.glob(pattern, recursive=True)
         
-        # Filter out hidden files and directories
+        # Filter out hidden files and directories with progress indicator
         filtered_files = []
-        for file_path in markdown_files:
-            relative_path = os.path.relpath(file_path, directory_path)
-            # Skip files in hidden directories or hidden files
-            if not any(part.startswith('.') for part in relative_path.split(os.sep)):
-                filtered_files.append(file_path)
+        if TQDM_AVAILABLE and len(markdown_files) > 5:
+            # Use progress bar for large file lists
+            for file_path in tqdm(markdown_files, desc="📂 Filtering files", unit="file"):
+                if self._should_include_file(file_path, directory_path, exclude_pattern):
+                    filtered_files.append(file_path)
+        else:
+            # Simple processing for small file lists
+            for file_path in markdown_files:
+                if self._should_include_file(file_path, directory_path, exclude_pattern):
+                    filtered_files.append(file_path)
         
         print(f"📄 Found {len(filtered_files)} markdown files")
-        for file_path in filtered_files:
-            print(f"   • {os.path.relpath(file_path, os.getcwd())}")
+        if len(filtered_files) <= 10:
+            # Show individual files for small lists
+            for file_path in filtered_files:
+                print(f"   • {os.path.relpath(file_path, os.getcwd())}")
+        else:
+            # Summary for large lists
+            print(f"   • Files ready for processing ({len(filtered_files)} total)")
         
         return filtered_files
+    
+    def _should_include_file(self, file_path, directory_path, exclude_pattern=None):
+        """Check if a file should be included based on filters"""
+        relative_path = os.path.relpath(file_path, directory_path)
+        
+        # Skip files in hidden directories or hidden files
+        if any(part.startswith('.') for part in relative_path.split(os.sep)):
+            return False
+        
+        # Apply exclude pattern if provided
+        if exclude_pattern:
+            import fnmatch
+            filename = os.path.basename(file_path)
+            if fnmatch.fnmatch(filename, exclude_pattern):
+                return False
+        
+        return True
     
     def load_directory_mapping(self, mapping_file='.synced_docs_mapping.json'):
         """Load the persistent mapping of files to Google Doc IDs"""
@@ -407,9 +460,9 @@ class GoogleDocsSync:
             print(f"❌ Error saving directory mapping: {e}")
             return False
     
-    def create_directory_config(self, directory_path, mapping_file='.synced_docs_mapping.json'):
+    def create_directory_config(self, directory_path, mapping_file='.synced_docs_mapping.json', include_pattern=None, exclude_pattern=None):
         """Create a temporary config from directory discovery"""
-        markdown_files = self.discover_markdown_files(directory_path)
+        markdown_files = self.discover_markdown_files(directory_path, include_pattern, exclude_pattern)
         if not markdown_files:
             return {}
         
@@ -675,7 +728,11 @@ class GoogleDocsSync:
             print("   • Run: /madio-doctor for troubleshooting")
             return None
     
-    def sync_file(self, file_path, doc_id, clean_escapes=True):
+    def get_doc_url(self, doc_id):
+        """Generate Google Doc URL from document ID"""
+        return f"https://docs.google.com/document/d/{doc_id}/edit"
+    
+    def sync_file(self, file_path, doc_id, clean_escapes=True, show_url=False):
         """Sync a single file to Google Docs"""
         print(f"📄 Syncing {file_path} to Google Doc {doc_id[:8]}...")
         
@@ -690,12 +747,14 @@ class GoogleDocsSync:
         success = self.update_google_doc(doc_id, content)
         if success:
             print(f"✅ Successfully synced {file_path}")
+            if show_url:
+                print(f"   🔗 View: {self.get_doc_url(doc_id)}")
         else:
             print(f"❌ Failed to sync {file_path}")
         
         return success
     
-    def sync_all_files(self, config_file='sync_config.json', clean_escapes=True, directory_path=None, mapping_file='.synced_docs_mapping.json'):
+    def sync_all_files(self, config_file='sync_config.json', clean_escapes=True, directory_path=None, mapping_file='.synced_docs_mapping.json', include_pattern=None, exclude_pattern=None):
         """Sync all files based on configuration or directory discovery"""
         config = {}
         config_updated = False
@@ -703,7 +762,7 @@ class GoogleDocsSync:
         if directory_path:
             # Directory mode - discover files and create temporary config
             print(f"🔍 Directory mode: scanning {directory_path} for markdown files")
-            config = self.create_directory_config(directory_path, mapping_file)
+            config = self.create_directory_config(directory_path, mapping_file, include_pattern, exclude_pattern)
             if not config:
                 print(f"❌ No markdown files found in directory: {directory_path}")
                 return False
@@ -766,14 +825,21 @@ class GoogleDocsSync:
         success_count = 0
         total_count = 0
         mapping_updated = False
+        synced_docs = []  # Track successfully synced documents
         
         # Create a copy of keys to iterate over, allowing modification of original dict
-        for file_path in list(config.keys()):
+        config_files = [fp for fp in config.keys() if not fp.startswith('_')]
+        
+        # Progress indicator for sync operations
+        if TQDM_AVAILABLE and len(config_files) > 3:
+            file_iterator = tqdm(config_files, desc="🔄 Syncing files", unit="file")
+        else:
+            file_iterator = config_files
+            if len(config_files) > 1:
+                print(f"🔄 Syncing {len(config_files)} files...")
+        
+        for file_path in file_iterator:
             doc_id = config[file_path]
-
-            # Skip configuration comments
-            if file_path.startswith('_'):
-                continue
             
             if doc_id == NEW_DOC_PLACEHOLDER:
                 print(f"ℹ️  Found placeholder for {file_path}. Attempting to create new Google Doc.")
@@ -817,8 +883,14 @@ class GoogleDocsSync:
                 continue
             
             total_count += 1
-            if self.sync_file(file_path, doc_id, clean_escapes):
+            if self.sync_file(file_path, doc_id, clean_escapes, show_url=(total_count <= 5)):
                 success_count += 1
+                # Track successful syncs for URL summary
+                synced_docs.append({
+                    'file': file_path,
+                    'doc_id': doc_id,
+                    'url': self.get_doc_url(doc_id)
+                })
         
         # Save updates based on mode
         if config_updated and not directory_path:
@@ -831,7 +903,53 @@ class GoogleDocsSync:
                 print(f"❌ Error writing updated configuration to {config_file}: {e}")
                 print("   Please check file permissions and path.")
         
-        print(f"\n📊 Sync complete: {success_count}/{total_count} files synced successfully")
+        # Display Google Doc URLs for successfully synced files
+        if synced_docs:
+            print(f"\n🔗 Google Doc URLs")
+            print(f"==================")
+            for doc in synced_docs:
+                filename = os.path.basename(doc['file'])
+                print(f"📄 {filename}")
+                print(f"   {doc['url']}")
+            
+            # Save URLs to file for easy reference
+            try:
+                urls_file = "google_docs_urls.txt"
+                with open(urls_file, 'w') as f:
+                    f.write("Google Docs URLs\n")
+                    f.write("================\n\n")
+                    for doc in synced_docs:
+                        f.write(f"{doc['file']}: {doc['url']}\n")
+                print(f"\n💾 URLs saved to: {urls_file}")
+            except Exception as e:
+                print(f"⚠️  Could not save URLs file: {e}")
+        
+        # Enhanced sync summary with detailed statistics
+        print(f"\n📊 Sync Summary")
+        print(f"================")
+        print(f"✅ Successfully synced: {success_count} files")
+        print(f"📂 Total files processed: {total_count} files")
+        
+        if total_count > 0:
+            success_rate = (success_count / total_count) * 100
+            print(f"📈 Success rate: {success_rate:.1f}%")
+        
+        failed_count = total_count - success_count
+        if failed_count > 0:
+            print(f"❌ Failed syncs: {failed_count} files")
+        
+        if config_updated or mapping_updated:
+            print(f"💾 Configuration updated: {'Yes' if config_updated or mapping_updated else 'No'}")
+        
+        if directory_path and mapping_updated:
+            print(f"📋 Mapping file updated: {mapping_file}")
+        
+        # Show sync mode
+        sync_mode = "Directory" if directory_path else "Config"
+        print(f"🔧 Sync mode: {sync_mode}")
+        
+        print(f"📅 Sync completed: {__import__('datetime').datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        
         return success_count == total_count and not (total_count == 0 and config_updated) # Success if all synced or only config updated
 
 
@@ -842,6 +960,8 @@ def main():
     parser.add_argument('--config', default='sync_config.json', help='Config file path')
     parser.add_argument('--directory', help='Directory to scan for markdown files (e.g., synced_docs)')
     parser.add_argument('--mapping-file', default='.synced_docs_mapping.json', help='File to store directory-to-doc-ID mappings')
+    parser.add_argument('--pattern', help='Glob pattern to include specific files (e.g., "tier3_*.md")')
+    parser.add_argument('--exclude', help='Glob pattern to exclude files (e.g., "test_*.md")')
     parser.add_argument('--no-clean', action='store_true', help='Skip cleaning escaped markdown characters')
     parser.add_argument('--credentials', default='credentials.json', help='Google credentials file')
     parser.add_argument('--token', default='token.pickle', help='Token file for authentication')
@@ -873,7 +993,9 @@ def main():
                 config_file=args.config, 
                 clean_escapes=clean_escapes,
                 directory_path=directory_path,
-                mapping_file=mapping_file
+                mapping_file=mapping_file,
+                include_pattern=args.pattern,
+                exclude_pattern=args.exclude
             )
             sys.exit(0 if success else 1)
         
