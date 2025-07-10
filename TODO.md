@@ -1,58 +1,76 @@
 # TODO.md
 
-## Active Items
+## 📋 Project Status Update
 
-### 1. 🔧 Google Docs Sync Production Readiness
-- [ ] **Review Jules' Production Readiness Report** - Incorporate engineer feedback on Google Docs sync error handling, user experience, and configuration validation
-  - [ ] Implement recommended error handling improvements
-  - [ ] Address configuration validation issues
-  - [ ] Resolve any user experience friction points identified
-  - **Context**: Jules reviewing sync_to_docs.py for production deployment readiness
+> **MAJOR MILESTONE**: Comprehensive architectural analysis completed! Most technical debt and improvement items have been systematically documented in **`docs/ARCHITECTURAL_REFACTORING_ROADMAP.md`** with expert recommendations from Jules and Codex.
 
-### 2. 🚨 OAuth Production Setup
+### ✅ **Migrated to Architectural Roadmap**
+The following TODO items are now comprehensively covered in `docs/ARCHITECTURAL_REFACTORING_ROADMAP.md`:
+
+- **🔧 Google Docs Sync Production Readiness** → Covered in Phase 1 (Security & Error Resilience)
+- **🛡️ Error Prevention & Recovery** → Covered in Phase 1 (Error Handling Enhancement) 
+- **📝 Documentation Improvements** → Covered in Phase 3 (Documentation Completion)
+- **🧪 Integration Testing** → Covered in Phase 5 (Testing & Validation Framework)
+
+**📊 Total Coverage**: 57 tasks across 5 phases with concrete timelines and success metrics.
+
+### 🔗 **See Also**
+- **[ARCHITECTURAL_REFACTORING_ROADMAP.md](docs/ARCHITECTURAL_REFACTORING_ROADMAP.md)** - Complete technical improvement plan
+- **Jules' Expert Analysis** - Architectural robustness and technical depth findings
+- **Codex's Expert Analysis** - User experience optimization and measurable outcome recommendations
+
+---
+
+## Active Items (Not in Roadmap)
+
+### 1. 🚨 OAuth Production Setup
 - [ ] Review and complete OAuth consent screen for production
 - [ ] Add privacy policy and terms of service if required
 - [ ] Submit app for verification if needed for public use
 - [ ] Add additional users to test user list as needed
 - [ ] Consider publishing app for broader MADIO community access
 - **Context**: Google Docs sync currently requires users to be added as test users. For wider MADIO adoption, may need production OAuth approval.
+- **Note**: This is deployment/publishing specific, not covered in technical roadmap
 
-### 3. ✨ Quick Start Improvements
+### 2. ✨ Quick Start Improvements
 - [ ] Move `_GETTING-STARTED.md` to prominent location after setup
 - [ ] Create interactive setup wizard for first-time users
 - [ ] Add VS Code recommended extensions prompt
 - [ ] Implement automatic git remote validation and fix
 - [ ] Generate project-specific README template
+- **Note**: These are MADIO framework improvements beyond the sync system scope
 
-### 4. 🛡️ Error Prevention & Recovery
-- [ ] Add pre-flight checks before any operations
-- [ ] Implement rollback capability for failed setups
-- [ ] Add clear error messages with solution steps
-- [ ] Implement setup state recovery
-
-### 5. 📝 Documentation Improvements
-- [ ] Create `VIDEO_TUTORIAL_SCRIPT.md` for screencast
-- [ ] Add `TROUBLESHOOTING.md` with common issues
-- [ ] Create `QUICK_START.md` as 1-page guide
-- [ ] Add inline help to all commands
-- [ ] Generate context-aware next steps
-
-### 6. 🎉 First-Run Experience
+### 3. 🎉 First-Run Experience
 - [ ] Create welcome message on VS Code open
 - [ ] Add `.vscode/settings.json` with helpful defaults
 - [ ] Implement smart command suggestions
 - [ ] Create progress indicator for setup steps
 - [ ] Add success celebration and next steps
-
-### 7. 🧪 Integration Testing
-- [ ] Test end-to-end flow on Windows/Mac/Linux
-- [ ] Verify with/without Gemini CLI installed
-- [ ] Validate with various Python versions
-- [ ] Test edge cases for sync and recovery
+- **Note**: These are VS Code integration improvements beyond sync system scope
 
 ---
 
 ## Recently Completed ✅
+
+### 🏗️ **ARCHITECTURAL ANALYSIS COMPLETED** (2025-01-10):
+
+#### Comprehensive Technical Roadmap Creation
+- ✅ **NEW**: Complete architectural analysis of MADIO document sync system
+- ✅ **NEW**: Expert recommendations from Jules (architectural robustness) and Codex (user experience)
+- ✅ **NEW**: 57-task improvement roadmap across 5 phases with concrete timelines
+- ✅ **NEW**: Technical debt inventory with High/Medium/Low prioritization
+- ✅ **NEW**: Concrete success metrics and exit tests for every improvement
+- ✅ **NEW**: Risk assessment with mitigation strategies
+- ✅ **DOCUMENTED**: Complete findings in `docs/ARCHITECTURAL_REFACTORING_ROADMAP.md`
+
+#### Key Discoveries & Expert Insights
+- **Jules Identified**: Configuration path inconsistencies, undocumented CLI features, granular error handling gaps
+- **Codex Identified**: Git secret leakage risks, buried security warnings, missing unified setup guide, hidden auto-sync features
+- **Critical Issues**: 6 urgent security and configuration issues requiring immediate attention
+- **Feature Gaps**: Multiple powerful features (CLI overrides, auto-sync) completely undocumented
+- **User Experience**: Systematic analysis of user drop-off points and friction areas
+
+**Result**: MADIO sync system now has expert-validated improvement strategy with measurable outcomes!
 
 ### 🎉 **MAJOR UPDATES COMPLETED** (2025-07-09):
 
