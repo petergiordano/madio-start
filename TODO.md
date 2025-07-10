@@ -48,6 +48,29 @@ The following TODO items are now comprehensively covered in `docs/ARCHITECTURAL_
 - [ ] Add success celebration and next steps
 - **Note**: These are VS Code integration improvements beyond sync system scope
 
+### 4. 🎯 Command List UX Improvement - Hide Advanced Commands
+- [ ] Move `madio-setup.md` to `.claude/internal/madio-setup.md` (hide from command list)
+- [ ] Update `madio-onboard.md` to reference internal command path for advanced users
+- [ ] Update documentation to mention advanced users can find direct setup in internal directory
+- [ ] Test that `/madio-onboard` still works correctly with internal path
+- [ ] Update any references to `/madio-setup` in documentation
+- **Problem**: Users typing "/" see both `/madio-onboard` and `/madio-setup`, creating decision paralysis and confusion about which to choose
+- **Solution**: Hide advanced command from autocomplete while keeping functionality available
+- **Benefits**: 
+  - Reduces decision paralysis (users see one clear "start here" command)
+  - Maintains advanced functionality for power users
+  - Follows UX best practice of hiding complexity from new users
+  - Matches user mental model of "single entry point" for setup
+- **Implementation**:
+  1. Create `.claude/internal/` directory
+  2. Move `.claude/commands/madio-setup.md` → `.claude/internal/madio-setup.md`
+  3. Update line 327 in `madio-onboard.md`: `if [ -f ".claude/commands/madio-setup.md" ]` → `if [ -f ".claude/internal/madio-setup.md" ]`
+  4. Update the call on line 327: `/madio-setup` → `.claude/internal/madio-setup.md` (or create wrapper)
+  5. Add note in documentation about advanced setup location
+  6. Test complete onboarding flow still works
+- **Priority**: Medium (UX improvement, not blocking functionality)
+- **Note**: Command discovery and UX improvement, not covered in technical roadmap
+
 ---
 
 ## Recently Completed ✅
