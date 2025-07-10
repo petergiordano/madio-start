@@ -473,10 +473,12 @@ echo ""
 echo "✅ MADIO AI System Generation Complete!"
 echo ""
 echo "📁 Generated Documents:"
+GENERATED_FILES=()
 for template in "${SELECTED_TEMPLATES[@]}"; do
     OUTPUT_NAME=$(echo "$template" | sed 's/madio_template_tier[0-9]_//g')
     if [ -f "$OUTPUT_NAME" ]; then
         echo "   ✅ $OUTPUT_NAME"
+        GENERATED_FILES+=("$OUTPUT_NAME")
     else
         echo "   ❌ $OUTPUT_NAME (generation failed)"
     fi
@@ -486,6 +488,63 @@ echo ""
 echo "🎯 Your AI System: $AI_SYSTEM_DESC"
 echo "📊 Complexity: $COMPLEXITY (${#SELECTED_TEMPLATES[@]} documents)"
 echo "🌉 Bridge File: AI_CONTEXT.md updated"
+echo ""
+
+# Optional: Offer to set up flexible sync
+echo "🔗 Google Docs Sync Setup:"
+echo ""
+echo "Would you like to set up flexible Google Docs sync for your generated files?"
+echo "This will:"
+echo "• Create a synced_docs/ directory"
+echo "• Move your generated MADIO files there"
+echo "• Enable automatic Google Docs creation and sync"
+echo ""
+read -p "Set up flexible sync? (y/N): " SETUP_SYNC
+
+if [[ "$SETUP_SYNC" =~ ^[Yy]$ ]]; then
+    echo ""
+    echo "📁 Setting up synced_docs/ directory..."
+    
+    # Create synced_docs directory
+    mkdir -p synced_docs
+    echo "   ✅ Created synced_docs/ directory"
+    
+    # Move generated files to synced_docs
+    for file in "${GENERATED_FILES[@]}"; do
+        if [ -f "$file" ]; then
+            mv "$file" "synced_docs/"
+            echo "   📁 Moved $file → synced_docs/"
+        fi
+    done
+    
+    echo ""
+    echo "🚀 Flexible sync directory ready!"
+    echo ""
+    
+    # Check if Google credentials are set up
+    if [ -f ".claude/scripts/credentials.json" ]; then
+        echo "✅ Google credentials found - ready to sync:"
+        echo "   python .claude/scripts/sync_to_docs.py --directory synced_docs"
+    else
+        echo "⚠️  Google credentials needed before first sync:"
+        echo "   1. Run: ./.claude/scripts/setup.sh"
+        echo "   2. Set up Google Cloud credentials (follow prompts)"
+        echo "   3. Then run: python .claude/scripts/sync_to_docs.py --directory synced_docs"
+    fi
+    
+    echo ""
+    echo "💡 Benefits of flexible sync:"
+    echo "   • Zero configuration - just add .md files to synced_docs/"
+    echo "   • Automatic Google Doc creation for new files"
+    echo "   • Persistent file→doc ID mapping in .synced_docs_mapping.json"
+    echo "   • Recursive discovery of files in subdirectories"
+    echo ""
+else
+    echo ""
+    echo "📋 Files remain in project root. To sync later:"
+    echo "   • Traditional mode: Configure .claude/scripts/sync_config.json"
+    echo "   • Flexible mode: Move files to synced_docs/ directory"
+fi
 echo ""
 echo "🚀 Next Steps:"
 echo ""
@@ -499,17 +558,23 @@ echo "   • Replace any remaining [BRACKETED_PLACEHOLDERS]"
 echo "   • Adapt content to your specific requirements"
 echo "   • Add domain-specific knowledge and examples"
 echo ""
-echo "3. 🧪 Test Locally:"
+echo "3. 🔗 Set Up Google Docs Sync (if not done already):"
+echo "   • Run: ./.claude/scripts/setup.sh (installs dependencies, sets up credentials)"
+echo "   • Follow Google Cloud setup prompts"
+echo "   • Then sync: python .claude/scripts/sync_to_docs.py --directory synced_docs"
+echo "   • See GETTING-STARTED.md Step 4 for detailed instructions"
+echo ""
+echo "4. 🧪 Test Locally:"
 echo "   • Validate document hierarchy and cross-references"
 echo "   • Test workflow logic and quality gates"
 echo "   • Ensure all placeholders are replaced"
 echo ""
-echo "4. 🚀 Deploy to Platform:"
+echo "5. 🚀 Deploy to Platform:"
 echo "   • OpenAI CustomGPT: Copy project_system_instructions.md + upload docs"
 echo "   • Google Gemini Gem: Combine documents per .madio configuration"
 echo "   • Claude Project: Upload to project knowledge with AI_CONTEXT.md"
 echo ""
-echo "5. 🔄 Update Context:"
+echo "6. 🔄 Update Context:"
 echo "   • Use: gemini \"Update AI_CONTEXT.md with customization progress\""
 echo "   • Document: Template selection rationale and modifications"
 echo "   • Track: Deployment status and platform configurations"
@@ -520,6 +585,7 @@ echo "   □ Document hierarchy maintains proper authority (Tier 1 → 2 → 3)"
 echo "   □ Cross-references between documents function correctly"
 echo "   □ Quality gates and validation procedures operational"
 echo "   □ Platform deployment requirements satisfied"
+echo "   □ Google Docs sync configured and tested (recommended for Claude Projects)"
 echo ""
 echo "🎉 Your MADIO AI system is ready for customization and deployment!"
 ```

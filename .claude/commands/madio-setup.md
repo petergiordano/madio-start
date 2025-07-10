@@ -309,7 +309,8 @@ gemini "review my MADIO documents and suggest improvements"
 | \`/generate-ai-system\` | Generate complete AI system from templates |
 | \`/madio-doctor\` | Diagnose project issues |
 | \`/madio-enable-sync\` | Set up Google Docs synchronization |
-| \`/push-to-docs\` | Sync documents to Google Docs |
+| \`/push-to-docs\` | Sync documents to Google Docs (traditional config mode) |
+| **NEW:** Directory sync | \`python .claude/scripts/sync_to_docs.py --directory synced_docs\` |
 
 ## 📚 Documentation
 

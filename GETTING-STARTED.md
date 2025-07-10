@@ -88,7 +88,51 @@ Claude Code will create several `.md` files in your project:
 - `content_operations.md` - If content validation needed
 - Additional Tier 3 documents based on complexity
 
-## ✏️ Step 4: Customize Your Project
+## ✏️ Step 4: Set Up Google Docs Sync (Recommended)
+
+**Why sync to Google Docs?**
+- Claude Projects can reference Google Docs directly in knowledge base
+- Enables seamless handoff between local development and browser AI
+- Automatic updates when you edit files locally
+
+### 1. Quick Setup
+```bash
+# Run the setup script and choose flexible sync
+./.claude/scripts/setup.sh
+```
+
+The setup will:
+- Install Python dependencies 
+- Create `synced_docs/` directory (if using flexible mode)
+- Guide you through Google Cloud credentials setup
+
+### 2. Google Cloud Credentials
+Follow the setup script prompts to:
+1. Create Google Cloud project
+2. Enable Google Docs API and Google Drive API
+3. Create OAuth2 credentials (Desktop application)
+4. Download `credentials.json` to `.claude/scripts/`
+
+### 3. First Sync
+If you chose flexible sync during `/generate-ai-system`:
+```bash
+python .claude/scripts/sync_to_docs.py --directory synced_docs
+```
+
+If files are still in project root:
+```bash
+# Move files to synced_docs first
+mkdir synced_docs
+mv *.md synced_docs/
+python .claude/scripts/sync_to_docs.py --directory synced_docs
+```
+
+The first sync will:
+- Create Google Docs for all your MADIO files
+- Set up Google Drive folder organization (interactive)
+- Save file→doc ID mappings for future syncs
+
+## ✏️ Step 5: Customize Your Project
 
 ### 1. Replace Placeholders
 Search for `[BRACKETED_TEXT]` in all generated files:
@@ -115,7 +159,7 @@ Ensure:
 - No circular dependencies
 - Clear authority chain (Tier 1 → 2 → 3)
 
-## 🚀 Step 5: Deploy Your AI
+## 🚀 Step 6: Deploy Your AI
 
 ### For OpenAI CustomGPT:
 1. Visit [chat.openai.com](https://chat.openai.com)
@@ -135,8 +179,10 @@ Ensure:
 2. Create new Project
 3. Use `project_system_instructions.md` as instructions
 4. Add other documents to project knowledge
+   
+   **💡 Pro Tip:** If you set up Google Docs sync, you can add the Google Docs URLs directly to Claude Project knowledge instead of uploading files manually.
 
-## 🧪 Step 6: Test Your AI System
+## 🧪 Step 7: Test Your AI System
 
 ### Basic Testing Checklist:
 - [ ] AI responds according to defined personality
