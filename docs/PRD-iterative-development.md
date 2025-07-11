@@ -8,21 +8,21 @@ The MADIO Framework currently operates under a "one-time setup" model that assum
 
 ### Current State Limitations
 
-- **Single Document Lifecycle**: System assumes documents are created once via `/generate-ai-system` or `/madio-import-docs`
+- **Single Document Lifecycle**: The system assumes documents are created once via `/generate-ai-system` or `/madio-import-docs`
 - **Stale Mapping Persistence**: Document-to-Google Doc ID mappings persist indefinitely, causing sync failures when documents are replaced
-- **No Lifecycle Management**: No tracking of document creation, modification, or replacement events
+- **No Lifecycle Management**: There is no tracking of document creation, modification, or replacement events
 - **Poor User Experience**: Users encounter cryptic errors when attempting iterative workflows
 - **Brittle Sync Process**: Google Docs sync breaks when attempting to sync to trashed or deleted documents
-- **Missing User Interaction**: Google Drive folder selection prompts are bypassed, forcing documents into root folder without user choice
+- **Missing User Interaction**: Google Drive folder selection prompts are bypassed, forcing documents into the root folder without user choice
 
 ### Impact on User Workflows
 
-1. **Initial Setup → Development Iteration**: Users complete setup, then need to add new specialized documents
+1. **Initial Setup → Development Iteration**: Users complete setup and then need to add specialized documents
 2. **Document Replacement**: Users want to replace existing documents with improved versions
 3. **Template Evolution**: Users need to upgrade to newer MADIO template versions
-4. **Collaborative Development**: Multiple team members contribute documents that need integration
+4. **Collaborative Development**: Multiple team members contribute documents that require integration
 5. **Experimentation**: Users want to test different document combinations without breaking existing setups
-6. **Document Organization**: Users cannot organize their Google Docs into proper folders, leading to cluttered Drive structure
+6. **Document Organization**: Users cannot organize their Google Docs into proper folders, leading to a cluttered Drive structure
 
 ## Vision Statement
 
@@ -34,8 +34,8 @@ Enable MADIO users to continuously evolve their AI systems through seamless iter
 
 **As a MADIO user, I want to manage my AI system documents as living assets so that I can continuously improve my AI system.**
 
-- **Story 1.1**: Add new documents to existing project without breaking sync
-- **Story 1.2**: Replace existing documents with new versions
+- **Story 1.1**: Add new documents to an existing project without breaking sync
+- **Story 1.2**: Replace existing documents with updated versions
 - **Story 1.3**: Remove documents that are no longer needed
 - **Story 1.4**: Track document history and changes
 
@@ -43,10 +43,10 @@ Enable MADIO users to continuously evolve their AI systems through seamless iter
 
 **As a MADIO user, I want to bring new AI system documents into my project at any time so that I can expand my AI system capabilities.**
 
-- **Story 2.1**: Import additional documents after initial setup
+- **Story 2.1**: Import additional documents after the initial setup
 - **Story 2.2**: Replace all documents with a new set
 - **Story 2.3**: Merge new documents with existing ones
-- **Story 2.4**: Preview import changes before applying
+- **Story 2.4**: Preview import changes before applying them
 
 ### Epic 3: Robust Sync Management
 
@@ -61,7 +61,7 @@ Enable MADIO users to continuously evolve their AI systems through seamless iter
 
 **As a MADIO user, I want to control where my documents are organized and how sync operations proceed so that I can maintain an organized workspace.**
 
-- **Story 4.1**: Choose Google Drive folder for document organization during sync
+- **Story 4.1**: Choose a Google Drive folder for document organization during sync
 - **Story 4.2**: Receive clear prompts and confirmations during critical operations
 - **Story 4.3**: Override default behaviors when needed
 - **Story 4.4**: Understand what the system is doing through clear status messages
@@ -127,37 +127,37 @@ Enable MADIO users to continuously evolve their AI systems through seamless iter
 
 #### 4. Smart Mapping Validation
 
-- Pre-sync validation of Google Doc accessibility
-- Automatic stale mapping detection and resolution
-- Interactive conflict resolution for ambiguous cases
-- Fallback to new document creation when needed
+- Validate Google Doc accessibility before each sync
+- Automatically detect and resolve stale mappings
+- Interactively resolve conflicts in ambiguous cases
+- Create new documents automatically when necessary
 
 #### 5. Workflow State Persistence
 
 - Track document creation and modification events
-- Maintain sync history and success/failure states
-- Enable rollback to previous working states
-- Provide audit trail for troubleshooting
+- Maintain sync history with success and failure states
+- Enable rollbacks to previous working states
+- Provide an audit trail for troubleshooting
 
 ## Functional Requirements
 
 ### FR1: Multi-Mode Import Operations
 
-- **Replace Mode**: Clear existing documents and import new set
+- **Replace Mode**: Clear existing documents and import a new set
 - **Merge Mode**: Add new documents while preserving existing ones
-- **Fresh Mode**: Reset entire project and start clean
-- **Preview Mode**: Show what changes will be made before applying
+- **Fresh Mode**: Reset the entire project and start clean
+- **Preview Mode**: Show proposed changes before applying them
 
 ### FR2: Intelligent Sync Management
 
-- **Mapping Validation**: Verify Google Doc accessibility before sync
-- **Stale Detection**: Identify and handle trashed/deleted documents
+- **Mapping Validation**: Verify Google Doc accessibility before syncing
+- **Stale Detection**: Identify and handle trashed or deleted documents
 - **Auto-Recovery**: Create new documents when mappings fail
 - **Conflict Resolution**: Handle duplicate names and mapping collisions
 
 ### FR3: Interactive User Experience
 
-- **Google Drive Folder Selection**: Always prompt user for folder choice unless explicitly overridden
+- **Google Drive Folder Selection**: Always prompt the user for a folder choice unless explicitly overridden
 - **Operation Confirmation**: Confirm destructive operations before execution
 - **Progress Visibility**: Show clear progress indicators during operations
 - **Error Recovery Guidance**: Provide actionable steps when operations fail
@@ -167,14 +167,14 @@ Enable MADIO users to continuously evolve their AI systems through seamless iter
 - **Lifecycle Tracking**: Record creation, modification, and deletion events
 - **Dependency Management**: Track document relationships and hierarchies
 - **Status Monitoring**: Monitor sync health and document accessibility
-- **Change Detection**: Identify when documents need re-sync
+- **Change Detection**: Identify when documents need to be re-synced
 
 ### FR5: Environment-Aware Operation
 
-- **Interactive Mode**: Full prompts and confirmations in terminal environments
-- **Non-Interactive Mode**: Sensible defaults for CI/CD and automated environments
-- **Hybrid Mode**: Critical prompts only, with defaults for routine operations
-- **Override Flags**: Command-line flags to force specific behaviors
+- **Interactive Mode**: Provide full prompts and confirmations in terminal environments
+- **Non-Interactive Mode**: Use sensible defaults for CI/CD and automated environments
+- **Hybrid Mode**: Show only critical prompts, using defaults for routine operations
+- **Override Flags**: Provide command-line flags to force specific behaviors
 
 ## Critical Bug Fixes
 
@@ -185,16 +185,16 @@ Enable MADIO users to continuously evolve their AI systems through seamless iter
 **Description**: During push-to-docs execution, users are not prompted to select Google Drive folder destination, causing documents to be placed in root folder without user choice.
 
 **Root Cause**:
-- Environment detection incorrectly identifies interactive terminal as non-interactive
-- Claude Code CLI environment may not properly forward stdin to Python subprocess
-- Folder selection prompt logic bypassed due to environment detection failure
+- Environment detection incorrectly identifies an interactive terminal as non-interactive
+- The Claude Code CLI environment may not properly forward stdin to Python subprocesses
+- Folder selection prompt logic is bypassed due to environment detection failure
 
 **Fix Requirements**:
 - Implement robust interactive environment detection
-- Ensure stdin forwarding works correctly in Claude Code CLI
-- Add fallback prompts using alternative input methods if needed
+- Ensure stdin forwarding works correctly in the Claude Code CLI
+- Add fallback prompts using alternative input methods when needed
 - Provide command-line flags for explicit folder specification
-- Test interaction flows in all supported environments
+- Test interaction flows across all supported environments
 
 ### BUG-002: Stale Document Mapping Persistence
 
@@ -244,7 +244,7 @@ Enable MADIO users to continuously evolve their AI systems through seamless iter
 ### Phase 3: Core Functionality (Week 3-4)
 
 - **Enhanced Import**: Add replace/merge/fresh modes to madio-import-docs
-- **Smart Sync**: Automatic stale mapping detection and resolution
+- **Smart Sync**: Automatically detect and resolve stale mappings
 - **Interactive Flows**: Comprehensive user interaction management
 
 ### Phase 4: User Experience (Week 5-6)
