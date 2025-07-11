@@ -209,12 +209,17 @@ your-project/
 │   │   ├── madio-enable-sync.md # Optional Google Docs sync setup
 │   │   ├── push-to-docs.md     # Sync documents to Google Docs
 │   │   └── orient.md           # Check project status
-│   ├── scripts/                # Optional Google Docs sync (if enabled)
-│   │   ├── sync_to_docs.py     # Sync script
-│   │   ├── requirements.txt    # Python dependencies
-│   │   ├── setup.sh           # Sync setup script
-│   │   └── sync_config.json   # Document mapping config
-│   └── settings.local.json     # Claude Code settings
+│   ├── scripts/                # Python scripts for commands
+│   │   ├── sync_to_docs.py     # Syncs documents to Google Docs
+│   │   ├── manage_docs.py      # Handles madio-update-docs logic
+│   │   ├── check_sync_health.py # Handles sync-status logic
+│   │   ├── madio_registry.py   # Manages the document registry
+│   │   ├── madio_migrate_config.py # Migrates old configs
+│   │   ├── requirements.txt    # Python dependencies for scripts
+│   │   └── setup.sh            # Optional: script to setup venv for scripts
+│   └── settings.local.json     # Claude Code settings (if used)
+├── .madio/                     # MADIO project-specific configuration
+│   └── document_registry.json  # Central registry for document state, mappings, and sync preferences
 ├── setup-ai-companion/         # AI companion setup guides
 │   ├── SETUP_INSTRUCTIONS.md
 │   ├── CLAUDE_PROJECT_INSTRUCTIONS.md
@@ -280,9 +285,20 @@ your-project/
 - `/generate-ai-system "[description]"` - Direct system generation
 - `/madio-import-docs` - Import existing AI system documents with automatic context generation
 
-**Optional Features:**
-- `/madio-enable-sync` - Set up Google Docs sync (optional, most users don't need this)
-- `/push-to-docs` - Sync documents to Google Docs (requires sync setup)
+**Document & Sync Management:**
+- `/madio-update-docs` - Add, remove, or update metadata for documents in the registry.
+  - `--add <filepath>`
+  - `--remove <filepath_in_registry>`
+  - `--update-metadata <filepath_in_registry> [--tier N] [--status S] [--source X]`
+- `/sync-status` - Check sync health and repair registry issues.
+  - `--health-check` (default)
+  - `--repair` (interactive)
+- `/madio-migrate-config` - Migrate old sync configurations to the new `.madio/document_registry.json`.
+
+**Optional Features (Google Docs Sync):**
+- `/madio-enable-sync` - One-time setup for Google Cloud credentials for sync.
+- `/push-to-docs` - Sync documents listed in the registry to Google Docs.
+  - `--force-new` (optional, creates new GDocs even if linked)
 
 **Examples:**
 ```bash
@@ -292,12 +308,14 @@ your-project/
 /generate-ai-system "data analysis system with evaluation frameworks"
 
 # Import existing AI system documents
-/madio-import-docs                    # Import from current directory
-/madio-import-docs --source ./docs    # Import from specific directory
-/madio-import-docs --copy --no-sync   # Import safely without Google sync
+/madio-import-docs                                # Import with default 'merge' mode
+/madio-import-docs --source ./docs --mode=merge   # Explicit merge
+/madio-import-docs --source ./new-set --mode=replace # Replace existing registry content
+/madio-import-docs --source ./fresh-start --mode=fresh # Fresh project reset then import
+/madio-import-docs --copy --no-sync               # Import safely without Google sync (still uses chosen mode)
 
 # Unattended setup for automation
-/madio-setup --yes                    # Skip all prompts for CI/CD pipelines
+/madio-setup --yes                                # Skip all prompts for CI/CD pipelines
 ```
 
 ## 📚 MADIO Templates
@@ -401,12 +419,16 @@ For users who want automatic synchronization between local AI system documents a
 - `/push-to-docs` - Sync all AI system documents (prompts for Google Drive folder organization)
 
 **What `/push-to-docs` does:**
-- Finds all AI system documents in `synced_docs/`
-- **Interactively asks where to organize your Google Docs**
-- Creates folders and documents automatically
-- Works in both interactive and automated environments
+- Reads the `.madio/document_registry.json` to find documents marked for sync.
+- **Interactively asks where to organize your Google Docs** (if not already configured in `sync_preferences` within the registry).
+- Creates new Google Docs for local files not yet linked, or updates existing linked Google Docs.
+- Stores Google Doc IDs, versions, and local file hashes in the registry.
+- Handles stale mappings and basic conflicts (potentially interactively).
+- Works in both interactive and automated environments (with appropriate flags/defaults).
 
-**💡 Remember: MADIO works perfectly without Google Docs sync!**
+**Key File:** `.madio/document_registry.json` is now the central place for all sync-related information, replacing older `sync_config.json` or `.synced_docs_mapping.json` methods. Use `/madio-migrate-config` if you have an older project.
+
+**💡 Remember: MADIO works perfectly without Google Docs sync!** This is an optional feature for specific workflows (like Claude Project knowledge base integration).
 
 ## 🔄 Getting Template Updates
 

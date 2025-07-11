@@ -59,8 +59,8 @@ def add_document(args, registry_data, project_root):
 
         if filepath_to_add.resolve() != destination_path_abs.resolve(): # Only copy if not already in dest
             if destination_path_abs.exists():
-                if not get_user_confirmation(f"File {destination_path_abs} already exists. Overwrite?"):
-                    print("Skipping add operation.")
+                if not input(f"Target file '{destination_path_abs}' already exists in 'synced_docs/'. Overwrite? (y/N): ").strip().lower() == 'y':
+                    print("Skipping add operation as file exists and user chose not to overwrite.")
                     return True # Not an error, user chose to skip
             try:
                 shutil.copy(str(filepath_to_add), str(destination_path_abs))
@@ -114,11 +114,12 @@ def remove_document(args, registry_data, project_root):
         is_interactive = sys.stdin.isatty() # Basic interactivity check
 
         if is_interactive:
-            if get_user_confirmation(f"Associated Google Doc: '{gdoc_title}' (ID: {gdoc_id}). Delete from Google Drive? (Choosing 'N' will only unlink it)"):
+            if input(f"Associated Google Doc: '{gdoc_title}' (ID: {gdoc_id}). Delete from Google Drive? (y/N, 'N' unlinks only): ").strip().lower() == 'y':
                 delete_gdoc_from_drive = True
 
         if delete_gdoc_from_drive:
-            print(f"Attempting to delete Google Doc ID: {gdoc_id} from Google Drive...")
+            # This part is still placeholder for actual GDoc deletion
+            print(f"INFO: User chose to delete Google Doc ID: {gdoc_id} from Google Drive.")
             drive_service = get_drive_service_placeholder()
             if drive_service:
                 try:
@@ -139,16 +140,24 @@ def remove_document(args, registry_data, project_root):
 
     if absolute_local_path.exists() and absolute_local_path.is_file():
         try:
-            if absolute_local_path.is_relative_to(synced_docs_dir): # Only delete if it's in synced_docs
-                if get_user_confirmation(f"Delete local managed file at '{absolute_local_path}'?", default_yes=False):
-                    os.remove(absolute_local_path)
-                    print(f"  Deleted local file: {absolute_local_path}")
-                else:
-                    print(f"  Local file '{absolute_local_path}' was not deleted.")
-            else: # File is outside synced_docs, just unregister
-                print(f"  Local file '{absolute_local_path}' is outside 'synced_docs/'. It will be unlinked from MADIO but not deleted from filesystem.")
+            # Standardize prompt for local deletion, make it clear it's the *managed* copy
+            delete_local_file_confirmed = False
+            if absolute_local_path.is_relative_to(synced_docs_dir):
+                if input(f"Delete local managed copy at '{absolute_local_path}'? (y/N): ").strip().lower() == 'y':
+                    delete_local_file_confirmed = True
+            else:
+                # If not in synced_docs, perhaps it was registered in place. Ask differently or have stricter rules.
+                # For now, if it's not in synced_docs, we won't prompt to delete, just unregister.
+                print(f"  Local file '{absolute_local_path}' is not in 'synced_docs/'. It will be unlinked from MADIO registry but not deleted from filesystem.")
+
+            if delete_local_file_confirmed:
+                os.remove(absolute_local_path)
+                print(f"  Deleted local managed file: {absolute_local_path}")
+            elif absolute_local_path.is_relative_to(synced_docs_dir): # It was in synced_docs but user said no
+                 print(f"  Local managed file '{absolute_local_path}' was not deleted by user choice.")
+
         except Exception as e:
-            print(f"  ⚠️ Error trying to delete local file {absolute_local_path}: {e}")
+            print(f"  ⚠️ Error during local file handling for {absolute_local_path}: {e}")
 
     madio_registry.remove_document_entry(registry_data, path_in_registry_str)
     return True

@@ -405,16 +405,17 @@ class GoogleDocsSync:
 
         # Proceed with interactive prompting
         print("\n📁 Google Drive Folder Configuration")
-        print("   Choose where to create your Google Docs:")
-        print("   • Press Enter for root folder (My Drive)")
-        print("   • Enter folder name (e.g., 'MADIO Docs')")
-        print("   • If folder doesn't exist, you'll be asked to create it")
+        print("   Choose a Google Drive folder for your MADIO documents.")
+        print("   - Press Enter to use the root 'My Drive' folder.")
+        print("   - Type a folder name (e.g., 'My AI Project Docs').")
+        print("   - If the folder doesn't exist, you'll be asked to create it.")
         
         while True:
             try:
-                folder_name = input("\nEnter Google Drive folder name (or press Enter for root): ").strip()
+                # Use actual_input_func which could be input() or one reading from /dev/tty
+                folder_name = actual_input_func("Enter folder name (or press Enter for root 'My Drive'): ").strip()
             except (EOFError, KeyboardInterrupt):
-                print("\n📂 Using root folder (My Drive)")
+                print("\n📂 Using root folder (My Drive). User cancelled prompt.")
                 return None
             
             if not folder_name:
@@ -428,10 +429,11 @@ class GoogleDocsSync:
                 return {'name': folder_name, 'id': folder_id}
             else:
                 # Folder not found, ask to create
-                print(f"\n❓ Folder \"{folder_name}\" not found.")
-                create_choice = input("Create this folder? (y/N): ").strip().lower()
+                print(f"\n❓ Folder \"{folder_name}\" not found in Google Drive.")
+                # Use actual_input_func here as well
+                create_choice = actual_input_func(f"Create folder \"{folder_name}\" in Google Drive? (y/N): ").strip().lower()
                 
-                if create_choice == 'y' or create_choice == 'yes':
+                if create_choice == 'y': # Standardize to 'y' for yes
                     folder_id = self.create_folder(folder_name)
                     if folder_id:
                         return {'name': folder_name, 'id': folder_id}

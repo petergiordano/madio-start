@@ -1,6 +1,6 @@
 # MADIO Import Docs - Import Existing MADIO Documents
 
-Import existing MADIO-compliant AI system documents into the framework with automatic context generation and Google Docs sync setup.
+Import existing MADIO-compliant AI system documents into the framework. This command now uses the `.madio/document_registry.json` to manage imported documents and can operate in different modes (`merge`, `replace`, `fresh`) to control how imported documents interact with existing registry entries and associated Google Docs. It also facilitates context generation and prepares documents for Google Docs synchronization via `/push-to-docs`.
 
 ## Command Purpose
 
@@ -22,15 +22,22 @@ Perfect for:
 # Import all AI system documents from current directory
 /madio-import-docs
 
-# Import from specific directory
+# Import from specific directory, default 'merge' mode
 /madio-import-docs --source ./my-ai-system-docs
 
-# Import without moving files (copy instead)
+# Import using 'replace' mode (clears registry, prompts about GDocs, then imports)
+/madio-import-docs --source ./new-project-docs --mode=replace
+
+# Import using 'fresh' mode (full project reset, prompts about GDocs, then imports)
+/madio-import-docs --source ./another-project --mode=fresh
+
+# Import by copying files instead of moving (applies to chosen mode)
 /madio-import-docs --copy
 
-# Skip sync setup (import only)
+# Skip prompting for immediate Google Docs sync setup after import
 /madio-import-docs --no-sync
 ```
+The script will call a Python backend (e.g., `process_madio_import.py` or similar) that handles the detailed logic for each mode, including interactions with the `.madio/document_registry.json` and prompting for Google Doc handling in `replace` or `fresh` modes.
 
 ## Implementation
 

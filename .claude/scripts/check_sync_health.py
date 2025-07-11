@@ -131,25 +131,30 @@ def perform_health_check(registry_data, project_root, drive_service_wrapper, rep
             print(f"  ⚠️ Local file CHANGED (Hash: {current_hash[:7]}... vs stored {str(stored_hash)[:7]}...)")
             stats["local_changed"] += 1
             # In repair mode, could offer to update hash if user confirms it's the new baseline
-            if repair_mode and is_interactive:
-                 if input(f"    Local file '{local_path_str}' has changed. Update hash in registry to current? (y/N): ").strip().lower() == 'y':
+            if repair_mode and is_interactive and local_changed : # Only prompt if actually changed
+                 if input(f"    Local file '{local_path_str}' has changed. Update hash in registry to match current file content? (y/N): ").strip().lower() == 'y':
                     entry["local_sha256_hash"] = current_hash
                     entry["last_modified_local_at"] = datetime.datetime.utcnow().isoformat() + "Z"
-                    print("    Action: Local hash updated in registry.")
+                    entry["status"] = "active_local_hash_updated" # New status
+                    print("    Action: Local hash and last_modified_local_at updated in registry.")
                     registry_changed_by_repair = True
-                    local_changed = False # Considered resolved for further status checks
+                    local_changed = False # Considered resolved for this check's purpose.
+                 else:
+                    print("    Action: Stored local hash NOT updated.")
+
 
         # 2. Check Google Doc
         gdoc_id = entry.get("google_doc_id")
-        remote_changed = False
+        remote_changed = False # Reset for each entry
         if gdoc_id:
             try:
+                # Ensure fields includes what's needed by prompt_resolve_gdoc_inaccessible if refactored
                 gdoc_meta = drive_service_wrapper.drive_service.files().get(fileId=gdoc_id, fields="id, name, trashed, version, headRevisionId, modifiedTime").execute()
                 live_gdoc_version = gdoc_meta.get("headRevisionId") or gdoc_meta.get("version")
-                stored_gdoc_version = entry.get("google_doc_version")
+                stored_gdoc_version = entry.get("google_doc_version") # This is version from last sync
 
                 if gdoc_meta.get("trashed"):
-                    print(f"  ❌ Google Doc TRASHED (ID: {gdoc_id})")
+                    print(f"  ❌ Stale Registry: Google Doc for '{local_path_str}' (ID: {gdoc_id}) is TRASHED on Google Drive.")
                     stats["gdoc_inaccessible"] += 1
                     error_found = True
                     entry["status"] = "error_gdoc_trashed"
@@ -162,17 +167,20 @@ def perform_health_check(registry_data, project_root, drive_service_wrapper, rep
                 elif live_gdoc_version != stored_gdoc_version:
                     print(f"  ⚠️ Google Doc CHANGED (Version: {live_gdoc_version} vs stored {stored_gdoc_version})")
                     stats["remote_changed"] += 1
-                    remote_changed = True
+                    remote_changed = True # Mark that we detected a remote change
                     if repair_mode and is_interactive:
-                        if input(f"    GDoc for '{local_path_str}' has changed remotely. Update stored GDoc version to {live_gdoc_version}? (y/N): ").strip().lower() == 'y':
+                        if input(f"    Google Doc for '{local_path_str}' has changed remotely (Live version: {live_gdoc_version}, Stored: {stored_gdoc_version}). Update registry to acknowledge live version? (y/N): ").strip().lower() == 'y':
                             entry["google_doc_version"] = live_gdoc_version
                             entry["google_doc_last_known_good_at"] = gdoc_meta.get("modifiedTime") or datetime.datetime.utcnow().isoformat() + "Z"
-                            print("    Action: GDoc version updated in registry.")
+                            entry["status"] = "active_gdoc_version_updated" # New status
+                            print("    Action: Stored Google Doc version updated in registry.")
                             registry_changed_by_repair = True
-                            remote_changed = False # Considered resolved for further status checks
-                else:
+                            remote_changed = False # Considered resolved for this check for this run
+                        else:
+                            print("    Action: Stored Google Doc version NOT updated.")
+                else: # Versions match
                     print(f"  ✅ Google Doc OK (ID: {gdoc_id}, Version: {live_gdoc_version})")
-                    # Update last known good time if it was accessible
+                    # Update last known good time if it was accessible and version matches
                     entry["google_doc_last_known_good_at"] = gdoc_meta.get("modifiedTime") or datetime.datetime.utcnow().isoformat() + "Z"
 
 

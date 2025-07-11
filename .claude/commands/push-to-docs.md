@@ -10,11 +10,16 @@ Sync local AI system documents to Google Docs for Claude Project integration.
 ```
 
 **What this does:**
-1. Scans `synced_docs/` directory for AI system documents
-2. **Prompts you to choose Google Drive folder** (with clear default option)
-3. Creates folder if it doesn't exist
-4. Syncs all documents to Google Docs
-5. Updates document mappings automatically
+1. Reads the `.madio/document_registry.json` to identify documents to be synced.
+2. **Prompts you to choose/confirm Google Drive folder** if not already set in `sync_preferences` within the registry, or if an override like `--folder "Name"` is used.
+3. Creates the Google Drive folder if it doesn't exist.
+4. For each relevant document in the registry:
+    - Compares local file hash with stored hash.
+    - Compares Google Doc version (if linked) with stored version.
+    - Handles stale mappings (e.g., missing local file, inaccessible GDoc) potentially interactively.
+    - Handles conflicts (local & remote changes) potentially interactively.
+    - Syncs content from local to Google Doc (creating GDoc if new or re-linking).
+5. Updates `.madio/document_registry.json` with latest hashes, GDoc IDs, versions, timestamps, and statuses.
 
 **Expected interaction:**
 ```
@@ -32,109 +37,50 @@ Enter folder name or press Enter for root [recommended: "MADIO Docs"]:
 ### Sync with specific folder (non-interactive)
 ```bash
 cd .claude/scripts
-python3 sync_to_docs.py --directory synced_docs --folder "MADIO Docs"
+python3 sync_to_docs.py --folder "MADIO Docs" # No --directory needed, uses registry
 ```
 
-### Sync to root folder (non-interactive)
+### Sync to root folder (non-interactive, if folder not set in registry)
 ```bash
 cd .claude/scripts
-python3 sync_to_docs.py --directory synced_docs
+python3 sync_to_docs.py # Uses registry, defaults to root if no pref
 ```
 
-### Traditional config mode
+### Adding `--force-new` (Example)
 ```bash
+/push-to-docs --force-new
+# or
 cd .claude/scripts
-python3 sync_to_docs.py --config sync_config.json
+python3 sync_to_docs.py --force-new --folder "Optional Target Folder"
 ```
 
 ## Setup Required
 
-### 1. Install dependencies
-```bash
-cd .claude/scripts
-pip install -r requirements.txt
-```
+Refer to the main `SYNC_SETUP.md` guide for initial Google Cloud credential setup and Python dependency installation. This command assumes that setup is complete and that your project's documents are managed via `.madio/document_registry.json`.
 
-### 2. Get Google credentials
-1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Create project or select existing
-3. Enable Google Docs API **and Google Drive API**
-4. Create OAuth2 credentials (Desktop application)
-5. Download `credentials.json` to `.claude/scripts/`
-
-### 3a. Configure sync mapping (traditional mode)
-Create `sync_config.json` in `.claude/scripts/`:
-```json
-{
-  "_google_drive_folder": {
-    "name": "",
-    "id": "",
-    "description": "Google Drive folder for documents. Leave name empty for root folder."
-  },
-  "../../project_system_instructions.md": "CREATE_NEW_DOCUMENT",
-  "../../orchestrator.md": "CREATE_NEW_DOCUMENT",
-  "../../methodology_framework.md": "CREATE_NEW_DOCUMENT"
-}
-```
-
-### 3b. NEW: Set up directory sync (flexible mode)
-Create a `synced_docs/` directory in your project root and add AI system documents:
-```bash
-mkdir synced_docs
-echo "# My Document" > synced_docs/example.md
-```
-
-**No configuration needed!** The script automatically:
-- Discovers all AI system documents in the directory
-- Creates Google Docs for new AI system documents
-- Saves document→doc mappings in `.synced_docs_mapping.json`
-- Organizes documents in Google Drive folders (with prompts)
-
-**✨ NEW: Google Drive Folder Organization**
-- Configure `_google_drive_folder.name` to organize documents in specific folders
-- Script automatically creates folders if they don't exist
-- Leave name empty for root folder (My Drive)
-- Interactive prompts guide folder selection
-
-**✨ NEW: Automatic Document Creation**
-- Use `CREATE_NEW_DOCUMENT` placeholder for new files
-- Script automatically creates Google Docs and updates config
-- No manual Google Doc ID copying required!
-
-### 4. First-time authentication
-Run `/push-to-docs` - browser will open for Google OAuth consent.
-
-**⚠️ Important**: If you previously used this script, delete `token.pickle` to re-authenticate with new Google Drive permissions.
+**If migrating from an older project:** Run `/madio-migrate-config` first.
 
 ## How it works
 
-### Traditional Config Mode
-1. Reads configuration from `sync_config.json`
-2. **NEW**: Configures Google Drive folder organization (interactive prompts)
-3. Reads local AI system documents from configured paths
-4. **NEW**: Auto-creates Google Docs for `CREATE_NEW_DOCUMENT` placeholders
-5. **NEW**: Places documents in specified Google Drive folders
-6. **NEW**: Automatically cleans escaped markdown characters from Google Docs exports
-7. Completely replaces Google Doc content
-8. Auto-updates config file with new Google Doc IDs and folder settings
-9. Preserves document ID for Claude Project
-10. All Google Docs auto-update in Claude Project knowledge
+1.  The `/push-to-docs` command (this file, a bash script) primarily invokes the Python script `.claude/scripts/sync_to_docs.py`.
+2.  `sync_to_docs.py` now performs the following:
+    *   Loads the document list and their states from `.madio/document_registry.json`.
+    *   Authenticates with Google using credentials in `.claude/scripts/credentials.json` and `token.pickle`.
+    *   Determines the target Google Drive folder:
+        *   Uses `--folder "Name"` or `--folder-id "ID"` if provided via command line.
+        *   Else, uses folder specified in `sync_preferences` within the registry.
+        *   Else (if no preference saved and no CLI override), prompts the user interactively (if possible) for a folder.
+    *   For each document:
+        *   Performs **stale mapping checks**: Verifies local file existence and Google Doc accessibility. Prompts for resolution if issues found (e.g., unlink, recreate GDoc).
+        *   Performs **hash and version comparison**: Checks if local file content (SHA256 hash) or Google Doc version has changed since last sync.
+        *   Handles **conflicts**: If both local and remote have changed, prompts user to choose which version wins (Local, GDoc, or Skip).
+        *   **Syncs content**: If a new GDoc is needed (or `--force-new` is used), it creates one. Otherwise, it updates the existing GDoc with local content (if local is chosen or no conflict).
+        *   **Updates registry**: Saves all changes (new GDoc IDs, updated hashes, versions, timestamps, statuses) back to `.madio/document_registry.json`.
+    *   Optionally cleans escaped markdown characters from content before pushing to Google Docs.
 
-### NEW: Directory Mode
-1. **NEW**: Scans specified directory for all AI system documents (recursive)
-2. **NEW**: Loads existing document→doc mappings from `.synced_docs_mapping.json`
-3. **NEW**: Auto-creates Google Docs for new AI system documents found
-4. **NEW**: Configures Google Drive folder organization (interactive prompts)
-5. **NEW**: Places documents in specified Google Drive folders
-6. **NEW**: Automatically cleans escaped markdown characters
-7. Completely replaces Google Doc content with local document content
-8. **NEW**: Updates `.synced_docs_mapping.json` with new document IDs
-9. Preserves document IDs for Claude Project integration
-10. All Google Docs auto-update in Claude Project knowledge
+### ✨ Automatic Markdown Cleanup (Still applies)
 
-### ✨ New: Automatic Markdown Cleanup
-
-The sync now automatically fixes escaped markdown characters from Google Docs exports:
+The sync process automatically fixes common escaped markdown characters that can result from Google Docs exports:
 
 **Before (Escaped):**
 ```

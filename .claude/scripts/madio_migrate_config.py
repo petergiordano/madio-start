@@ -6,8 +6,13 @@ from pathlib import Path
 # Assuming madio_registry.py is in the same directory or PYTHONPATH
 try:
     from . import madio_registry
+    from .madio_registry import calculate_sha256_hash # Added this import
 except ImportError:
     import madio_registry
+    from madio_registry import calculate_sha256_hash # Added this import
+
+# Define this constant locally, as it's specific to how old configs marked it.
+NEW_DOC_PLACEHOLDER = "CREATE_NEW_DOCUMENT"
 
 # Old config file paths (relative to project root for consistency)
 OLD_SYNC_CONFIG_PATH_REL = ".claude/scripts/sync_config.json"
@@ -69,8 +74,8 @@ def migrate_configurations():
 
                 # Initialize with defaults, then overlay specific migrated data
                 entry_data = madio_registry._create_default_document_entry_fields()
-                entry_data["google_doc_id"] = doc_id_or_placeholder if doc_id_or_placeholder != madio_registry.NEW_DOC_PLACEHOLDER else None
-                entry_data["status"] = "migrated_placeholder" if doc_id_or_placeholder == madio_registry.NEW_DOC_PLACEHOLDER else "migrated"
+                entry_data["google_doc_id"] = doc_id_or_placeholder if doc_id_or_placeholder != NEW_DOC_PLACEHOLDER else None
+                entry_data["status"] = "migrated_placeholder" if doc_id_or_placeholder == NEW_DOC_PLACEHOLDER else "migrated"
                 entry_data["source"] = "migrated_sync_config"
                 # For migrated entries, created_at and last_modified_local_at are effectively the migration time
                 migration_time = datetime.datetime.utcnow().isoformat() + "Z"
@@ -105,8 +110,8 @@ def migrate_configurations():
                 # These paths should already be relative to project root
                 # Initialize with defaults, then overlay specific migrated data
                 entry_data = madio_registry._create_default_document_entry_fields()
-                entry_data["google_doc_id"] = doc_id_or_placeholder if doc_id_or_placeholder != madio_registry.NEW_DOC_PLACEHOLDER else None
-                entry_data["status"] = "migrated_placeholder" if doc_id_or_placeholder == madio_registry.NEW_DOC_PLACEHOLDER else "migrated"
+                entry_data["google_doc_id"] = doc_id_or_placeholder if doc_id_or_placeholder != NEW_DOC_PLACEHOLDER else None
+                entry_data["status"] = "migrated_placeholder" if doc_id_or_placeholder == NEW_DOC_PLACEHOLDER else "migrated"
                 entry_data["source"] = "migrated_dir_mapping"
                 migration_time = datetime.datetime.utcnow().isoformat() + "Z"
                 entry_data["created_at"] = migration_time # Or try to preserve if it existed in a very old format? No, migration is new creation event for this registry.
@@ -161,15 +166,23 @@ def migrate_configurations():
 
 
 if __name__ == "__main__":
-    confirm = input("This script will attempt to migrate old MADIO sync configurations to the new\n"
-                    ".madio/document_registry.json format. It may overwrite an existing new registry file.\n"
-                    "It's recommended to backup your project first.\n"
-                    "Continue with migration? (yes/N): ")
-    if confirm.lower() == 'yes':
+    print("MADIO Configuration Migration Utility")
+    print("-------------------------------------")
+    print("This script will attempt to migrate old MADIO sync configurations")
+    print("(e.g., .claude/scripts/sync_config.json, .synced_docs_mapping.json)")
+    print("to the new .madio/document_registry.json format.")
+    print("\nIMPORTANT:")
+    print("- If an existing .madio/document_registry.json is found, this script will")
+    print("  effectively create a new one based on OLD formats. It does NOT merge.")
+    print("  If you ran this previously, re-running might overwrite your new registry.")
+    print("- It is STRONGLY recommended to backup your project, especially any existing")
+    print("  .madio/document_registry.json and old config files, before proceeding.")
+
+    confirm = input("\nContinue with migration? (y/N): ").strip().lower()
+    if confirm == 'y':
         migrate_configurations()
     else:
         print("Migration cancelled by user.")
 
-# TODO: Add command definition for /madio-migrate-config
-# This would typically be a separate .md file in .claude/commands/
-# For now, this script can be run directly: python .claude/scripts/madio_migrate_config.py
+# TODO: The /madio-migrate-config command definition .md file was already created in Phase 1.
+# This script is the backend for it.
