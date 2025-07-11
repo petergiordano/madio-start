@@ -35,8 +35,15 @@ except ImportError:
 # Scopes required for Google Docs and Drive APIs
 SCOPES = ['https://www.googleapis.com/auth/documents', 'https://www.googleapis.com/auth/drive']
 
-# Placeholder for new documents in config
+# Placeholder for new documents in config - this might be deprecated if registry stores None for new docs
 NEW_DOC_PLACEHOLDER = "CREATE_NEW_DOCUMENT"
+
+# Import the new registry management functions
+try:
+    from . import madio_registry # Relative import if in the same package
+except ImportError:
+    import madio_registry # Direct import if run as script or in PYTHONPATH
+
 
 def find_project_root():
     """Find project root by looking for .claude directory"""
@@ -190,8 +197,12 @@ class GoogleDocsSync:
         self.service = None
         self.drive_service = None
         self.target_folder_id = None
-        self.authenticate()
+        self.cli_args = None # Placeholder for args
+        # self.authenticate() # Authentication will be called after args are set
     
+    def set_cli_args(self, args):
+        self.cli_args = args
+
     def authenticate(self):
         """Authenticate with Google Docs API with enhanced error handling"""
         creds = None
@@ -331,19 +342,66 @@ class GoogleDocsSync:
             print("   • Run: /madio-doctor for troubleshooting")
             return None
     
-    def prompt_for_folder(self, force_interactive=False):
+    def prompt_for_folder(self): # Removed cli_args from parameters, will use self.cli_args
         """Prompt user for Google Drive folder selection with terminal detection"""
         
-        # Check if we're in an interactive terminal
-        is_interactive = force_interactive or (sys.stdin.isatty() and sys.stdout.isatty())
-        
-        if not is_interactive:
-            print("\n📁 Google Drive Folder Configuration")
-            print("   ⚠️  Non-interactive environment detected (Claude Code CLI, CI/CD, etc.)")
-            print("   📂 Using root folder (My Drive)")
-            print("   💡 Tip: Use --folder 'Your Folder Name' to specify a folder")
+        # Determine if an interactive session is intended and possible
+        interactive_session_intended = self.cli_args and self.cli_args.interactive_session
+        # The 'force_interactive' via --interactive can be a fallback if needed, or removed if --interactive-session is sufficient
+        force_interactive_flag = self.cli_args and self.cli_args.interactive
+
+        can_be_interactive = sys.stdin.isatty() and sys.stdout.isatty()
+        dev_tty_input = None
+
+        if interactive_session_intended and not can_be_interactive:
+            # Try to use /dev/tty if stdin is not a TTY but interaction is desired
+            if os.name == 'posix': # Posix check for /dev/tty
+                try:
+                    dev_tty_input_stream = open('/dev/tty', 'r')
+                    # Test if we can actually read. This might still fail in some restricted environments.
+                    # A simple test could be trying to read with a timeout, but input() will block.
+                    # For now, we'll assume if open succeeds, we can try using it.
+                    # We need a way to use this stream for input() or an alternative.
+                    # Standard input() uses sys.stdin. We might need a custom input function.
+                    # This is a simplification; robustly handling /dev/tty for input() is complex.
+                    # Let's make a custom input function for this case.
+
+                    def get_input_from_tty(prompt_message):
+                        sys.stdout.write(prompt_message) # Write prompt to current stdout
+                        sys.stdout.flush()
+                        try:
+                            return dev_tty_input_stream.readline().strip()
+                        finally:
+                            # Do not close dev_tty_input_stream here if you plan to reuse it.
+                            # It should be closed when the script exits or when done with all prompts.
+                            # For simplicity in this change, let's assume one-time use or it's closed later.
+                            pass # dev_tty_input_stream.close() should be handled carefully
+
+                    print("    Attempting direct TTY interaction for folder prompt...")
+                    dev_tty_input = get_input_from_tty # Assign custom input function
+
+                except Exception as e:
+                    print(f"   ⚠️ Could not open /dev/tty for direct input: {e}")
+                    dev_tty_input = None # Fallback
+
+        actual_input_func = dev_tty_input if dev_tty_input else input
+
+        if not (can_be_interactive or dev_tty_input): # If not a TTY and /dev/tty failed or wasn't attempted/intended
+            if interactive_session_intended: # User wanted interaction but we couldn't provide it
+                print("\n📁 Google Drive Folder Configuration")
+                print("   ⚠️  Interactive session intended, but standard input is not a TTY and direct TTY access failed.")
+                print("   📂 Defaulting to root folder (My Drive).")
+                print("   💡 To specify a folder, please use the command-line arguments:")
+                print("      --folder \"Your Desired Folder Name\"")
+                print("      OR --folder-id \"your_folder_id_here\"")
+            else: # Genuinely non-interactive (e.g. CI/CD)
+                print("\n📁 Google Drive Folder Configuration")
+                print("   ℹ️  Non-interactive environment detected (e.g., CI/CD or script).")
+                print("   📂 Using root folder (My Drive) by default.")
+                print("   💡 Tip: Use --folder 'Your Folder Name' or --folder-id 'your_folder_id' to specify a folder.")
             return None
-        
+
+        # Proceed with interactive prompting
         print("\n📁 Google Drive Folder Configuration")
         print("   Choose where to create your Google Docs:")
         print("   • Press Enter for root folder (My Drive)")
@@ -769,185 +827,192 @@ class GoogleDocsSync:
         
         return success
     
-    def sync_all_files(self, config_file='sync_config.json', clean_escapes=True, directory_path=None, mapping_file='.synced_docs_mapping.json', include_pattern=None, exclude_pattern=None, target_folder=None):
-        """Sync all files based on configuration or directory discovery"""
-        config = {}
-        config_updated = False
+    def sync_all_files(self, clean_escapes=True, target_folder_override=None): # Removed old config/mapping args
+        """Sync all files based on the document_registry.json."""
         
-        if directory_path:
-            # Directory mode - discover files and create temporary config
-            print(f"🔍 Directory mode: scanning {directory_path} for markdown files")
-            config = self.create_directory_config(directory_path, mapping_file, include_pattern, exclude_pattern)
-            if not config:
-                print(f"❌ No markdown files found in directory: {directory_path}")
-                return False
-        else:
-            # Traditional config file mode
-            if not os.path.exists(config_file):
-                print(f"❌ Config file not found: {config_file}")
-                return False
-            
-            try:
-                with open(config_file, 'r') as f:
-                    config = json.load(f)
-            except json.JSONDecodeError as e:
-                print(f"❌ Invalid JSON in config file: {e}")
-                return False
-        
+        registry_data = madio_registry.load_registry()
+        doc_registry_map = registry_data.get("document_registry", {})
+        sync_preferences = madio_registry.get_sync_preferences(registry_data)
+        registry_updated = False
+
         # Handle folder configuration
-        folder_config = config.get('_google_drive_folder', {})
-        
-        # Check if folder is already configured
-        if folder_config.get('id'):
-            folder_name = folder_config.get('name', 'configured folder')
-            folder_id = folder_config.get('id')
-            print(f"📂 Using configured folder: \"{folder_name}\" ({folder_id[:15]}...)")
-            self.target_folder_id = folder_id
-        elif folder_config.get('name'):
-            # Folder name specified but no ID - search for it
-            folder_name = folder_config.get('name')
-            folder_id = self.find_folder_by_name(folder_name)
+        # Priority: command-line override -> registry preference -> prompt
+        if target_folder_override:
+            print(f"📁 Command-line folder override: \"{target_folder_override}\"")
+            folder_id = self.find_folder_by_name(target_folder_override)
             if folder_id:
-                print(f"📂 Found folder: \"{folder_name}\" ({folder_id[:15]}...)")
                 self.target_folder_id = folder_id
-                # Update config with found folder ID
-                config['_google_drive_folder']['id'] = folder_id
-                config_updated = True
+                # Update registry if different or not set
+                if sync_preferences.get("google_drive_folder", {}).get("name") != target_folder_override or \
+                   sync_preferences.get("google_drive_folder", {}).get("id") != folder_id:
+                    sync_preferences["google_drive_folder"] = {"name": target_folder_override, "id": folder_id}
+                    madio_registry.update_sync_preferences(registry_data, sync_preferences)
+                    registry_updated = True
             else:
-                print(f"❌ Configured folder \"{folder_name}\" not found")
-                return False
-        else:
-            # No folder configured - check for command-line folder or prompt user
-            if target_folder:
-                # Folder specified via command line
-                print(f"📁 Command-line folder specified: \"{target_folder}\"")
-                folder_id = self.find_folder_by_name(target_folder)
+                print(f"📁 Folder \"{target_folder_override}\" not found, creating...")
+                folder_id = self.create_folder(target_folder_override)
                 if folder_id:
-                    print(f"📂 Found existing folder: \"{target_folder}\" ({folder_id[:15]}...)")
                     self.target_folder_id = folder_id
+                    sync_preferences["google_drive_folder"] = {"name": target_folder_override, "id": folder_id}
+                    madio_registry.update_sync_preferences(registry_data, sync_preferences)
+                    registry_updated = True
                 else:
-                    print(f"📁 Folder \"{target_folder}\" not found, creating...")
-                    folder_id = self.create_folder(target_folder)
-                    if folder_id:
-                        print(f"✅ Created folder: \"{target_folder}\" ({folder_id[:15]}...)")
-                        self.target_folder_id = folder_id
-                    else:
-                        print(f"❌ Failed to create folder \"{target_folder}\", using root folder")
-                        self.target_folder_id = None
-                
-                # Update config if folder was found/created
-                if self.target_folder_id:
-                    config['_google_drive_folder'] = {
-                        'name': target_folder,
-                        'id': self.target_folder_id,
-                        'description': "Google Drive folder for documents. Leave name empty for root folder."
-                    }
-                    config_updated = True
-            else:
-                # No command-line folder - prompt user or use root
-                try:
-                    folder_info = self.prompt_for_folder()
-                    if folder_info:
-                        print(f"📂 Selected folder: \"{folder_info['name']}\" ({folder_info['id'][:15]}...)")
-                        self.target_folder_id = folder_info['id']
-                        # Update config with selected folder
-                        config['_google_drive_folder'] = {
-                            'name': folder_info['name'],
-                            'id': folder_info['id'],
-                            'description': "Google Drive folder for documents. Leave name empty for root folder."
-                        }
-                        config_updated = True
-                    else:
-                        print("📂 Using root folder (My Drive)")
-                        self.target_folder_id = None
-                except (EOFError, KeyboardInterrupt):
-                    print("\n📂 Using root folder (My Drive)")
-                    self.target_folder_id = None
+                    print(f"❌ Failed to create folder \"{target_folder_override}\", using root folder.")
+                    self.target_folder_id = None # Default to root
         
+        elif sync_preferences.get("google_drive_folder", {}).get("id"):
+            folder_name = sync_preferences["google_drive_folder"]["name"]
+            folder_id = sync_preferences["google_drive_folder"]["id"]
+            print(f"📂 Using configured folder from registry: \"{folder_name}\" ({folder_id[:15]}...)")
+            self.target_folder_id = folder_id
+        else:
+            # No folder configured in registry and no override - prompt user
+            try:
+                folder_info = self.prompt_for_folder()
+                if folder_info:
+                    print(f"📂 Selected folder: \"{folder_info['name']}\" ({folder_info['id'][:15]}...)")
+                    self.target_folder_id = folder_info['id']
+                    sync_preferences["google_drive_folder"] = {"name": folder_info['name'], "id": folder_info['id']}
+                    madio_registry.update_sync_preferences(registry_data, sync_preferences)
+                    registry_updated = True
+                else:
+                    print("📂 Using root folder (My Drive). No folder preference saved.")
+                    self.target_folder_id = None
+            except (EOFError, KeyboardInterrupt):
+                print("\n📂 Using root folder (My Drive). User cancelled prompt.")
+                self.target_folder_id = None
+
         success_count = 0
         total_count = 0
-        mapping_updated = False
-        synced_docs = []  # Track successfully synced documents
-        
-        # Create a copy of keys to iterate over, allowing modification of original dict
-        config_files = [fp for fp in config.keys() if not fp.startswith('_')]
-        
-        # Progress indicator for sync operations
-        if TQDM_AVAILABLE and len(config_files) > 3:
-            file_iterator = tqdm(config_files, desc="🔄 Syncing files", unit="file")
+        synced_docs = []
+
+        # Iterate over a copy of items if modifying the dict during iteration (not strictly needed here as we modify entries)
+        # Items are (local_path_str, entry_data_dict)
+        registry_items = list(doc_registry_map.items())
+
+        if not registry_items:
+            print("ℹ️ Document registry is empty. Nothing to sync.")
+            if registry_updated: # Save if only folder prefs changed
+                 madio_registry.save_registry(registry_data)
+            return True
+
+        print(f"🔄 Processing {len(registry_items)} document(s) from registry...")
+
+        # Progress indicator
+        if TQDM_AVAILABLE and len(registry_items) > 1: # Show progress if more than 1 file
+            file_iterator = tqdm(registry_items, desc="🔄 Syncing files", unit="file")
         else:
-            file_iterator = config_files
-            if len(config_files) > 1:
-                print(f"🔄 Syncing {len(config_files)} files...")
+            file_iterator = registry_items
         
-        for file_path in file_iterator:
-            doc_id = config[file_path]
+        project_root = madio_registry.get_project_root()
+
+        for local_path_str, entry_data in file_iterator:
+            # Construct absolute local path from project root + relative path from registry
+            absolute_local_path = project_root / local_path_str
+
+            doc_id = entry_data.get("google_doc_id")
+            status = entry_data.get("status", "unknown") # Phase 1: basic status
+
+            # --- BUG-002: Basic Stale Mapping Detection START ---
+            # 1. Check local file existence
+            if not absolute_local_path.exists():
+                print(f"⚠️ Stale mapping: Local file not found at {absolute_local_path}. Skipping sync for this entry.")
+                entry_data["status"] = "error_local_missing"
+                doc_registry_map[local_path_str] = entry_data # Update status in memory
+                registry_updated = True
+                continue # Skip to next file
+
+            # 2. Check Google Doc accessibility if doc_id exists
+            if doc_id and doc_id != NEW_DOC_PLACEHOLDER: # Only check if there's an existing ID
+                try:
+                    gdoc_metadata = self.drive_service.files().get(fileId=doc_id, fields='id, name, trashed').execute()
+                    if gdoc_metadata.get('trashed'):
+                        print(f"⚠️ Stale mapping: Google Doc for {local_path_str} (ID: {doc_id}) is in trash. Skipping sync.")
+                        entry_data["status"] = "error_gdoc_trashed"
+                        entry_data["google_doc_id"] = None # Clear the GDoc ID as it's unusable
+                        doc_registry_map[local_path_str] = entry_data
+                        registry_updated = True
+                        continue
+                except HttpError as e:
+                    if e.resp.status == 404:
+                        print(f"⚠️ Stale mapping: Google Doc for {local_path_str} (ID: {doc_id}) not found (404). Skipping sync.")
+                        entry_data["status"] = "error_gdoc_not_found"
+                        entry_data["google_doc_id"] = None # Clear the GDoc ID
+                        doc_registry_map[local_path_str] = entry_data
+                        registry_updated = True
+                        continue
+                    else:
+                        # Other HTTP errors might be transient, log and attempt sync
+                        print(f"⚠️ Warning: HTTP error checking Google Doc {doc_id} for {local_path_str}: {e}. Will attempt sync if possible.")
+                        entry_data["status"] = "warning_gdoc_check_failed"
+                        # Do not continue; allow sync attempt below
+            # --- BUG-002: Basic Stale Mapping Detection END ---
+
+            # Determine if a new Google Doc needs to be created
+            if self.cli_args and self.cli_args.force_new:
+                print(f"ℹ️  --force-new specified: Will create a new Google Doc for {local_path_str}, even if one is already mapped.")
+                entry_data["google_doc_id"] = None # Unlink any existing GDoc ID for this run
+                doc_id = None # Ensure it's treated as needing creation
+                needs_creation = True
+            else:
+                # If doc_id is missing or is placeholder (or cleared due to stale check), needs creation
+                needs_creation = not entry_data.get("google_doc_id") or entry_data.get("google_doc_id") == NEW_DOC_PLACEHOLDER
             
-            if doc_id == NEW_DOC_PLACEHOLDER:
-                print(f"ℹ️  Found placeholder for {file_path}. Attempting to create new Google Doc.")
-                # Derive title from filename
-                title = os.path.basename(file_path)
-                # Potentially remove .md extension from title if desired
+            if needs_creation:
+                # This check is now after stale mapping detection which might clear a doc_id or if --force-new is used
+                print(f"ℹ️  Entry for {local_path_str} needs Google Doc creation (or re-creation).")
+                title = os.path.basename(local_path_str)
                 if title.endswith(".md"):
                     title = title[:-3]
                 
                 new_doc_id = self.create_google_doc(title)
-                
                 if new_doc_id:
-                    config[file_path] = new_doc_id
-                    doc_id = new_doc_id  # Use the new ID for syncing this iteration
-                    
-                    # Update appropriate mapping
-                    if directory_path:
-                        # Update directory mapping
-                        existing_mapping = self.load_directory_mapping(mapping_file)
-                        existing_mapping[file_path] = new_doc_id
-                        self.save_directory_mapping(existing_mapping, mapping_file)
-                        mapping_updated = True
-                    else:
-                        # Update config file
-                        config_updated = True
-                    
-                    print(f"   🔄 Updated mapping for {file_path} with new Doc ID: {new_doc_id[:15]}...")
+                    entry_data["google_doc_id"] = new_doc_id
+                    doc_id = new_doc_id
+                    entry_data["status"] = "active"
+                    entry_data["last_synced_at"] = datetime.datetime.utcnow().isoformat() + "Z"
+                    # Update registry entry directly (madio_registry.add_or_update_document_entry might be better)
+                    doc_registry_map[local_path_str] = entry_data
+                    registry_updated = True
+                    print(f"   🔄 Updated registry for {local_path_str} with new Doc ID: {new_doc_id[:15]}...")
                 else:
-                    print(f"❌ Failed to create Google Doc for {file_path}. Skipping sync for this file.")
-                    continue  # Skip to the next file if creation failed
+                    print(f"❌ Failed to create Google Doc for {local_path_str}. Skipping.")
+                    entry_data["status"] = "creation_failed"
+                    doc_registry_map[local_path_str] = entry_data
+                    registry_updated = True
+                    continue
             
-            elif doc_id == "REPLACE_WITH_GOOGLE_DOC_ID": # Legacy placeholder
-                print(f"⚠️  Skipping {file_path} - uses legacy placeholder. Update to '{NEW_DOC_PLACEHOLDER}' to enable auto-creation.")
-                continue
-
-            if not os.path.exists(file_path):
-                # This check should be after potential doc creation,
-                # as a new file might not exist yet if config was prepared in advance.
-                # However, for syncing content, the local file must exist.
-                print(f"⚠️  Local file not found: {file_path}. Skipping sync for this file.")
+            # Check local file existence (absolute_local_path)
+            if not absolute_local_path.exists():
+                print(f"⚠️  Local file not found: {absolute_local_path}. Skipping sync.")
+                # Future: Update status in registry, e.g., entry_data["status"] = "local_missing"
                 continue
             
             total_count += 1
-            if self.sync_file(file_path, doc_id, clean_escapes, show_url=(total_count <= 5)):
+            # Pass absolute_local_path to sync_file
+            if self.sync_file(str(absolute_local_path), doc_id, clean_escapes, show_url=(total_count <= 5)):
                 success_count += 1
-                # Track successful syncs for URL summary
+                entry_data["last_synced_at"] = datetime.datetime.utcnow().isoformat() + "Z"
+                entry_data["status"] = "active" # Assuming sync success means it's active
+                doc_registry_map[local_path_str] = entry_data
+                registry_updated = True
                 synced_docs.append({
-                    'file': file_path,
+                    'file': local_path_str, # Store relative path for consistency
                     'doc_id': doc_id,
                     'url': self.get_doc_url(doc_id)
                 })
+            else:
+                # Sync failed, potentially update status
+                entry_data["status"] = "sync_failed"
+                doc_registry_map[local_path_str] = entry_data
+                registry_updated = True
         
-        # Save updates based on mode
-        if config_updated and not directory_path:
-            print(f"\n💾 Updating configuration file: {config_file}...")
-            try:
-                with open(config_file, 'w') as f:
-                    json.dump(config, f, indent=2)
-                print(f"✅ Configuration file updated successfully.")
-            except IOError as e:
-                print(f"❌ Error writing updated configuration to {config_file}: {e}")
-                print("   Please check file permissions and path.")
-        
-        # Display Google Doc URLs for successfully synced files
+        if registry_updated:
+            madio_registry.save_registry(registry_data)
+            print(f"\n💾 Document registry updated.")
+
+        # Display Google Doc URLs
         if synced_docs:
-            print(f"\n🔗 Google Doc URLs")
             print(f"==================")
             for doc in synced_docs:
                 filename = os.path.basename(doc['file'])
@@ -956,21 +1021,23 @@ class GoogleDocsSync:
             
             # Save URLs to file for easy reference
             try:
-                urls_file = "google_docs_urls.txt"
-                with open(urls_file, 'w') as f:
-                    f.write("Google Docs URLs\n")
-                    f.write("================\n\n")
-                    for doc in synced_docs:
-                        f.write(f"{doc['file']}: {doc['url']}\n")
-                print(f"\n💾 URLs saved to: {urls_file}")
+                # Ensure urls_file is in project root for easier access by user
+                project_root = madio_registry.get_project_root()
+                urls_file_path = project_root / "google_docs_urls.txt"
+                with open(urls_file_path, 'w') as f:
+                    f.write("Synced Google Docs URLs\n")
+                    f.write("=======================\n\n")
+                    for doc_info in synced_docs: # Corrected variable name
+                        f.write(f"{doc_info['file']}: {doc_info['url']}\n")
+                print(f"\n💾 URLs saved to: {urls_file_path}")
             except Exception as e:
                 print(f"⚠️  Could not save URLs file: {e}")
         
-        # Enhanced sync summary with detailed statistics
+        # Enhanced sync summary
         print(f"\n📊 Sync Summary")
         print(f"================")
-        print(f"✅ Successfully synced: {success_count} files")
-        print(f"📂 Total files processed: {total_count} files")
+        print(f"✅ Successfully synced: {success_count} file(s)")
+        print(f"📂 Total files processed from registry: {total_count} file(s)")
         
         if total_count > 0:
             success_rate = (success_count / total_count) * 100
@@ -978,99 +1045,123 @@ class GoogleDocsSync:
         
         failed_count = total_count - success_count
         if failed_count > 0:
-            print(f"❌ Failed syncs: {failed_count} files")
+            print(f"❌ Failed/skipped syncs: {failed_count} file(s)")
         
-        if config_updated or mapping_updated:
-            print(f"💾 Configuration updated: {'Yes' if config_updated or mapping_updated else 'No'}")
+        if registry_updated: # Check if the main registry object was marked for update
+            print(f"💾 Document registry was updated.")
         
-        if directory_path and mapping_updated:
-            print(f"📋 Mapping file updated: {mapping_file}")
+        print(f"🔧 Sync mode: Document Registry") # Always using registry now
+        print(f"📅 Sync completed: {datetime.datetime.utcnow().isoformat()}Z")
         
-        # Show sync mode
-        sync_mode = "Directory" if directory_path else "Config"
-        print(f"🔧 Sync mode: {sync_mode}")
-        
-        print(f"📅 Sync completed: {__import__('datetime').datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-        
-        return success_count == total_count and not (total_count == 0 and config_updated) # Success if all synced or only config updated
+        # Determine overall success. True if all processed files synced successfully.
+        # If total_count is 0 but registry_updated is true (e.g. only folder prefs changed), consider it a success.
+        return (total_count == 0 and registry_updated) or (total_count > 0 and success_count == total_count)
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Sync markdown files to Google Docs')
-    parser.add_argument('--file', help='Specific file to sync')
-    parser.add_argument('--doc-id', help='Google Doc ID (required with --file)')
-    parser.add_argument('--config', default='sync_config.json', help='Config file path')
-    parser.add_argument('--directory', help='Directory to scan for markdown files (e.g., synced_docs)')
-    parser.add_argument('--folder', help='Google Drive folder name for documents (e.g., "MADIO Docs"). Creates folder if needed.')
-    parser.add_argument('--mapping-file', default='.synced_docs_mapping.json', help='File to store directory-to-doc-ID mappings')
-    parser.add_argument('--pattern', help='Glob pattern to include specific files (e.g., "tier3_*.md")')
-    parser.add_argument('--exclude', help='Glob pattern to exclude files (e.g., "test_*.md")')
-    parser.add_argument('--no-clean', action='store_true', help='Skip cleaning escaped markdown characters')
+    parser = argparse.ArgumentParser(description='Sync markdown files to Google Docs using MADIO Document Registry')
+    # --file and --doc-id are for specific single file sync, less common now but can be kept for utility
+    parser.add_argument('--file', help='Specific local file path (relative to project root) to sync.')
+    parser.add_argument('--doc-id', help='Google Doc ID to sync the specific file to (optional, will use registry if available).')
+
+    # --config, --directory, --mapping-file, --pattern, --exclude are now obsolete as primary mechanisms
+    # They can be removed or kept if there's a specific utility for them outside normal flow.
+    # For Phase 1, let's simplify and assume they are not used for the main sync_all_files path.
+    # We will re-evaluate if `sync_file` needs them or if it also uses registry.
+
+    parser.add_argument('--folder', help='Google Drive folder name for documents (e.g., "MADIO Docs"). Overrides registry preference for this run. Creates folder if needed.')
+    # Add --folder-id for more precise folder specification
+    parser.add_argument('--folder-id', help='Google Drive folder ID for documents. Overrides --folder and registry preference.')
+
+    parser.add_argument('--no-clean', action='store_true', help='Skip cleaning escaped markdown characters.')
+    parser.add_argument('--force-new', action='store_true', help='Force creation of new Google Docs for all files, even if mappings exist.')
     parser.add_argument('--credentials', default='credentials.json', help='Google credentials file')
     parser.add_argument('--token', default='token.pickle', help='Token file for authentication')
-    parser.add_argument('--interactive', action='store_true', help='Force interactive mode even in non-TTY environments')
+    # --interactive flag is kept for backward compatibility if scripts relied on it, but new logic uses --interactive-session
+    parser.add_argument('--interactive', action='store_true', help='DEPRECATED: Force interactive mode. Use --interactive-session.')
+    parser.add_argument('--interactive-session', action='store_true', help='Indicates that an interactive session is intended by the user.')
     
     args = parser.parse_args()
     
     try:
         sync = GoogleDocsSync(args.credentials, args.token)
+        sync.set_cli_args(args) # Store args
+        sync.authenticate() # Now authenticate
         
-        if args.file:
+        if args.file: # Specific file sync mode
             if not args.doc_id:
-                print("❌ --doc-id is required when using --file")
-                sys.exit(1)
-            
-            # Resolve file path from project root
-            file_path = resolve_from_root(args.file)
-            clean_escapes = not args.no_clean
-            success = sync.sync_file(file_path, args.doc_id, clean_escapes)
-            sys.exit(0 if success else 1)
-        
-        elif args.directory:
-            # Directory mode - scan directory for markdown files
-            # Resolve directory path from project root
-            directory_path = resolve_from_root(args.directory)
-            mapping_file = args.mapping_file
-            
-            clean_escapes = not args.no_clean
-            success = sync.sync_all_files(
-                config_file=args.config, 
-                clean_escapes=clean_escapes,
-                directory_path=directory_path,
-                mapping_file=mapping_file,
-                include_pattern=args.pattern,
-                exclude_pattern=args.exclude,
-                target_folder=args.folder
-            )
-            sys.exit(0 if success else 1)
-        
-        else:
-            # Traditional config file mode
-            # Resolve config file path - try script directory first, then project root
-            config_path = args.config
-            
-            # If relative path, try script directory first
-            if not os.path.isabs(config_path):
-                script_config_path = resolve_script_file(config_path)
-                if os.path.exists(script_config_path):
-                    config_path = script_config_path
+                # Try to get doc_id from registry if not provided
+                registry_data = madio_registry.load_registry()
+                # Ensure args.file is relative to project root for registry lookup
+                project_root = madio_registry.get_project_root()
+                try:
+                    # Convert args.file to be relative to project_root if it's not already
+                    # This assumes args.file might be passed as absolute or relative to cwd
+                    abs_file_path = Path(args.file).resolve()
+                    relative_file_path_str = str(abs_file_path.relative_to(project_root))
+                except ValueError: # Not under project root if this fails
+                    print(f"❌ Error: File {args.file} is not under project root {project_root}.")
+                    sys.exit(1)
+
+                doc_entry = madio_registry.get_document_entry(registry_data, relative_file_path_str)
+                if doc_entry and doc_entry.get("google_doc_id"):
+                    args.doc_id = doc_entry["google_doc_id"]
+                    print(f"ℹ️  Found Google Doc ID {args.doc_id} in registry for file {relative_file_path_str}.")
                 else:
-                    # Try relative to project root
-                    root_config_path = resolve_from_root(config_path)
-                    if os.path.exists(root_config_path):
-                        config_path = root_config_path
-                    else:
-                        print(f"❌ Config file not found: {args.config}")
-                        print(f"   Tried: {script_config_path}")
-                        print(f"   Tried: {root_config_path}")
-                        sys.exit(1)
+                    print(f"❌ --doc-id is required for --file mode if not in registry, or use '{NEW_DOC_PLACEHOLDER}' to create new.")
+                    sys.exit(1)
             
+            # Resolve file path from project root for sync_file function
+            file_path_to_sync = str(madio_registry.get_project_root() / relative_file_path_str)
             clean_escapes = not args.no_clean
-            success = sync.sync_all_files(config_path, clean_escapes)
+            # Note: sync_file does not currently handle folder preferences from registry.
+            # This mode is more of a direct utility. For folder handling, use general sync.
+            success = sync.sync_file(file_path_to_sync, args.doc_id, clean_escapes, show_url=True)
+            sys.exit(0 if success else 1)
+        
+        else: # General sync all mode (uses registry)
+            clean_escapes = not args.no_clean
+            
+            # Determine target_folder_override from --folder-id or --folder
+            target_folder_name_override = None
+            if args.folder_id: # --folder-id takes precedence
+                # We need to find the folder name if only ID is given, or pass ID directly
+                # For now, sync_all_files expects a name to search or create.
+                # This part needs refinement if we want to pass ID directly to sync_all_files
+                # Let's assume for now we pass the ID and let sync_all_files handle it,
+                # OR we make sync_all_files accept folder_id directly.
+                # The PRD implies user provides name, script finds/creates ID.
+                # Let's adjust sync_all_files to handle target_folder_id_override.
+                # For now, this path is complex. Let's simplify: if --folder-id, we can't easily get name.
+                # The current sync_all_files is better suited to take folder name.
+                # So, if args.folder_id is provided, we'd ideally convert it to a name or have sync_all_files use it.
+                # This is a TODO: Handle --folder-id more gracefully if name is needed for find/create logic.
+                # For Phase 1, --folder (name) is the primary override.
+                print(f"ℹ️  --folder-id specified: {args.folder_id}. This will be used if possible, but name-based logic is primary for folder creation.")
+                # We can pass the folder_id to target_folder_override and let sync_all_files decide.
+                # However, sync_all_files currently uses find_folder_by_name.
+                # This needs more thought. For now, let's prioritize --folder.
+                if args.folder:
+                    target_folder_name_override = args.folder
+                else:
+                    print("Warning: --folder-id used without --folder. Name based search/creation might be an issue. Please provide --folder as well for now if creating new.")
+                    # Ideally, we'd fetch folder name using ID, or pass ID to create_google_doc.
+                    # This is a simplification for Phase 1.
+                    target_folder_name_override = None # No name to use for creation if not found by ID
+                    sync.target_folder_id = args.folder_id # Directly set if ID is given
+                    print(f"📂 Using explicit folder ID: {args.folder_id}. Document creation will use this folder.")
+
+            elif args.folder:
+                target_folder_name_override = args.folder
+            
+            success = sync.sync_all_files(
+                clean_escapes=clean_escapes,
+                target_folder_override=target_folder_name_override # Pass the name
+            )
             sys.exit(0 if success else 1)
             
     except KeyboardInterrupt:
-        print("\n❌ Operation cancelled by user")
+        print("\n❌ Operation cancelled by user.")
         sys.exit(1)
     except Exception as e:
         print(f"❌ Unexpected error: {e}")

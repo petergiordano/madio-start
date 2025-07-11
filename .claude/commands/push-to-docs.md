@@ -305,15 +305,25 @@ else
     read -p "Enter folder name or press Enter for root [recommended: \"MADIO Docs\"]: " FOLDER_NAME
     
     echo ""
+    # Capture additional arguments like --force-new
+    OTHER_ARGS=""
+    for arg in "$@"
+    do
+        if [[ "$arg" == "--force-new" ]]; then
+            OTHER_ARGS="$OTHER_ARGS $arg"
+        fi
+        # Add other passthrough args here if needed
+    done
     
+    cd .claude/scripts # Change directory once
     if [ -z "$FOLDER_NAME" ]; then
         echo "📂 Using root folder (My Drive)"
-        cd .claude/scripts
-        python3 sync_to_docs.py --directory ../../synced_docs
+        # Pass --interactive-session and other args
+        python3 sync_to_docs.py --directory ../../synced_docs --interactive-session $OTHER_ARGS
     else
         echo "📂 Using folder: \"$FOLDER_NAME\""
-        cd .claude/scripts
-        python3 sync_to_docs.py --directory ../../synced_docs --folder "$FOLDER_NAME"
+        # Pass --interactive-session, folder name, and other args
+        python3 sync_to_docs.py --directory ../../synced_docs --folder "$FOLDER_NAME" --interactive-session $OTHER_ARGS
     fi
 fi
 ```
