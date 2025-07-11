@@ -787,6 +787,27 @@ class GoogleDocsSync:
             print(f"❌ Unexpected error moving document to folder: {e}")
             return False
 
+    def _download_gdoc_as_markdown(self, doc_id):
+        """Downloads Google Doc content as markdown text."""
+        try:
+            print(f"📄 Downloading GDoc {doc_id} as markdown...")
+            request = self.drive_service.files().export_media(fileId=doc_id, mimeType='text/markdown')
+            response_bytes = request.execute()
+            # Assuming UTF-8 encoding, which is typical for markdown from GDocs export
+            markdown_content = response_bytes.decode('utf-8')
+            # The exported markdown from Google often has escaped characters.
+            # We might want to clean it here or let the user handle it.
+            # For now, return as-is from export. Or use self.clean_escaped_markdown
+            # cleaned_content = self.clean_escaped_markdown(markdown_content)
+            # return cleaned_content
+            return markdown_content
+        except HttpError as error:
+            handle_http_error(error, f"downloading GDoc {doc_id} as markdown")
+            return None
+        except Exception as e:
+            print(f"❌ Unexpected error downloading GDoc {doc_id}: {e}")
+            return None
+
     def create_google_doc(self, title):
         """Create a new Google Doc and return its ID."""
         try:
@@ -1052,9 +1073,102 @@ class GoogleDocsSync:
                     else:
                         print(f"⚠️ Warning: HTTP error checking Google Doc {doc_id} for {local_path_str}: {e}. Will attempt sync if possible.")
                         entry_data["status"] = "warning_gdoc_check_failed"
+
+            live_gdoc_version_for_conflict_check = entry_data.get("google_doc_version") # Version from metadata check
             # --- BUG-002: Basic Stale Mapping Detection END ---
 
-            # Determine if a new Google Doc needs to be created (could be true after stale checks)
+
+            # --- CONFLICT RESOLUTION (Concurrent Modification) START ---
+            # Pre-conditions for conflict check:
+            # - Local file exists (checked by stale mapping)
+            # - GDoc is accessible (i.e., not trashed/404, checked by stale mapping)
+            # - Not a --force-new scenario (which bypasses existing GDoc considerations)
+            # - Not a 'needs_creation' scenario (no existing GDoc to conflict with)
+
+            is_potential_conflict_scenario = (
+                absolute_local_path.exists() and
+                entry_data.get("google_doc_id") and
+                entry_data.get("google_doc_id") != NEW_DOC_PLACEHOLDER and
+                not (self.cli_args and self.cli_args.force_new) and
+                entry_data.get("status") not in ["error_gdoc_trashed", "error_gdoc_not_found"] # Ensure GDoc was accessible
+            )
+
+            if is_potential_conflict_scenario:
+                stored_local_hash = entry_data.get("local_sha256_hash")
+                current_local_hash_for_conflict = calculate_sha256_hash(str(absolute_local_path)) # Recalculate for safety, or use one from earlier if sure it's fresh.
+
+                stored_gdoc_version = entry_data.get("google_doc_version_at_last_sync") # Need a field for this. For now, use current GDoc version as proxy for 'version at last sync'
+                                                                                       # This requires a more robust version tracking than currently implemented.
+                                                                                       # Let's assume 'google_doc_version' field holds the version *before* current live check.
+                                                                                       # This part is tricky. The 'live_gdoc_version_for_conflict_check' is the current live version.
+                                                                                       # We need to compare current local hash with stored hash (from last sync)
+                                                                                       # AND current GDoc version with stored GDoc version (from last sync).
+
+                # Simplified: if local hash changed from registry AND live GDoc version changed from registry's last known GDoc version.
+                # This means we need to ensure 'local_sha256_hash' and 'google_doc_version' in registry are from *last successful sync*.
+
+                # For this phase, let's assume entry_data.local_sha256_hash and entry_data.google_doc_version are from last successful sync.
+                # And current_local_hash_for_conflict and live_gdoc_version_for_conflict_check are the current live states.
+
+                local_has_changed = current_local_hash_for_conflict != stored_local_hash if stored_local_hash else False
+                remote_has_changed = live_gdoc_version_for_conflict_check != entry_data.get("google_doc_version") if entry_data.get("google_doc_version") else False
+                # A true conflict is if BOTH have changed independently.
+                # If only local changed, it's a simple push. If only remote changed, it's a pull (or warning).
+
+                if local_has_changed and remote_has_changed:
+                    print(f"🔥 CONFLICT: File '{local_path_str}' has changed locally AND on Google Drive since last sync.")
+                    entry_data["status"] = "conflict"
+                    registry_updated = True # status changed
+
+                    if self.cli_args and self.cli_args.interactive_session:
+                        choice = input("   Options: (L)ocal overwrites GDoc, (G)Doc overwrites local, (S)kip sync for this file? [S]: ").strip().lower()
+                        if choice == 'l':
+                            print(f"   Action: Local content will overwrite Google Doc for '{local_path_str}'.")
+                            # Allow sync_file to proceed. Hash/version will be updated by sync_file logic.
+                            entry_data["status"] = "conflict_resolved_local_wins" # Temporary status
+                        elif choice == 'g':
+                            print(f"   Action: Google Doc content will overwrite local file for '{local_path_str}'.")
+                            gdoc_content = self._download_gdoc_as_markdown(entry_data["google_doc_id"])
+                            if gdoc_content is not None:
+                                try:
+                                    with open(absolute_local_path, 'w', encoding='utf-8') as f_local:
+                                        f_local.write(gdoc_content)
+                                    print(f"     Successfully updated local file '{local_path_str}' with GDoc content.")
+                                    # Update registry based on this action
+                                    entry_data["local_sha256_hash"] = calculate_sha256_hash(str(absolute_local_path))
+                                    entry_data["google_doc_version"] = live_gdoc_version_for_conflict_check # Already live version
+                                    entry_data["last_synced_at"] = datetime.datetime.utcnow().isoformat() + "Z"
+                                    entry_data["google_doc_last_known_good_at"] = entry_data["last_synced_at"]
+                                    entry_data["status"] = "active" # Synced by GDoc pull
+                                    doc_registry_map[local_path_str] = entry_data
+                                    registry_updated = True
+                                    # Add to synced_docs for URL summary, as it's now "synced"
+                                    synced_docs.append({
+                                        'file': local_path_str, 'doc_id': entry_data["google_doc_id"],
+                                        'url': self.get_doc_url(entry_data["google_doc_id"])
+                                    })
+                                    total_count +=1 # Count as processed
+                                    success_count +=1 # Count as success
+                                    continue # Skip the normal sync_file call for this iteration
+                                except Exception as e_write:
+                                    print(f"     Error writing GDoc content to local file {local_path_str}: {e_write}")
+                                    entry_data["status"] = "conflict_resolution_failed"
+                                    # Fall through to skip or let user decide again? For now, it's effectively skipped.
+                            else:
+                                print(f"     Could not download GDoc content for {local_path_str}. Skipping overwrite.")
+                                entry_data["status"] = "conflict_resolution_failed"
+                            # If GDoc download failed, effectively skip
+                            continue # Skip normal sync_file call
+                        else: # Skip
+                            print(f"   Action: Skipping sync for '{local_path_str}' due to conflict.")
+                            continue # Skip normal sync_file call
+                    else: # Non-interactive
+                        print(f"   Conflict detected for '{local_path_str}' (non-interactive). Skipping.")
+                        continue # Skip normal sync_file call
+            # --- CONFLICT RESOLUTION (Concurrent Modification) END ---
+
+
+            # Determine if a new Google Doc needs to be created (could be true after stale checks or --force-new)
             if self.cli_args and self.cli_args.force_new:
                 print(f"ℹ️  --force-new specified: Will create a new Google Doc for {local_path_str}, even if one is already mapped.")
                 entry_data["google_doc_id"] = None # Unlink any existing GDoc ID for this run

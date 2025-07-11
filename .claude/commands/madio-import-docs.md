@@ -50,6 +50,7 @@ COPY_MODE=false
 SKIP_SYNC=false
 IMPORT_TIMESTAMP=$(date '+%Y%m%d_%H%M%S')
 IMPORT_LOG=".madio_import_$IMPORT_TIMESTAMP.log"
+IMPORT_MODE="merge" # Default mode
 
 # Parse arguments
 for arg in "$@"; do
@@ -63,13 +64,26 @@ for arg in "$@"; do
         --no-sync)
             SKIP_SYNC=true
             ;;
+        --mode=*)
+            MODE_VALUE="${arg#*=}"
+            if [[ "$MODE_VALUE" == "replace" || "$MODE_VALUE" == "merge" || "$MODE_VALUE" == "fresh" ]]; then
+                IMPORT_MODE="$MODE_VALUE"
+            else
+                echo "❌ Invalid value for --mode: $MODE_VALUE. Allowed: replace, merge, fresh."
+                exit 1
+            fi
+            ;;
         --help)
             echo "Usage: /madio-import-docs [options]"
             echo ""
             echo "Options:"
-            echo "  --source=DIR   Directory containing AI system documents (default: current)"
-            echo "  --copy         Copy files instead of moving them"
-            echo "  --no-sync      Skip Google Docs sync setup"
+            echo "  --source=DIR      Directory containing AI system documents (default: current)"
+            echo "  --copy            Copy files instead of moving them"
+            echo "  --no-sync         Skip Google Docs sync setup"
+            echo "  --mode=MODE       Import mode: merge (default), replace, fresh"
+            echo "                    merge: Add new/update existing. Prompts on conflict."
+            echo "                    replace: Clear registry & local managed files, then import. Prompts about GDocs."
+            echo "                    fresh: Full project reset then import. Prompts about GDocs."
             echo ""
             exit 0
             ;;
@@ -199,17 +213,23 @@ echo "Analyzing document structure and hierarchy..."
 python3 .claude/scripts/analyze_madio_import.py \
     --file-list "$TEMP_FILE_LIST" \
     --output ".madio_import_analysis_$IMPORT_TIMESTAMP.json" \
-    --log "$IMPORT_LOG"
+    --log "$IMPORT_LOG" \
+    --import-mode "$IMPORT_MODE" \
+    $( $COPY_MODE && echo "--copy-files" ) \
+    $( $SKIP_SYNC && echo "--skip-sync-setup" )
+
 
 if [ $? -ne 0 ]; then
-    echo "❌ Document analysis failed. Check $IMPORT_LOG for details."
+    echo "❌ Document import process failed. Check $IMPORT_LOG for details."
     exit 1
 fi
 
-# Display analysis summary
+# Display analysis summary (Python script should now handle more than just analysis)
+# This part might be removed if the python script now handles all output.
+# For now, let's assume the JSON output still contains a summary.
 python3 -c "
 import json
-with open('.madio_import_analysis_$IMPORT_TIMESTAMP.json', 'r') as f:
+with open('.madio_import_analysis_$IMPORT_TIMESTAMP.json', 'r') as f: # Or a more generic output file
     analysis = json.load(f)
     
 print(f\"\\n✅ Analysis Complete:\")
