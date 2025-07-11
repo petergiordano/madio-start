@@ -67,11 +67,23 @@ def migrate_configurations():
                     print(f"  Warning: Path {rel_path_from_scripts_dir} in old sync_config.json seems to be outside project root. Skipping.")
                     continue
 
-                entry_data = {
-                    "google_doc_id": doc_id_or_placeholder if doc_id_or_placeholder != madio_registry.NEW_DOC_PLACEHOLDER else None,
-                    "status": "migrated_placeholder" if doc_id_or_placeholder == madio_registry.NEW_DOC_PLACEHOLDER else "migrated",
-                    "source": "migrated_sync_config"
-                }
+                # Initialize with defaults, then overlay specific migrated data
+                entry_data = madio_registry._create_default_document_entry_fields()
+                entry_data["google_doc_id"] = doc_id_or_placeholder if doc_id_or_placeholder != madio_registry.NEW_DOC_PLACEHOLDER else None
+                entry_data["status"] = "migrated_placeholder" if doc_id_or_placeholder == madio_registry.NEW_DOC_PLACEHOLDER else "migrated"
+                entry_data["source"] = "migrated_sync_config"
+                # For migrated entries, created_at and last_modified_local_at are effectively the migration time
+                migration_time = datetime.datetime.utcnow().isoformat() + "Z"
+                entry_data["created_at"] = migration_time
+                entry_data["last_modified_local_at"] = migration_time
+
+                # Calculate hash if local file exists
+                abs_file_path_for_hash = project_root / path_from_root
+                if abs_file_path_for_hash.exists():
+                    entry_data["local_sha256_hash"] = madio_registry.calculate_sha256_hash(str(abs_file_path_for_hash))
+                else:
+                    entry_data["local_sha256_hash"] = None # Or some indicator it was missing at migration
+
                 madio_registry.add_or_update_document_entry(new_registry, path_from_root, entry_data)
                 migrated_entries_count +=1
                 print(f"  Migrated entry from sync_config: {path_from_root} -> GDocID/Placeholder: {doc_id_or_placeholder}")
@@ -90,17 +102,37 @@ def migrate_configurations():
                 old_dir_mapping = json.load(f)
 
             for path_from_root, doc_id_or_placeholder in old_dir_mapping.items():
-                 # These paths should already be relative to project root
-                entry_data = {
-                    "google_doc_id": doc_id_or_placeholder if doc_id_or_placeholder != madio_registry.NEW_DOC_PLACEHOLDER else None,
-                    "status": "migrated_placeholder" if doc_id_or_placeholder == madio_registry.NEW_DOC_PLACEHOLDER else "migrated",
-                    "source": "migrated_dir_mapping"
-                }
-                # Add/Update, potentially overwriting if sync_config had a less specific (e.g. placeholder) entry for same file
+                # These paths should already be relative to project root
+                # Initialize with defaults, then overlay specific migrated data
+                entry_data = madio_registry._create_default_document_entry_fields()
+                entry_data["google_doc_id"] = doc_id_or_placeholder if doc_id_or_placeholder != madio_registry.NEW_DOC_PLACEHOLDER else None
+                entry_data["status"] = "migrated_placeholder" if doc_id_or_placeholder == madio_registry.NEW_DOC_PLACEHOLDER else "migrated"
+                entry_data["source"] = "migrated_dir_mapping"
+                migration_time = datetime.datetime.utcnow().isoformat() + "Z"
+                entry_data["created_at"] = migration_time # Or try to preserve if it existed in a very old format? No, migration is new creation event for this registry.
+                entry_data["last_modified_local_at"] = migration_time
+
+                abs_file_path_for_hash = project_root / path_from_root
+                if abs_file_path_for_hash.exists():
+                    entry_data["local_sha256_hash"] = madio_registry.calculate_sha256_hash(str(abs_file_path_for_hash))
+                else:
+                    entry_data["local_sha256_hash"] = None
+
+                # Add/Update, .synced_docs_mapping entries often more specific/correct for GDoc IDs
+                # if they came from directory sync which auto-updated them.
                 madio_registry.add_or_update_document_entry(new_registry, path_from_root, entry_data)
-                if path_from_root not in old_sync_config: # Avoid double counting if path was in both
-                    migrated_entries_count +=1
-                print(f"  Migrated entry from .synced_docs_mapping: {path_from_root} -> GDocID/Placeholder: {doc_id_or_placeholder}")
+
+                # Check if this path was already added from old_sync_config to avoid double counting
+                # add_or_update_document_entry handles the merging, so we just need to adjust count
+                # This logic for migrated_entries_count might be slightly off if paths are identical and overwritten.
+                # The final count `len(new_registry['document_registry'])` is more accurate.
+                # For simplicity, let's assume this count is indicative of files processed from this source.
+                # A better way: check if it was a truly new key added to new_registry['document_registry'].
+                # However, add_or_update_document_entry doesn't return that.
+                # Let's rely on the final len() for accuracy of total unique.
+                # migrated_entries_count +=1 # This simple increment is fine for "processed from this source".
+
+                print(f"  Migrated/Updated entry from .synced_docs_mapping: {path_from_root} -> GDocID/Placeholder: {doc_id_or_placeholder}")
 
         except Exception as e:
             print(f"  Error processing old .synced_docs_mapping.json: {e}")

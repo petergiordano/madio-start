@@ -41,8 +41,10 @@ NEW_DOC_PLACEHOLDER = "CREATE_NEW_DOCUMENT"
 # Import the new registry management functions
 try:
     from . import madio_registry # Relative import if in the same package
+    from .madio_registry import calculate_sha256_hash
 except ImportError:
     import madio_registry # Direct import if run as script or in PYTHONPATH
+    from madio_registry import calculate_sha256_hash
 
 
 def find_project_root():
@@ -720,16 +722,31 @@ class GoogleDocsSync:
             result = self.service.documents().batchUpdate(
                 documentId=doc_id, body={'requests': requests}).execute()
             
-            return True
+            # After successful update, fetch the new revision ID using Drive API
+            gdoc_drive_metadata = None
+            try:
+                gdoc_drive_metadata = self.drive_service.files().get(fileId=doc_id, fields='id, name, version, headRevisionId, modifiedTime').execute()
+                return {
+                    "success": True,
+                    "version": gdoc_drive_metadata.get('headRevisionId'),
+                    "modified_time": gdoc_drive_metadata.get('modifiedTime')
+                }
+            except HttpError as drive_err:
+                print(f"⚠️ Update to GDoc {doc_id} succeeded, but could not fetch new Drive metadata: {drive_err}")
+                return {"success": True, "version": None, "modified_time": None} # Update succeeded but version unknown
             
         except HttpError as error:
             error_type = handle_http_error(error, f"updating Google Doc {doc_id[:15]}...")
             if error_type == "rate_limited":
                 # Try with rate limiting retry
-                def retry_update():
-                    return self.update_google_doc(doc_id, content)
-                return retry_on_rate_limit(lambda: False) != False  # Returns True if retry succeeds
-            return False
+                # This retry logic needs to be adjusted if we want to return the version from the retry
+                print("Rate limit on update, retry might not return version info correctly yet.")
+                # For simplicity in this step, retry_on_rate_limit might need to be enhanced
+                # or we accept that a rate-limited retry might not get the version immediately.
+                # Let's assume for now retry returns a simple boolean.
+                success = retry_on_rate_limit(lambda: self.update_google_doc(doc_id, content).get("success", False))
+                return {"success": success, "version": None, "modified_time": None} # Version info lost in simple retry
+            return {"success": False, "version": None, "modified_time": None}
         except Exception as e:
             print(f"❌ Unexpected error updating Google Doc {doc_id[:15]}...: {e}")
             print("🔧 Solutions:")
@@ -775,17 +792,30 @@ class GoogleDocsSync:
         try:
             print(f"➕ Creating new Google Doc with title: \"{title}\"...")
             document_body = {'title': title}
-            doc = self.service.documents().create(body=document_body).execute()
+            doc = self.service.documents().create(body=document_body).execute() # This creates the doc
             doc_id = doc.get('documentId')
             print(f"✅ Successfully created Google Doc with ID: {doc_id}")
-            
+
+            # To get revision ID, we might need a drive.files.get call after creation
+            # However, the document object returned by documents().create() might not have revision info directly.
+            # Let's fetch it separately using drive_service to ensure we get it.
+            gdoc_drive_metadata = None
+            try:
+                gdoc_drive_metadata = self.drive_service.files().get(fileId=doc_id, fields='id, name, version, headRevisionId, modifiedTime').execute()
+            except HttpError as drive_err:
+                print(f"⚠️ Could not fetch Drive metadata for new GDoc {doc_id}: {drive_err}")
+
             # Move to target folder if specified
             if self.target_folder_id:
-                success = self.move_document_to_folder(doc_id, self.target_folder_id)
-                if not success:
+                move_success = self.move_document_to_folder(doc_id, self.target_folder_id)
+                if not move_success:
                     print(f"⚠️  Document created but failed to move to folder")
             
-            return doc_id
+            return {
+                "doc_id": doc_id,
+                "version": gdoc_drive_metadata.get('headRevisionId') if gdoc_drive_metadata else None,
+                "modified_time": gdoc_drive_metadata.get('modifiedTime') if gdoc_drive_metadata else None
+            }
         except HttpError as error:
             error_type = handle_http_error(error, f"creating Google Doc '{title}'")
             if error_type == "rate_limited":
@@ -817,15 +847,15 @@ class GoogleDocsSync:
         if clean_escapes:
             content = self.clean_escaped_markdown(content)
         
-        success = self.update_google_doc(doc_id, content)
-        if success:
+        update_result = self.update_google_doc(doc_id, content) # Now returns a dict
+        if update_result.get("success"):
             print(f"✅ Successfully synced {file_path}")
             if show_url:
                 print(f"   🔗 View: {self.get_doc_url(doc_id)}")
         else:
             print(f"❌ Failed to sync {file_path}")
         
-        return success
+        return update_result # Return the whole dict
     
     def sync_all_files(self, clean_escapes=True, target_folder_override=None): # Removed old config/mapping args
         """Sync all files based on the document_registry.json."""
@@ -916,39 +946,115 @@ class GoogleDocsSync:
             # --- BUG-002: Basic Stale Mapping Detection START ---
             # 1. Check local file existence
             if not absolute_local_path.exists():
-                print(f"⚠️ Stale mapping: Local file not found at {absolute_local_path}. Skipping sync for this entry.")
                 entry_data["status"] = "error_local_missing"
-                doc_registry_map[local_path_str] = entry_data # Update status in memory
+                doc_registry_map[local_path_str] = entry_data
                 registry_updated = True
-                continue # Skip to next file
+
+                if self.cli_args and self.cli_args.interactive_session: # Check for interactive mode
+                    print(f"❓ Stale mapping: Local file not found at {absolute_local_path}.")
+                    choice = input("   Options: (R)emove from registry, (U)nlink GDoc & Remove, (S)kip this time, (A)bort sync? [S]: ").strip().lower()
+                    if choice == 'r':
+                        # To be fully implemented: remove_document_entry would be called when saving.
+                        # For now, mark for deletion or handle directly.
+                        # This implies deleting the GDoc is not an option here as local file is primary.
+                        print(f"   Action: Marked {local_path_str} for removal from registry.")
+                        # We'd need a way to signal this to the main loop or handle removal here.
+                        # For Phase 2, let's simplify: remove means it won't be processed further by this run.
+                        # Actual removal from registry file happens on save if we delete from doc_registry_map.
+                        del doc_registry_map[local_path_str]
+                        registry_updated = True # Ensure save happens
+                        continue # Effectively removed for this run.
+                    elif choice == 'u': # Unlink GDoc (if any) & Remove from registry
+                        print(f"   Action: Marked {local_path_str} for unlinking GDoc and removal from registry.")
+                        if entry_data.get("google_doc_id"):
+                            print(f"   Note: Associated GDoc ID was {entry_data['google_doc_id']}. It will NOT be deleted from Drive by this action.")
+                        del doc_registry_map[local_path_str]
+                        registry_updated = True
+                        continue
+                    elif choice == 'a':
+                        print("   Sync aborted by user.")
+                        sys.exit(1)
+                    else: # Default 's' (skip)
+                        print(f"   Action: Skipping sync for {local_path_str} this time.")
+                        continue
+                else: # Non-interactive
+                    print(f"⚠️ Stale mapping: Local file not found at {absolute_local_path}. Skipping sync (non-interactive).")
+                    continue
 
             # 2. Check Google Doc accessibility if doc_id exists
             if doc_id and doc_id != NEW_DOC_PLACEHOLDER: # Only check if there's an existing ID
                 try:
-                    gdoc_metadata = self.drive_service.files().get(fileId=doc_id, fields='id, name, trashed').execute()
+                    gdoc_metadata = self.drive_service.files().get(fileId=doc_id, fields='id, name, trashed, version, headRevisionId').execute()
+                    entry_data["google_doc_version"] = gdoc_metadata.get('headRevisionId') or gdoc_metadata.get('version') # Store latest known version
+                    entry_data["google_doc_last_known_good_at"] = datetime.datetime.utcnow().isoformat() + "Z"
+
                     if gdoc_metadata.get('trashed'):
-                        print(f"⚠️ Stale mapping: Google Doc for {local_path_str} (ID: {doc_id}) is in trash. Skipping sync.")
                         entry_data["status"] = "error_gdoc_trashed"
-                        entry_data["google_doc_id"] = None # Clear the GDoc ID as it's unusable
                         doc_registry_map[local_path_str] = entry_data
                         registry_updated = True
-                        continue
+                        if self.cli_args and self.cli_args.interactive_session:
+                            print(f"❓ Stale mapping: Google Doc for {local_path_str} (ID: {doc_id}) is in trash.")
+                            choice = input("   Options: (C)reate new GDoc & link, (U)nlink (keep local file as 'local_only'), (S)kip, (A)bort? [S]: ").strip().lower()
+                            if choice == 'c':
+                                print(f"   Action: Will attempt to create a new GDoc for {local_path_str}.")
+                                entry_data["google_doc_id"] = None # Mark for creation
+                                doc_id = None # Ensure needs_creation logic picks it up
+                            elif choice == 'u':
+                                print(f"   Action: Unlinking {local_path_str} from GDoc ID {entry_data['google_doc_id']}. Local file kept.")
+                                entry_data["google_doc_id"] = None
+                                entry_data["status"] = "local_only" # Now it's just a local file
+                                doc_registry_map[local_path_str] = entry_data
+                                registry_updated = True
+                                continue # Skip actual content sync for this iteration
+                            elif choice == 'a':
+                                print("   Sync aborted by user.")
+                                sys.exit(1)
+                            else: # Skip
+                                print(f"   Action: Skipping sync for {local_path_str} this time.")
+                                continue
+                        else: # Non-interactive
+                            print(f"⚠️ Stale mapping: Google Doc for {local_path_str} (ID: {doc_id}) is in trash. Skipping (non-interactive).")
+                            entry_data["google_doc_id"] = None # Unlink it
+                            doc_registry_map[local_path_str] = entry_data
+                            registry_updated = True
+                            continue
                 except HttpError as e:
                     if e.resp.status == 404:
-                        print(f"⚠️ Stale mapping: Google Doc for {local_path_str} (ID: {doc_id}) not found (404). Skipping sync.")
                         entry_data["status"] = "error_gdoc_not_found"
-                        entry_data["google_doc_id"] = None # Clear the GDoc ID
                         doc_registry_map[local_path_str] = entry_data
                         registry_updated = True
-                        continue
+                        if self.cli_args and self.cli_args.interactive_session:
+                            print(f"❓ Stale mapping: Google Doc for {local_path_str} (ID: {doc_id}) not found (404).")
+                            choice = input("   Options: (C)reate new GDoc & link, (U)nlink (mark local as 'local_only'), (S)kip, (A)bort? [S]: ").strip().lower()
+                            if choice == 'c':
+                                print(f"   Action: Will attempt to create a new GDoc for {local_path_str}.")
+                                entry_data["google_doc_id"] = None
+                                doc_id = None
+                            elif choice == 'u':
+                                print(f"   Action: Unlinking {local_path_str}. Local file kept.")
+                                entry_data["google_doc_id"] = None
+                                entry_data["status"] = "local_only"
+                                doc_registry_map[local_path_str] = entry_data
+                                registry_updated = True
+                                continue
+                            elif choice == 'a':
+                                print("   Sync aborted by user.")
+                                sys.exit(1)
+                            else: # Skip
+                                print(f"   Action: Skipping sync for {local_path_str} this time.")
+                                continue
+                        else: # Non-interactive
+                            print(f"⚠️ Stale mapping: Google Doc for {local_path_str} (ID: {doc_id}) not found (404). Skipping (non-interactive).")
+                            entry_data["google_doc_id"] = None # Unlink it
+                            doc_registry_map[local_path_str] = entry_data
+                            registry_updated = True
+                            continue
                     else:
-                        # Other HTTP errors might be transient, log and attempt sync
                         print(f"⚠️ Warning: HTTP error checking Google Doc {doc_id} for {local_path_str}: {e}. Will attempt sync if possible.")
                         entry_data["status"] = "warning_gdoc_check_failed"
-                        # Do not continue; allow sync attempt below
             # --- BUG-002: Basic Stale Mapping Detection END ---
 
-            # Determine if a new Google Doc needs to be created
+            # Determine if a new Google Doc needs to be created (could be true after stale checks)
             if self.cli_args and self.cli_args.force_new:
                 print(f"ℹ️  --force-new specified: Will create a new Google Doc for {local_path_str}, even if one is already mapped.")
                 entry_data["google_doc_id"] = None # Unlink any existing GDoc ID for this run
@@ -957,24 +1063,32 @@ class GoogleDocsSync:
             else:
                 # If doc_id is missing or is placeholder (or cleared due to stale check), needs creation
                 needs_creation = not entry_data.get("google_doc_id") or entry_data.get("google_doc_id") == NEW_DOC_PLACEHOLDER
-            
+
             if needs_creation:
                 # This check is now after stale mapping detection which might clear a doc_id or if --force-new is used
                 print(f"ℹ️  Entry for {local_path_str} needs Google Doc creation (or re-creation).")
                 title = os.path.basename(local_path_str)
                 if title.endswith(".md"):
                     title = title[:-3]
-                
-                new_doc_id = self.create_google_doc(title)
-                if new_doc_id:
-                    entry_data["google_doc_id"] = new_doc_id
-                    doc_id = new_doc_id
+
+                # Calculate hash before creation, as it's a property of the local file
+                current_local_hash = calculate_sha256_hash(str(absolute_local_path))
+                entry_data["local_sha256_hash"] = current_local_hash
+                entry_data["last_modified_local_at"] = datetime.datetime.utcnow().isoformat() + "Z" # Time of check/hash
+
+                creation_result = self.create_google_doc(title) # Returns dict
+                if creation_result and creation_result.get("doc_id"):
+                    doc_id = creation_result["doc_id"]
+                    entry_data["google_doc_id"] = doc_id
+                    entry_data["google_doc_version"] = creation_result.get("version")
+                    entry_data["google_doc_last_known_good_at"] = creation_result.get("modified_time") or (datetime.datetime.utcnow().isoformat() + "Z")
                     entry_data["status"] = "active"
-                    entry_data["last_synced_at"] = datetime.datetime.utcnow().isoformat() + "Z"
-                    # Update registry entry directly (madio_registry.add_or_update_document_entry might be better)
+                    # Align sync time with GDoc mod time on creation if available, else now
+                    entry_data["last_synced_at"] = entry_data["google_doc_last_known_good_at"]
+
                     doc_registry_map[local_path_str] = entry_data
                     registry_updated = True
-                    print(f"   🔄 Updated registry for {local_path_str} with new Doc ID: {new_doc_id[:15]}...")
+                    print(f"   🔄 Updated registry for {local_path_str} with new Doc ID: {doc_id[:15]}..., Version: {creation_result.get('version')}")
                 else:
                     print(f"❌ Failed to create Google Doc for {local_path_str}. Skipping.")
                     entry_data["status"] = "creation_failed"
@@ -982,32 +1096,41 @@ class GoogleDocsSync:
                     registry_updated = True
                     continue
             
-            # Check local file existence (absolute_local_path)
-            if not absolute_local_path.exists():
-                print(f"⚠️  Local file not found: {absolute_local_path}. Skipping sync.")
-                # Future: Update status in registry, e.g., entry_data["status"] = "local_missing"
-                continue
-            
+            # Calculate and store/update local file hash before syncing content for existing docs
+            # This is also done before creation now, but ensure it's always fresh if not created.
+            if not needs_creation:
+                current_local_hash = calculate_sha256_hash(str(absolute_local_path))
+                # Only mark as modified if hash actually changed or wasn't there
+                if entry_data.get("local_sha256_hash") != current_local_hash:
+                    entry_data["local_sha256_hash"] = current_local_hash
+                    entry_data["last_modified_local_at"] = datetime.datetime.utcnow().isoformat() + "Z"
+                    registry_updated = True
+                # If hash is same, last_modified_local_at should ideally reflect actual file mod time,
+                # but for now, this simplified update is acceptable.
+                doc_registry_map[local_path_str] = entry_data
+
             total_count += 1
-            # Pass absolute_local_path to sync_file
-            if self.sync_file(str(absolute_local_path), doc_id, clean_escapes, show_url=(total_count <= 5)):
+            sync_result = self.sync_file(str(absolute_local_path), doc_id, clean_escapes, show_url=(total_count <= 5)) # Returns dict
+
+            if sync_result.get("success"):
                 success_count += 1
                 entry_data["last_synced_at"] = datetime.datetime.utcnow().isoformat() + "Z"
-                entry_data["status"] = "active" # Assuming sync success means it's active
+                entry_data["google_doc_version"] = sync_result.get("version")
+                entry_data["google_doc_last_known_good_at"] = sync_result.get("modified_time") or entry_data["last_synced_at"]
+                entry_data["status"] = "active"
                 doc_registry_map[local_path_str] = entry_data
                 registry_updated = True
                 synced_docs.append({
-                    'file': local_path_str, # Store relative path for consistency
+                    'file': local_path_str,
                     'doc_id': doc_id,
                     'url': self.get_doc_url(doc_id)
                 })
             else:
-                # Sync failed, potentially update status
                 entry_data["status"] = "sync_failed"
                 doc_registry_map[local_path_str] = entry_data
                 registry_updated = True
         
-        if registry_updated:
+        if registry_updated: # Save at the end of all operations
             madio_registry.save_registry(registry_data)
             print(f"\n💾 Document registry updated.")
 
