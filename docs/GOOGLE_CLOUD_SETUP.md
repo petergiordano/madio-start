@@ -75,6 +75,7 @@ Ensure you are logged into the Google account you intend to use for this project
 7.  **Place `credentials.json` File:**
     *   Move the renamed `credentials.json` file into the `.claude/scripts/` directory within your MADIO project.
     *   The full path should be `[Your_MADIO_Project_Root]/.claude/scripts/credentials.json`.
+    *   **🔒 Security:** Set secure file permissions: `chmod 600 .claude/scripts/credentials.json`
 
 ---
 
@@ -86,10 +87,15 @@ Once you have placed `credentials.json` in the correct location:
 *   The first time the sync script runs (usually triggered by `/madio-enable-sync` or `/push-to-docs`), it will open a browser window asking you to authorize the "app" (which you named in the OAuth consent screen) to access your Google Docs. You must grant this permission.
 *   After granting permission, a `token.pickle` file will be created in `.claude/scripts/` to store your authorization, so you don't have to re-authorize every time.
 
-## Security Reminders:
-*   The `credentials.json` file contains sensitive information. **Do not commit it to Git or share it publicly.** The `.gitignore` file in this project should already be configured to ignore it.
-*   The `token.pickle` file also contains sensitive access tokens and should also be ignored by Git.
-*   This setup grants the script permission to manage your Google Docs files. Ensure you understand the script's functionality.
+## 🔒 Security Reminders:
+
+**⚠️ IMPORTANT SECURITY WARNINGS:**
+
+*   **Credential Protection:** The `credentials.json` file contains sensitive information. **Do not commit it to Git or share it publicly.** The `.gitignore` file in this project should already be configured to ignore it.
+*   **File Permissions:** Always set secure permissions: `chmod 600 .claude/scripts/credentials.json`
+*   **Token Security:** The `token.pickle` file also contains sensitive access tokens and should also be ignored by Git.
+*   **API Access:** This setup grants the script permission to read and write your Google Docs files. Ensure you understand the script's functionality.
+*   **Account Isolation:** Consider using a dedicated Google account for MADIO projects if working with sensitive documents.
 
 ## Troubleshooting Common Issues:
 

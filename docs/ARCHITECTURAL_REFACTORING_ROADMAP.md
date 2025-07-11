@@ -1,9 +1,9 @@
 # MADIO Document Sync - Architectural Refactoring Roadmap
 
-**Document Version**: 1.0  
+**Document Version**: 1.1  
 **Created**: 2025-01-10  
-**Status**: 📋 Planning Phase  
-**Last Updated**: 2025-01-10
+**Status**: 🚀 Implementation in Progress (49% Complete)  
+**Last Updated**: 2025-01-11
 
 ---
 
@@ -32,10 +32,11 @@ This document provides a comprehensive roadmap for refactoring and enhancing the
 ### Core Components Discovered
 
 #### 1. Synchronization Engine
-- **File**: `.claude/scripts/sync_to_docs.py` (706 lines)
+- **File**: `.claude/scripts/sync_to_docs.py` (1082 lines)
 - **Functionality**: Dual-mode sync system (traditional config + flexible directory)
 - **APIs**: Google Docs API v1, Google Drive API v3
 - **Authentication**: OAuth2 with persistent token caching
+- **Enhanced Features**: Comprehensive error handling, progress indicators, batch operations
 
 #### 2. Entry Points & Commands
 | Command | Purpose | Status | Integration |
@@ -58,13 +59,15 @@ Python Requirements:
 ├── google-api-python-client==2.108.0
 ├── google-auth==2.23.4
 ├── google-auth-oauthlib==1.1.0
-└── google-auth-httplib2==0.1.1
+├── google-auth-httplib2==0.1.1
+└── tqdm==4.66.1 (Progress indicators)
 
 Environment:
 ├── .claude/scripts/venv/ (Virtual environment)
 ├── credentials.json (OAuth2 credentials)
 ├── token.pickle (Cached authentication)
-└── requirements.txt (Dependency specifications)
+├── requirements.txt (Dependency specifications)
+└── .synced_docs_mapping.json (Dynamic file mappings)
 ```
 
 ### Hidden Features & Capabilities
@@ -92,17 +95,27 @@ Environment:
    - OAuth configuration documentation
    - Maintenance history tracking
 
-5. **CLI Override Arguments** *(Jules discovered - completely undocumented)*
+5. **CLI Override Arguments** *(Now Fully Documented)*
    - `--config <path>` - Custom sync config file path
    - `--credentials <path>` - Custom credentials file path
    - `--token <path>` - Custom token file path
-   - Enhanced flexibility for power users
-   - No official documentation exists for these features
+   - `--folder <name>` - Direct Google Drive folder specification
+   - `--pattern <glob>` - Include specific files (e.g., "tier3_*.md")
+   - `--exclude <glob>` - Exclude files (e.g., "test_*.md")
+   - `--interactive` - Force interactive mode in non-TTY environments
+   - Enhanced flexibility for power users and automation
 
 6. **Configuration Magic Conventions** *(Jules identified)*
    - Keys starting with `_` in sync_config.json are ignored
    - Multiple placeholder formats supported
    - Relative path assumptions (`../../file.md` patterns)
+
+7. **Enhanced Progress & Feedback** *(New Implementation)*
+   - Real-time progress bars with tqdm integration
+   - Detailed sync statistics and success rates
+   - Google Doc URL display and automatic saving
+   - Comprehensive error reporting with recovery guidance
+   - Batch operation summaries
 
 #### 📊 Integration Touchpoints
 - **MADIO Workflow**: Seamless integration with `/generate-ai-system`
@@ -117,16 +130,19 @@ Environment:
 ### 🔴 HIGH PRIORITY Issues
 
 #### Security & Authentication
-- [ ] **Generic Error Handling**: HTTP status codes not differentiated (401, 403, 429, 500+)
+- [x] **Generic Error Handling**: HTTP status codes not differentiated (401, 403, 429, 500+)
+  - **✅ COMPLETED**: Implemented specific HTTP status code handling with `handle_http_error()` function
 - [ ] **Credential Security**: Basic file permission security, needs hardening
 - [ ] **Token Management**: `token.pickle` security documentation incomplete
 - [ ] **API Scope Validation**: Limited validation of Google API permissions
 - [ ] **Missing Security Steps in Manual Setup** *(Jules identified)*: Manual docs omit `chmod 600 credentials.json`
 - [ ] **🚨 SEC-5: Git Secret Leakage** *(Codex identified)*: No pre-commit hooks or CI secret scanning to prevent credential commits
 - [x] **🚨 SEC-6: Buried Security Warnings** *(Codex identified)*: Token/credential safety warnings hidden in side docs instead of prominent core setup placement
+  - **✅ COMPLETED**: Security warnings added to SYNC_SETUP.md and core documentation
 
 #### Path & Configuration Complexity
-- [ ] **Multiple Working Directory Changes**: `os.chdir()` calls make debugging difficult
+- [x] **Multiple Working Directory Changes**: `os.chdir()` calls make debugging difficult
+  - **✅ COMPLETED**: All `os.chdir()` calls eliminated from codebase
 - [ ] **Relative Path Dependencies**: Complex `../../` patterns in configuration
 - [ ] **Configuration Fragmentation**: Setup info spread across multiple files
 - [ ] **Hardcoded Assumptions**: Script directory dependencies
@@ -142,7 +158,7 @@ Environment:
 #### Error Resilience
 - [ ] **Network Timeout Handling**: Missing specific timeout error management
 - [x] **Rate Limiting**: No built-in API quota management
-  - **✅ COMPLETED**: Implemented automatic retry with exponential backoff for 429 errors
+  - **✅ COMPLETED**: Implemented automatic retry with exponential backoff for 429 errors via `retry_on_rate_limit()` function
 - [ ] **Recovery Procedures**: Limited guidance for common failure scenarios
 - [ ] **Validation Gaps**: Insufficient configuration validation
 - [x] **Granular Error Handling Gaps** *(Jules identified)*:
@@ -156,9 +172,12 @@ Environment:
 
 #### User Experience
 - [ ] **Setup Complexity**: Multi-step Google Cloud setup can be confusing
-- [ ] **Documentation Gaps**: Flexible sync not prominently featured in README
-- [ ] **Error Messages**: Generic error messages without specific guidance
-- [ ] **Progress Feedback**: Limited feedback during sync operations
+- [x] **Documentation Gaps**: Flexible sync not prominently featured in README
+  - **✅ COMPLETED**: README.md and GETTING-STARTED.md updated with "Essential Commands" sections
+- [x] **Error Messages**: Generic error messages without specific guidance
+  - **✅ COMPLETED**: Implemented specific error messages with recovery instructions
+- [x] **Progress Feedback**: Limited feedback during sync operations
+  - **✅ COMPLETED**: Added tqdm progress bars with fallback for multi-file operations
 
 #### Feature Documentation
 - [ ] **Hidden Features**: Google Drive organization not well documented
@@ -179,7 +198,8 @@ Environment:
 ### 🟢 LOW PRIORITY Issues
 
 #### Performance & Optimization
-- [ ] **Batch Operations**: Limited multi-file efficiency optimizations
+- [x] **Batch Operations**: Limited multi-file efficiency optimizations
+  - **✅ COMPLETED**: Added `--pattern` and `--exclude` for selective file processing
 - [ ] **Caching Strategy**: Minimal caching of API responses
 - [ ] **Large File Handling**: Performance considerations for large documents
 - [ ] **Concurrent Sync**: No parallel processing capabilities
@@ -219,15 +239,15 @@ Environment:
 #### Specific Tasks
 
 ##### Error Handling Enhancement
-- [ ] **HTTP Status Code Handling**
-  - Implement specific handlers for 401 (Unauthorized), 403 (Forbidden), 429 (Rate Limited), 500+ (Server Errors)
-  - Add user-friendly error messages with specific recovery instructions
-  - Create error code mapping documentation
+- [x] **HTTP Status Code Handling**
+  - ✅ Implement specific handlers for 401 (Unauthorized), 403 (Forbidden), 429 (Rate Limited), 500+ (Server Errors)
+  - ✅ Add user-friendly error messages with specific recovery instructions
+  - ✅ Create error code mapping documentation
 
-- [ ] **API Rate Limiting**
-  - Implement exponential backoff for 429 responses
-  - Add configurable retry logic with maximum retry limits
-  - Track API quota usage and provide warnings
+- [x] **API Rate Limiting**
+  - ✅ Implement exponential backoff for 429 responses
+  - ✅ Add configurable retry logic with maximum retry limits
+  - [ ] Track API quota usage and provide warnings
 
 - [ ] **Network Timeout Management**
   - Add configurable timeout settings for different operations
@@ -285,15 +305,15 @@ Environment:
 #### Specific Tasks
 
 ##### Path Management Refactoring
-- [ ] **Working Directory Elimination**
-  - Remove all `os.chdir()` calls from sync logic
-  - Implement absolute path resolution throughout
-  - Create centralized path management utilities
+- [x] **Working Directory Elimination**
+  - ✅ Remove all `os.chdir()` calls from sync logic
+  - ✅ Implement absolute path resolution throughout
+  - ✅ Create centralized path management utilities
 
-- [ ] **Relative Path Simplification**
-  - Replace `../../` patterns with absolute path calculations
-  - Implement project root detection logic
-  - Create path configuration validation
+- [x] **Relative Path Simplification**
+  - ✅ Replace `../../` patterns with absolute path calculations
+  - ✅ Implement project root detection logic
+  - [ ] Create path configuration validation
 
 - [ ] **Configuration Centralization**
   - Merge `sync_config.json` and `.synced_docs_mapping.json` concepts
@@ -323,11 +343,11 @@ Environment:
   - Create configuration repair utilities
 
 ##### Codex's Path Enhancements
-- [ ] **CFG-4: Path Resolution Robustness** *(Codex addition)*
-  - Create `resolve_from_root(path)` helper function
-  - Remove path math inside loops for better maintainability
-  - Fix sync_to_docs.py breaking when run outside project root
-  - Implement project root detection logic
+- [x] **CFG-4: Path Resolution Robustness** *(Codex addition)*
+  - ✅ Create `resolve_from_root(path)` helper function
+  - ✅ Remove path math inside loops for better maintainability
+  - ✅ Fix sync_to_docs.py breaking when run outside project root
+  - ✅ Implement project root detection logic
 
 #### Deliverables
 - Refactored path management system
@@ -384,17 +404,17 @@ Environment:
   - Multi-developer team setup guidance
 
 ##### Codex's Documentation Enhancements
-- [ ] **DOC-3: Unified Setup Guide** *(Codex addition)*
-  - Write comprehensive SYNC_SETUP.md linking all steps
-  - Include cloud setup, dependencies, credentials, and first run
-  - Create single source of truth for complete setup process
-  - Link from every entry documentation
+- [x] **DOC-3: Unified Setup Guide** *(Codex addition)*
+  - ✅ Write comprehensive SYNC_SETUP.md linking all steps
+  - ✅ Include cloud setup, dependencies, credentials, and first run
+  - ✅ Create single source of truth for complete setup process
+  - ✅ Link from every entry documentation
 
-- [ ] **DOC-4: Command Discovery** *(Codex addition)*
-  - Update GETTING-STARTED.md with clear command instructions
-  - Update README.md to prominently feature `/madio-enable-sync` and `/push-to-docs`
-  - Ensure users know which commands to run for first successful sync
-  - Add command flow diagrams for visual clarity
+- [x] **DOC-4: Command Discovery** *(Codex addition)*
+  - ✅ Update GETTING-STARTED.md with clear command instructions
+  - ✅ Update README.md to prominently feature `/madio-enable-sync` and `/push-to-docs`
+  - ✅ Ensure users know which commands to run for first successful sync
+  - [ ] Add command flow diagrams for visual clarity
 
 - [ ] **DOC-5: Auto-sync Feature Prominence** *(Codex addition)*
   - Add "Auto-sync on save" section to main documentation
@@ -784,34 +804,35 @@ Codex provides **specific exit tests** for every improvement:
 ## 📊 Progress Tracking Dashboard
 
 ### Overall Progress
-- **Phase 1**: 🟢 Near Complete (8/18 tasks) *Critical sync reliability and user experience improvements completed*
-- **Phase 2**: 🟡 In Progress (1/10 tasks) *Path resolution robustness completed*
-- **Phase 3**: 🟢 Major Progress (10/15 tasks) *Documentation and user experience substantially enhanced*
+- **Phase 1**: 🟢 Substantial Progress (12/18 tasks) *Critical error handling, path resolution, and authentication improvements completed*
+- **Phase 2**: 🟢 Major Progress (4/10 tasks) *Path management refactoring completed, configuration unification pending*
+- **Phase 3**: 🟢 Near Complete (12/15 tasks) *Documentation and user experience substantially enhanced*
 - **Phase 4**: ⏸️ Not Started (0/8 tasks)
 - **Phase 5**: ⏸️ Not Started (0/6 tasks)
 
-**Total Progress**: 19/57 tasks completed (33%) *Major user experience transformation delivered*
+**Total Progress**: 28/57 tasks completed (49%) *Major architectural improvements and user experience transformation delivered*
 
-### 🎯 Recent Completions (2025-01-10)
+### 🎯 Recent Completions (Based on Code Review Analysis)
 
-#### Critical Infrastructure (Completed Earlier)
-✅ **SEC-6**: Security Warning Prominence - Warnings moved to core setup docs
-✅ **CFG-4**: Path Resolution Robustness - Script works from any directory
-✅ **Configuration Path Inconsistency**: Fixed setup.sh config path alignment
-✅ **Rate Limiting**: Implemented automatic retry with exponential backoff
-✅ **Granular Error Handling**: Specific HTTP status code handling with actionable guidance
-✅ **DOC-3**: Unified Setup Guide - Created comprehensive SYNC_SETUP.md
-✅ **DOC-4**: Command Discovery - Updated README and GETTING-STARTED with essential commands
+#### Core Architecture Improvements (Phase 1 & 2)
+✅ **Error Handling Enhancement**: Implemented comprehensive HTTP status code handling (401, 403, 404, 429, 500+) with `handle_http_error()` and `handle_auth_error()` functions
+✅ **Rate Limiting**: Added automatic retry with exponential backoff via `retry_on_rate_limit()` function for 429 responses
+✅ **Path Resolution**: Created `find_project_root()` and `resolve_from_root()` helper functions, eliminated all `os.chdir()` calls
+✅ **Interactive Folder Selection**: Enhanced `prompt_for_folder()` with terminal detection using `sys.stdin.isatty()`
+✅ **Security Warnings**: Moved credential safety warnings to prominent locations in core documentation
 
-#### 🚀 Major User Experience Enhancements (Completed Today)
-✅ **UX-1**: Enhanced `/generate-ai-system` - Automatic file movement to `synced_docs/` when sync chosen
-✅ **UX-2**: Created `/sync-status` command - Comprehensive health check with 0-100 scoring and Google Doc URLs
-✅ **UX-3**: Added progress indicators - `tqdm` integration with fallback for multi-file operations
-✅ **UX-4**: Implemented batch operations - Pattern matching (`--pattern`) and exclusions (`--exclude`)
-✅ **UX-5**: Enhanced sync feedback - Detailed statistics, success rates, and comprehensive summaries
-✅ **UX-6**: Integrated URL management - Clickable Google Doc URLs displayed after sync and saved to file
-✅ **UX-7**: Improved first-time experience - Clear 3-step Quick Start guide in `/madio-enable-sync`
-✅ **UX-8**: Requirements update - Added `tqdm==4.66.1` for enhanced progress visualization
+#### User Experience Enhancements (Phase 3)
+✅ **Progress Indicators**: Implemented tqdm integration with graceful fallback for multi-file operations
+✅ **Batch Operations**: Added `--pattern` and `--exclude` command-line arguments for selective file processing
+✅ **Enhanced Sync Summary**: Detailed statistics including success rates, file counts, and comprehensive progress reporting
+✅ **URL Management**: Google Doc URLs displayed after sync and automatically saved to `google_docs_urls.txt`
+✅ **Auto-Creation**: `CREATE_NEW_DOCUMENT` placeholder system with automatic Google Doc creation and ID mapping
+✅ **Markdown Cleanup**: Automatic escaped markdown character cleaning from Google Docs exports
+
+#### Documentation Completions (Phase 3)
+✅ **DOC-3**: Created comprehensive SYNC_SETUP.md with step-by-step instructions
+✅ **DOC-4**: Updated README.md and GETTING-STARTED.md with "Essential Commands for First Success" sections
+✅ **Command Documentation**: Updated all .claude/commands/ files with current features and capabilities
 
 #### User Journey Transformation Results
 ✅ **Setup Reduction**: 5+ steps → 3 simple steps (60% improvement)
@@ -820,9 +841,9 @@ Codex provides **specific exit tests** for every improvement:
 ✅ **Health Monitoring**: Proactive sync health scoring with specific recommendations
 
 ### Current Sprint Status
-- **Active Phase**: 🟢 Phase 1 Near Complete (8 critical tasks completed) + 🟢 Phase 3 Major Progress (10 tasks completed)
-- **Next Milestone**: Complete remaining security hardening tasks (SEC-5, Authentication improvements)
-- **Major Achievement**: User experience transformation delivered - 33% total progress with critical UX improvements complete
+- **Active Phase**: 🟢 Phase 1-3 Major Progress (28/43 tasks completed)
+- **Next Milestone**: Complete remaining security hardening (SEC-5, credential management) and configuration unification
+- **Major Achievement**: Core architecture transformation delivered - 49% total progress with substantial user experience improvements
 
 ### Risk Indicators
 - 🟢 **Low Risk**: Documentation and testing phases
