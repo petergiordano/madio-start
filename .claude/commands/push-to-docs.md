@@ -6,26 +6,34 @@ Sync local AI system documents to Google Docs for Claude Project integration.
 
 ### Sync all AI system documents
 ```bash
+# Default sync (uses "MADIO Docs" folder)
 /push-to-docs
+
+# Sync to specific folder
+/push-to-docs "My Project Docs"
+
+# Use environment variable
+export DESTINATION_GOOGLE_DRIVE_FOLDER="Team Shared Docs"
+/push-to-docs
+
+# Use nested folder paths
+/push-to-docs "@AI Agent Projects/My New Project"
+
+# Use Google Drive folder ID directly
+/push-to-docs --folder-id=1ABC123def456
 ```
 
 **What this does:**
 1. Scans `synced_docs/` directory for AI system documents
-2. **Prompts you to choose Google Drive folder** (with clear default option)
-3. Creates folder if it doesn't exist
+2. Uses specified folder or "MADIO Docs" as default
+3. Creates folder automatically if it doesn't exist
 4. Syncs all documents to Google Docs
 5. Updates document mappings automatically
 
-**Expected interaction:**
-```
-📁 Google Drive Folder Selection
-   Where should your Google Docs be created?
-   
-   1. Root folder (My Drive) - Press Enter
-   2. Organized folder (recommended) - Enter folder name
-   
-Enter folder name or press Enter for root [recommended: "MADIO Docs"]: 
-```
+**Folder Selection Behavior:**
+- **Interactive terminals**: Prompts for folder name (with default)
+- **Non-interactive (Claude Code CLI)**: Uses argument, env var, or "MADIO Docs" default
+- **Special value**: Use "root" or "ROOT" to sync to My Drive root
 
 ## Advanced Usage (Direct Script Access)
 
@@ -288,32 +296,69 @@ echo "   1. Root folder (My Drive) - Press Enter"
 echo "   2. Organized folder (recommended) - Enter folder name"
 echo ""
 
+# Check for --folder-id argument
+FOLDER_ID=""
+FOLDER_ARG=""
+for arg in "$@"; do
+    case $arg in
+        --folder-id=*)
+            FOLDER_ID="${arg#*=}"
+            shift
+            ;;
+        *)
+            FOLDER_ARG="$arg"
+            ;;
+    esac
+done
+
 # Check if running in non-interactive environment
 if [ ! -t 0 ] || [ ! -t 1 ]; then
     echo "⚠️  Non-interactive environment detected (Claude Code CLI)"
-    echo "📂 Using root folder (My Drive)"
-    echo ""
-    echo "💡 Tip: For organized folders, use:"
-    echo "   python .claude/scripts/sync_to_docs.py --directory synced_docs --folder \"MADIO Docs\""
-    echo ""
     
-    # Run sync to root folder
-    cd .claude/scripts
-    python3 sync_to_docs.py --directory ../../synced_docs
-else
-    # Interactive environment - prompt user
-    read -p "Enter folder name or press Enter for root [recommended: \"MADIO Docs\"]: " FOLDER_NAME
-    
-    echo ""
-    
-    if [ -z "$FOLDER_NAME" ]; then
-        echo "📂 Using root folder (My Drive)"
+    if [ -n "$FOLDER_ID" ]; then
+        echo "📂 Using folder ID: ${FOLDER_ID:0:15}..."
         cd .claude/scripts
-        python3 sync_to_docs.py --directory ../../synced_docs
+        python3 sync_to_docs.py --directory ../../synced_docs --folder-id "$FOLDER_ID"
     else
+        # Check for command line argument or environment variable
+        FOLDER_NAME="${FOLDER_ARG:-${DESTINATION_GOOGLE_DRIVE_FOLDER:-MADIO Docs}}"
+        
         echo "📂 Using folder: \"$FOLDER_NAME\""
+        echo ""
+        echo "💡 Tip: To use a different folder:"
+        echo "   • Pass as argument: /push-to-docs \"My Folder\""
+        echo "   • Use folder ID: /push-to-docs --folder-id=1ABC123def456"
+        echo "   • Set environment variable: export DESTINATION_GOOGLE_DRIVE_FOLDER=\"My Folder\""
+        echo ""
+        
+        # Run sync with specified folder
         cd .claude/scripts
         python3 sync_to_docs.py --directory ../../synced_docs --folder "$FOLDER_NAME"
+    fi
+else
+    # Interactive environment - prompt user
+    if [ -n "$FOLDER_ID" ]; then
+        echo "📂 Using folder ID: ${FOLDER_ID:0:15}..."
+        cd .claude/scripts
+        python3 sync_to_docs.py --directory ../../synced_docs --folder-id "$FOLDER_ID"
+    else
+        DEFAULT_FOLDER="${FOLDER_ARG:-${DESTINATION_GOOGLE_DRIVE_FOLDER:-MADIO Docs}}"
+        read -p "Enter folder name or press Enter for default [\"$DEFAULT_FOLDER\"]: " FOLDER_NAME
+        
+        echo ""
+        
+        # Use default if empty
+        FOLDER_NAME="${FOLDER_NAME:-$DEFAULT_FOLDER}"
+        
+        if [ "$FOLDER_NAME" = "root" ] || [ "$FOLDER_NAME" = "ROOT" ]; then
+            echo "📂 Using root folder (My Drive)"
+            cd .claude/scripts
+            python3 sync_to_docs.py --directory ../../synced_docs
+        else
+            echo "📂 Using folder: \"$FOLDER_NAME\""
+            cd .claude/scripts
+            python3 sync_to_docs.py --directory ../../synced_docs --folder "$FOLDER_NAME"
+        fi
     fi
 fi
 ```
