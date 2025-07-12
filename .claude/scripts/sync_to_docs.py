@@ -262,52 +262,67 @@ class GoogleDocsSync:
             print("   • Run: /madio-doctor for comprehensive diagnostics")
             sys.exit(1)
     
-    def find_folder_by_name(self, folder_name):
-        """Search for a folder by name in Google Drive"""
-        try:
-            print(f"🔍 Searching for folder: \"{folder_name}\"...")
+    def find_or_create_folder_path(self, folder_path):
+        """Find or create a nested folder path in Google Drive"""
+        if not folder_path or folder_path.lower() in ['root', 'my drive', '/', '']:
+            return None
             
-            # Search for folders with the specified name
+        # Split path and clean components
+        path_parts = [p.strip() for p in folder_path.split('/') if p.strip()]
+        if not path_parts:
+            return None
+            
+        print(f"📁 Setting up folder path: {' > '.join(path_parts)}")
+        
+        current_parent_id = 'root'
+        
+        for i, folder_name in enumerate(path_parts):
+            # Search for folder in current parent
+            folder_id = self.find_folder_in_parent(folder_name, current_parent_id)
+            
+            if not folder_id:
+                # Create the folder
+                folder_id = self.create_folder_in_parent(folder_name, current_parent_id)
+                if not folder_id:
+                    print(f"❌ Failed to create folder path at: {folder_name}")
+                    return None
+                    
+            current_parent_id = folder_id
+            
+        print(f"✅ Folder path ready: {' > '.join(path_parts)}")
+        return current_parent_id
+    
+    def find_folder_in_parent(self, folder_name, parent_id='root'):
+        """Search for a folder by name in a specific parent"""
+        try:
             query = f"name='{folder_name}' and mimeType='application/vnd.google-apps.folder' and trashed=false"
+            if parent_id:
+                query += f" and '{parent_id}' in parents"
+                
             results = self.drive_service.files().list(
                 q=query,
-                fields='files(id, name, parents)'
+                fields='files(id, name)'
             ).execute()
             
             folders = results.get('files', [])
+            return folders[0]['id'] if folders else None
             
-            if not folders:
-                print(f"❌ Folder \"{folder_name}\" not found")
-                return None
-            elif len(folders) == 1:
-                folder_id = folders[0]['id']
-                print(f"✅ Found folder \"{folder_name}\" (ID: {folder_id[:15]}...)")
-                return folder_id
-            else:
-                # Multiple folders found - use the first one but warn
-                folder_id = folders[0]['id']
-                print(f"⚠️  Multiple folders named \"{folder_name}\" found. Using first one (ID: {folder_id[:15]}...)")
-                return folder_id
-                
-        except HttpError as error:
-            error_type = handle_http_error(error, f"searching for folder '{folder_name}'")
-            return None
         except Exception as e:
-            print(f"❌ Unexpected error searching for folder \"{folder_name}\": {e}")
-            print("🔧 Solutions:")
-            print("   • Check internet connection")
-            print("   • Verify Google Drive API is enabled")
-            print("   • Run: /madio-doctor for troubleshooting")
+            print(f"❌ Error searching for folder: {e}")
             return None
     
-    def create_folder(self, folder_name):
-        """Create a new folder in Google Drive"""
+    def find_folder_by_name(self, folder_name):
+        """Search for a folder by name in Google Drive (legacy single folder)"""
+        # For backward compatibility, this now uses the path-based function
+        return self.find_or_create_folder_path(folder_name)
+    
+    def create_folder_in_parent(self, folder_name, parent_id='root'):
+        """Create a new folder in a specific parent folder"""
         try:
-            print(f"📁 Creating folder: \"{folder_name}\"...")
-            
             folder_metadata = {
                 'name': folder_name,
-                'mimeType': 'application/vnd.google-apps.folder'
+                'mimeType': 'application/vnd.google-apps.folder',
+                'parents': [parent_id] if parent_id else ['root']
             }
             
             folder = self.drive_service.files().create(
@@ -316,39 +331,53 @@ class GoogleDocsSync:
             ).execute()
             
             folder_id = folder.get('id')
-            print(f"✅ Created folder \"{folder_name}\" (ID: {folder_id[:15]}...)")
+            print(f"   ✅ Created: {folder_name}")
             return folder_id
             
         except HttpError as error:
-            error_type = handle_http_error(error, f"creating folder '{folder_name}'")
+            handle_http_error(error, f"creating folder '{folder_name}'")
             return None
         except Exception as e:
-            print(f"❌ Unexpected error creating folder \"{folder_name}\": {e}")
-            print("🔧 Solutions:")
-            print("   • Check internet connection")
-            print("   • Verify Google Drive API is enabled")
-            print("   • Check if you have permission to create folders")
-            print("   • Run: /madio-doctor for troubleshooting")
+            print(f"❌ Error creating folder: {e}")
             return None
+    
+    def create_folder(self, folder_name):
+        """Create a new folder in Google Drive (legacy single folder)"""
+        # For backward compatibility, create in root
+        return self.create_folder_in_parent(folder_name, 'root')
     
     def prompt_for_folder(self, force_interactive=False):
         """Prompt user for Google Drive folder selection with terminal detection"""
         
         # Check if we're in an interactive terminal
-        is_interactive = force_interactive or (sys.stdin.isatty() and sys.stdout.isatty())
+        # More robust detection: check TTY, CI env vars, and common non-interactive indicators
+        is_ci = os.environ.get('CI', '').lower() in ('true', '1', 'yes')
+        is_docker = os.path.exists('/.dockerenv')
+        is_interactive = force_interactive or (sys.stdin.isatty() and sys.stdout.isatty() and not is_ci and not is_docker)
         
         if not is_interactive:
+            # In non-interactive mode, check for environment variable
+            default_folder = os.environ.get('DESTINATION_GOOGLE_DRIVE_FOLDER', 'MADIO Docs')
+            
             print("\n📁 Google Drive Folder Configuration")
-            print("   ⚠️  Non-interactive environment detected (Claude Code CLI, CI/CD, etc.)")
-            print("   📂 Using root folder (My Drive)")
-            print("   💡 Tip: Use --folder 'Your Folder Name' to specify a folder")
-            return None
+            print("   ⚠️  Non-interactive environment detected")
+            print(f"   📂 Using folder: \"{default_folder}\"")
+            print("   💡 Tip: Set DESTINATION_GOOGLE_DRIVE_FOLDER environment variable to customize")
+            
+            # Try to find or create the folder path
+            folder_id = self.find_or_create_folder_path(default_folder)
+            if folder_id:
+                return {'name': default_folder, 'id': folder_id}
+            else:
+                print("   ❌ Failed to create folder path, using root folder")
+                return None
         
         print("\n📁 Google Drive Folder Configuration")
         print("   Choose where to create your Google Docs:")
         print("   • Press Enter for root folder (My Drive)")
         print("   • Enter folder name (e.g., 'MADIO Docs')")
-        print("   • If folder doesn't exist, you'll be asked to create it")
+        print("   • Enter folder path (e.g., '@AI Agent Projects/My Project')")
+        print("   • Folders will be created automatically if needed")
         
         while True:
             try:
@@ -361,23 +390,13 @@ class GoogleDocsSync:
                 print("📂 Using root folder (My Drive)")
                 return None
             
-            # Search for the folder
-            folder_id = self.find_folder_by_name(folder_name)
-            
+            # Try to find or create the folder path
+            folder_id = self.find_or_create_folder_path(folder_name)
             if folder_id:
                 return {'name': folder_name, 'id': folder_id}
             else:
-                # Folder not found, ask to create
-                print(f"\n❓ Folder \"{folder_name}\" not found.")
-                create_choice = input("Create this folder? (y/N): ").strip().lower()
-                
-                if create_choice == 'y' or create_choice == 'yes':
-                    folder_id = self.create_folder(folder_name)
-                    if folder_id:
-                        return {'name': folder_name, 'id': folder_id}
-                    else:
-                        print("❌ Failed to create folder. Please try again.")
-                        continue
+                print("❌ Failed to create folder path. Please try again.")
+                continue
                 else:
                     print("📂 Using root folder (My Drive)")
                     return None
@@ -769,7 +788,7 @@ class GoogleDocsSync:
         
         return success
     
-    def sync_all_files(self, config_file='sync_config.json', clean_escapes=True, directory_path=None, mapping_file='.synced_docs_mapping.json', include_pattern=None, exclude_pattern=None, target_folder=None):
+    def sync_all_files(self, config_file='sync_config.json', clean_escapes=True, directory_path=None, mapping_file='.synced_docs_mapping.json', include_pattern=None, exclude_pattern=None, target_folder=None, target_folder_id=None):
         """Sync all files based on configuration or directory discovery"""
         config = {}
         config_updated = False
@@ -794,14 +813,47 @@ class GoogleDocsSync:
                 print(f"❌ Invalid JSON in config file: {e}")
                 return False
         
-        # Handle folder configuration
+        # Handle folder configuration with priority:
+        # 1. Command-line folder ID (most specific)
+        # 2. Command-line folder path/name
+        # 3. Saved configuration
+        # 4. Environment variable
+        # 5. Interactive prompt or default
+        
         folder_config = config.get('_google_drive_folder', {})
         
-        # Check if folder is already configured
-        if folder_config.get('id'):
+        if target_folder_id:
+            # Direct folder ID provided
+            print(f"📂 Using specified folder ID: {target_folder_id[:15]}...")
+            self.target_folder_id = target_folder_id
+            # Update config for future runs
+            config['_google_drive_folder'] = {
+                'name': 'Direct ID',
+                'id': target_folder_id,
+                'description': 'Google Drive folder specified by ID'
+            }
+            config_updated = True
+        elif target_folder:
+            # Folder path/name provided via command line
+            print(f"📁 Command-line folder specified: \"{target_folder}\"")
+            folder_id = self.find_or_create_folder_path(target_folder)
+            if folder_id:
+                self.target_folder_id = folder_id
+                # Save for future runs
+                config['_google_drive_folder'] = {
+                    'name': target_folder,
+                    'id': folder_id,
+                    'description': 'Google Drive folder for documents'
+                }
+                config_updated = True
+            else:
+                print(f"❌ Failed to create folder \"{target_folder}\", using root folder")
+                self.target_folder_id = None
+        elif folder_config.get('id'):
+            # Use saved configuration
             folder_name = folder_config.get('name', 'configured folder')
             folder_id = folder_config.get('id')
-            print(f"📂 Using configured folder: \"{folder_name}\" ({folder_id[:15]}...)")
+            print(f"📂 Using saved folder: \"{folder_name}\" ({folder_id[:15]}...)")
             self.target_folder_id = folder_id
         elif folder_config.get('name'):
             # Folder name specified but no ID - search for it
@@ -817,44 +869,35 @@ class GoogleDocsSync:
                 print(f"❌ Configured folder \"{folder_name}\" not found")
                 return False
         else:
-            # No folder configured - check for command-line folder or prompt user
-            if target_folder:
-                # Folder specified via command line
-                print(f"📁 Command-line folder specified: \"{target_folder}\"")
-                folder_id = self.find_folder_by_name(target_folder)
+            # No saved config - check environment variable or prompt
+            env_folder = os.environ.get('DESTINATION_GOOGLE_DRIVE_FOLDER')
+            if env_folder:
+                print(f"🎯 Using environment variable: DESTINATION_GOOGLE_DRIVE_FOLDER=\"{env_folder}\"")
+                folder_id = self.find_or_create_folder_path(env_folder)
                 if folder_id:
-                    print(f"📂 Found existing folder: \"{target_folder}\" ({folder_id[:15]}...)")
                     self.target_folder_id = folder_id
-                else:
-                    print(f"📁 Folder \"{target_folder}\" not found, creating...")
-                    folder_id = self.create_folder(target_folder)
-                    if folder_id:
-                        print(f"✅ Created folder: \"{target_folder}\" ({folder_id[:15]}...)")
-                        self.target_folder_id = folder_id
-                    else:
-                        print(f"❌ Failed to create folder \"{target_folder}\", using root folder")
-                        self.target_folder_id = None
-                
-                # Update config if folder was found/created
-                if self.target_folder_id:
+                    # Save for future runs
                     config['_google_drive_folder'] = {
-                        'name': target_folder,
-                        'id': self.target_folder_id,
-                        'description': "Google Drive folder for documents. Leave name empty for root folder."
+                        'name': env_folder,
+                        'id': folder_id,
+                        'description': 'Google Drive folder from environment variable'
                     }
                     config_updated = True
+                else:
+                    print(f"❌ Failed to create folder from env var, using root folder")
+                    self.target_folder_id = None
             else:
-                # No command-line folder - prompt user or use root
+                # No config, no env var - prompt user
                 try:
                     folder_info = self.prompt_for_folder()
                     if folder_info:
                         print(f"📂 Selected folder: \"{folder_info['name']}\" ({folder_info['id'][:15]}...)")
                         self.target_folder_id = folder_info['id']
-                        # Update config with selected folder
+                        # Save for future runs
                         config['_google_drive_folder'] = {
                             'name': folder_info['name'],
                             'id': folder_info['id'],
-                            'description': "Google Drive folder for documents. Leave name empty for root folder."
+                            'description': 'Google Drive folder for documents'
                         }
                         config_updated = True
                     else:
@@ -1001,7 +1044,8 @@ def main():
     parser.add_argument('--doc-id', help='Google Doc ID (required with --file)')
     parser.add_argument('--config', default='sync_config.json', help='Config file path')
     parser.add_argument('--directory', help='Directory to scan for markdown files (e.g., synced_docs)')
-    parser.add_argument('--folder', help='Google Drive folder name for documents (e.g., "MADIO Docs"). Creates folder if needed.')
+    parser.add_argument('--folder', help='Google Drive folder name/path for documents (e.g., "@AI Agent Projects/My Project")')
+    parser.add_argument('--folder-id', help='Google Drive folder ID (bypasses folder search/creation)')
     parser.add_argument('--mapping-file', default='.synced_docs_mapping.json', help='File to store directory-to-doc-ID mappings')
     parser.add_argument('--pattern', help='Glob pattern to include specific files (e.g., "tier3_*.md")')
     parser.add_argument('--exclude', help='Glob pattern to exclude files (e.g., "test_*.md")')
@@ -1040,7 +1084,8 @@ def main():
                 mapping_file=mapping_file,
                 include_pattern=args.pattern,
                 exclude_pattern=args.exclude,
-                target_folder=args.folder
+                target_folder=args.folder,
+                target_folder_id=args.folder_id
             )
             sys.exit(0 if success else 1)
         
