@@ -397,9 +397,9 @@ class GoogleDocsSync:
             else:
                 print("❌ Failed to create folder path. Please try again.")
                 continue
-                else:
-                    print("📂 Using root folder (My Drive)")
-                    return None
+        else:
+            print("📂 Using root folder (My Drive)")
+            return None
     
     def discover_markdown_files(self, directory_path, include_pattern=None, exclude_pattern=None):
         """Discover all markdown files in the specified directory with optional pattern filtering"""
