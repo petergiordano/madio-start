@@ -1,0 +1,42 @@
+# MADIO Project Flake8 Configuration
+# Optimized for documentation/utility scripts with markdown processing
+
+[flake8]
+max-line-length = 120
+
+# Ignored error codes - relaxed for script/documentation project context
+extend-ignore = 
+    W291,
+    W292,
+    W293,
+    F401,
+    W605,
+    F541,
+    F841,
+    F821,
+    E712,
+    E128,
+    E261,
+    E301,
+    E302
+
+exclude = 
+    .git,
+    __pycache__,
+    .venv,
+    venv,
+    .claude/scripts/venv,
+    docs/source/conf.py,
+    docs/development-history,
+    old,
+    build,
+    dist,
+    archive,
+    .pytest_cache,
+    *.egg-info
+
+per-file-ignores =
+    # Allow more flexibility in script files
+    .claude/scripts/*.py: E501
+    # Allow long lines in backup/archive files  
+    docs/development-history/*.py: E501,F401,E302
