@@ -25,15 +25,17 @@ export DESTINATION_GOOGLE_DRIVE_FOLDER="Team Shared Docs"
 
 **What this does:**
 1. Scans `synced_docs/` directory for AI system documents
-2. Uses specified folder or "MADIO Docs" as default
+2. Uses specified folder, last used folder, or root folder as default
 3. Creates folder automatically if it doesn't exist
 4. Syncs all documents to Google Docs
 5. Updates document mappings automatically
+6. Saves folder preference for future runs
 
 **Folder Selection Behavior:**
-- **Interactive terminals**: Prompts for folder name (with default)
-- **Non-interactive (Claude Code CLI)**: Uses argument, env var, or "MADIO Docs" default
+- **Interactive terminals**: Prompts for folder name (suggests last used)
+- **Non-interactive (Claude Code CLI)**: Uses argument → env var → last used → root folder
 - **Special value**: Use "root" or "ROOT" to sync to My Drive root
+- **Preference**: Last used folder saved to `.claude/.madio_drive_folder`
 
 ## Advanced Usage (Direct Script Access)
 
@@ -292,9 +294,23 @@ fi
 echo "📁 Google Drive Folder Selection"
 echo "   Where should your Google Docs be created?"
 echo ""
-echo "   1. Root folder (My Drive) - Press Enter"
-echo "   2. Organized folder (recommended) - Enter folder name"
-echo ""
+
+# Function to read last used folder from preference file
+get_last_folder() {
+    local pref_file=".claude/.madio_drive_folder"
+    if [ -f "$pref_file" ]; then
+        cat "$pref_file"
+    else
+        echo ""
+    fi
+}
+
+# Function to save folder preference
+save_folder_preference() {
+    local folder="$1"
+    local pref_file=".claude/.madio_drive_folder"
+    echo "$folder" > "$pref_file"
+}
 
 # Check for --folder-id argument
 FOLDER_ID=""
@@ -320,20 +336,40 @@ if [ ! -t 0 ] || [ ! -t 1 ]; then
         cd .claude/scripts
         python3 sync_to_docs.py --directory ../../synced_docs --folder-id "$FOLDER_ID"
     else
-        # Check for command line argument or environment variable
-        FOLDER_NAME="${FOLDER_ARG:-${DESTINATION_GOOGLE_DRIVE_FOLDER:-MADIO Docs}}"
+        # Check priority: argument → env var → last used → root
+        LAST_FOLDER=$(get_last_folder)
+        FOLDER_NAME="$FOLDER_ARG"
         
-        echo "📂 Using folder: \"$FOLDER_NAME\""
+        if [ -z "$FOLDER_NAME" ]; then
+            FOLDER_NAME="$DESTINATION_GOOGLE_DRIVE_FOLDER"
+        fi
+        
+        if [ -z "$FOLDER_NAME" ] && [ -n "$LAST_FOLDER" ]; then
+            FOLDER_NAME="$LAST_FOLDER"
+        fi
+        
+        if [ -n "$FOLDER_NAME" ]; then
+            echo "📂 Using folder: \"$FOLDER_NAME\""
+            
+            # Save preference if this was explicitly chosen
+            if [ -n "$FOLDER_ARG" ] || [ -n "$DESTINATION_GOOGLE_DRIVE_FOLDER" ]; then
+                save_folder_preference "$FOLDER_NAME"
+            fi
+            
+            cd .claude/scripts
+            python3 sync_to_docs.py --directory ../../synced_docs --folder "$FOLDER_NAME"
+        else
+            echo "📂 Using root folder (My Drive)"
+            cd .claude/scripts
+            python3 sync_to_docs.py --directory ../../synced_docs
+        fi
+        
         echo ""
         echo "💡 Tip: To use a different folder:"
         echo "   • Pass as argument: /push-to-docs \"My Folder\""
         echo "   • Use folder ID: /push-to-docs --folder-id=1ABC123def456"
         echo "   • Set environment variable: export DESTINATION_GOOGLE_DRIVE_FOLDER=\"My Folder\""
         echo ""
-        
-        # Run sync with specified folder
-        cd .claude/scripts
-        python3 sync_to_docs.py --directory ../../synced_docs --folder "$FOLDER_NAME"
     fi
 else
     # Interactive environment - prompt user
@@ -342,20 +378,51 @@ else
         cd .claude/scripts
         python3 sync_to_docs.py --directory ../../synced_docs --folder-id "$FOLDER_ID"
     else
-        DEFAULT_FOLDER="${FOLDER_ARG:-${DESTINATION_GOOGLE_DRIVE_FOLDER:-MADIO Docs}}"
-        read -p "Enter folder name or press Enter for default [\"$DEFAULT_FOLDER\"]: " FOLDER_NAME
+        # Get last used folder and prepare prompt
+        LAST_FOLDER=$(get_last_folder)
+        
+        # Determine default suggestion priority: argument → env var → last used
+        DEFAULT_FOLDER="$FOLDER_ARG"
+        if [ -z "$DEFAULT_FOLDER" ]; then
+            DEFAULT_FOLDER="$DESTINATION_GOOGLE_DRIVE_FOLDER"
+        fi
+        if [ -z "$DEFAULT_FOLDER" ]; then
+            DEFAULT_FOLDER="$LAST_FOLDER"
+        fi
+        
+        # Display interactive prompt
+        echo "📁 Google Drive Folder Selection"
+        echo "Enter folder name for your Google Docs:"
+        echo "- Press Enter for root folder (My Drive)"
+        echo "- Enter a name like \"Project Docs\" for a specific folder"
+        echo "- Use paths like \"Projects/MADIO/Docs\" for nested folders"
+        echo ""
+        
+        if [ -n "$LAST_FOLDER" ]; then
+            echo "Last used: $LAST_FOLDER"
+        fi
+        
+        if [ -n "$DEFAULT_FOLDER" ]; then
+            read -p "Your choice [$DEFAULT_FOLDER]: " FOLDER_NAME
+            # Use default if empty
+            FOLDER_NAME="${FOLDER_NAME:-$DEFAULT_FOLDER}"
+        else
+            read -p "Your choice: " FOLDER_NAME
+        fi
         
         echo ""
         
-        # Use default if empty
-        FOLDER_NAME="${FOLDER_NAME:-$DEFAULT_FOLDER}"
-        
-        if [ "$FOLDER_NAME" = "root" ] || [ "$FOLDER_NAME" = "ROOT" ]; then
+        # Handle the user's choice
+        if [ -z "$FOLDER_NAME" ] || [ "$FOLDER_NAME" = "root" ] || [ "$FOLDER_NAME" = "ROOT" ]; then
             echo "📂 Using root folder (My Drive)"
+            # Save empty preference for root folder
+            save_folder_preference ""
             cd .claude/scripts
             python3 sync_to_docs.py --directory ../../synced_docs
         else
             echo "📂 Using folder: \"$FOLDER_NAME\""
+            # Save folder preference
+            save_folder_preference "$FOLDER_NAME"
             cd .claude/scripts
             python3 sync_to_docs.py --directory ../../synced_docs --folder "$FOLDER_NAME"
         fi

@@ -16,11 +16,16 @@ Before running this command, ensure:
 
 ## Process Overview
 
-1. **Project Analysis** - Understand current state and requirements
-2. **Template Selection** - Choose appropriate templates based on complexity
-3. **Document Generation** - Create hierarchical AI system documents
-4. **Context Updates** - Update AI_CONTEXT.md with generation details
-5. **Validation** - Ensure system completeness and deployment readiness
+### **Kiro-Inspired Three-Phase Approach**
+1. **Requirements Generation** - EARS format requirements capture and user story development
+2. **Technical Design** - Architecture, data flow, and API specification
+3. **Task Implementation** - Granular task breakdown with dependencies and testing
+
+### **MADIO Integration Steps**
+4. **Template Selection** - Choose appropriate Tier 3 templates based on complexity
+5. **Document Generation** - Create hierarchical AI system documents (Tier 1-3)
+6. **Context Updates** - Update AI_CONTEXT.md with generation details
+7. **Validation** - Ensure system completeness and deployment readiness
 
 ## Implementation
 
@@ -113,16 +118,98 @@ esac
 echo "   🔧 Complexity: $COMPLEXITY"
 ```
 
+### Phase 2.5: Kiro-Inspired Requirements Gathering (EARS Format)
+
+```bash
+echo ""
+echo "📋 Requirements Generation (EARS Format)"
+echo ""
+echo "Let's gather detailed requirements using EARS (Easy Approach to Requirements Syntax):"
+echo ""
+
+# Collect primary user stories
+echo "🎯 Core User Stories:"
+echo ""
+echo "Who will use this AI system? (e.g., customers, employees, developers)"
+read -p "Primary Users: " PRIMARY_USERS
+
+echo ""
+echo "What are the main tasks they need to accomplish?"
+read -p "Primary Tasks: " PRIMARY_TASKS
+
+echo ""
+echo "What value/benefit should they receive?"
+read -p "Expected Benefits: " EXPECTED_BENEFITS
+
+# Generate EARS requirements interactively
+echo ""
+echo "📝 Let's create EARS requirements (WHEN [trigger] IF [condition] THEN [response] WHERE [constraint]):"
+echo ""
+
+# Collect main functional requirements
+EARS_REQUIREMENTS=()
+REQUIREMENT_COUNT=1
+
+while true; do
+    echo "Requirement #$REQUIREMENT_COUNT:"
+    read -p "WHEN (trigger event): " WHEN_TRIGGER
+    if [ -z "$WHEN_TRIGGER" ]; then
+        break
+    fi
+    
+    read -p "IF (condition - optional, press enter to skip): " IF_CONDITION
+    read -p "THEN (system response): " THEN_RESPONSE
+    read -p "WHERE (constraint/quality requirement): " WHERE_CONSTRAINT
+    
+    EARS_REQ="WHEN $WHEN_TRIGGER"
+    if [ ! -z "$IF_CONDITION" ]; then
+        EARS_REQ="$EARS_REQ IF $IF_CONDITION"
+    fi
+    EARS_REQ="$EARS_REQ THEN $THEN_RESPONSE WHERE $WHERE_CONSTRAINT"
+    
+    EARS_REQUIREMENTS+=("$EARS_REQ")
+    echo "   ✅ Requirement $REQUIREMENT_COUNT: $EARS_REQ"
+    echo ""
+    
+    ((REQUIREMENT_COUNT++))
+    read -p "Add another requirement? (y/N): " ADD_MORE
+    if [[ ! "$ADD_MORE" =~ ^[Yy]$ ]]; then
+        break
+    fi
+done
+
+# Collect quality requirements
+echo ""
+echo "🏆 Quality Requirements:"
+read -p "Response time requirement (e.g., < 2 seconds): " RESPONSE_TIME
+read -p "Accuracy requirement (e.g., 95% accurate): " ACCURACY_REQ
+read -p "Availability requirement (e.g., 99.9% uptime): " AVAILABILITY_REQ
+
+# Collect non-functional requirements
+echo ""
+echo "🛡️ Behavioral Constraints:"
+read -p "What should the system NEVER do? " FORBIDDEN_BEHAVIORS
+read -p "What personality/tone should it maintain? " PERSONALITY_TONE
+read -p "Any security/privacy requirements? " SECURITY_REQS
+
+echo ""
+echo "   ✅ Requirements gathering complete"
+echo "   📊 Captured $((REQUIREMENT_COUNT-1)) EARS requirements"
+```
+
 ### Phase 3: Template Selection Logic
 
 ```bash
 echo ""
 echo "📚 Selecting MADIO Templates..."
 
-# Always include mandatory core templates
+# Always include mandatory core templates (Tier 1 & 2)
 SELECTED_TEMPLATES=(
     "madio_template_tier1_project_system_instructions.md"
     "madio_template_tier2_orchestrator.md"
+    "madio_template_tier2_requirements.md"
+    "madio_template_tier2_design.md"
+    "madio_template_tier2_tasks.md"
 )
 
 # Add templates based on complexity and system description
@@ -356,6 +443,57 @@ for template in "${SELECTED_TEMPLATES[@]}"; do
                 sed -i.bak "s/\[List all Tier 3 documents this orchestrator will reference\]/$(escape_for_sed "$TIER3_REFS")/g" "$OUTPUT_NAME"
                 ;;
                 
+            "requirements.md")
+                # Populate EARS requirements
+                sed -i.bak "s/\[PRIMARY_FUNCTION\]/$(escape_for_sed "$AI_SYSTEM_DESC")/g" "$OUTPUT_NAME"
+                sed -i.bak "s/\[TARGET_AUDIENCE\]/$(escape_for_sed "$PRIMARY_USERS")/g" "$OUTPUT_NAME"
+                sed -i.bak "s/\[DOMAIN\]/$(escape_for_sed "$DOMAIN")/g" "$OUTPUT_NAME"
+                
+                # Add EARS requirements
+                if [ ${#EARS_REQUIREMENTS[@]} -gt 0 ]; then
+                    EARS_SECTION=""
+                    for i in "${!EARS_REQUIREMENTS[@]}"; do
+                        EARS_SECTION="$EARS_SECTION$(($i + 1)). **REQ-1.$(($i + 1)).1:** ${EARS_REQUIREMENTS[$i]}\n"
+                    done
+                    sed -i.bak "s/\[List core capabilities the AI system must provide\]/Requirements captured:\n$EARS_SECTION/g" "$OUTPUT_NAME"
+                fi
+                
+                # Add quality requirements
+                if [ ! -z "$RESPONSE_TIME" ]; then
+                    sed -i.bak "s/response time < X seconds/response time < $RESPONSE_TIME/g" "$OUTPUT_NAME"
+                fi
+                if [ ! -z "$ACCURACY_REQ" ]; then
+                    sed -i.bak "s/accuracy >= X%/accuracy >= $ACCURACY_REQ/g" "$OUTPUT_NAME"
+                fi
+                ;;
+                
+            "design.md")
+                # Populate design context
+                sed -i.bak "s/\[PRIMARY_FUNCTION\]/$(escape_for_sed "$AI_SYSTEM_DESC")/g" "$OUTPUT_NAME"
+                sed -i.bak "s/\[Handle user inputs and requests\]/Handle $PRIMARY_TASKS for $PRIMARY_USERS/g" "$OUTPUT_NAME"
+                sed -i.bak "s/\[Main AI logic and decision making\]/Process $AI_SYSTEM_DESC requests/g" "$OUTPUT_NAME"
+                
+                # Add security requirements if specified
+                if [ ! -z "$SECURITY_REQS" ]; then
+                    sed -i.bak "s/\[Specify authentication method\]/$(escape_for_sed "$SECURITY_REQS")/g" "$OUTPUT_NAME"
+                fi
+                ;;
+                
+            "tasks.md")
+                # Populate task context
+                sed -i.bak "s/\[PRIMARY_FUNCTION\]/$(escape_for_sed "$AI_SYSTEM_DESC")/g" "$OUTPUT_NAME"
+                
+                # Add primary tasks from requirements
+                if [ ! -z "$PRIMARY_TASKS" ]; then
+                    sed -i.bak "s/\[Handle user inputs and requests\]/$(escape_for_sed "$PRIMARY_TASKS")/g" "$OUTPUT_NAME"
+                fi
+                
+                # Add expected benefits
+                if [ ! -z "$EXPECTED_BENEFITS" ]; then
+                    sed -i.bak "s/\[benefit\/value\]/$(escape_for_sed "$EXPECTED_BENEFITS")/g" "$OUTPUT_NAME"
+                fi
+                ;;
+                
             "character_voice_authority.md")
                 if [ ! -z "$PERSONALITY_TRAITS" ]; then
                     sed -i.bak "s/\[Define the personality traits\]/$(escape_for_sed "$PERSONALITY_TRAITS")/g" "$OUTPUT_NAME"
@@ -487,6 +625,8 @@ done
 echo ""
 echo "🎯 Your AI System: $AI_SYSTEM_DESC"
 echo "📊 Complexity: $COMPLEXITY (${#SELECTED_TEMPLATES[@]} documents)"
+echo "🔍 EARS Requirements: $((REQUIREMENT_COUNT-1)) captured"
+echo "🏗️ Kiro-Inspired Features: Requirements → Design → Tasks"
 echo "🌉 Bridge File: AI_CONTEXT.md updated"
 echo ""
 
